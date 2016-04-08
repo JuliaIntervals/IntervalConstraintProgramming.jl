@@ -1,3 +1,7 @@
+using ValidatedNumerics
+
+include("reverse_mode.jl")
+
 # Own version of gensym:
 const symbol_number = [1]
 
@@ -30,7 +34,7 @@ function make_explicit(ex::Expr)
     op = ex.args[1]
 
     new_code = quote end
-    vars = Symbol[]
+    vars = []
 
     for arg in ex.args[2:end]
         var, code = make_explicit(arg)
@@ -54,7 +58,7 @@ into interval intersections
 TODO: Allow something like [3,4]' for the complement of [3,4]'"""
 
 function parse_comparison(ex)
-    if ex.head != :comparison
+    if ex.head != :comparison  # THIS IS ONLY JULIA 0.4; CHANGED IN 0.5
         throw(ArgumentError("Attempting to parse non-comparison $ex as comparison"))
     end
 
@@ -96,16 +100,20 @@ function transform(ex::Expr)
         root_var, code = make_explicit(ex)
     end
 
-    new_code = quote end
+    new_code = copy(code)
 
-    for code_line in code.args  # each of form z10 = a + b
-        var = code_line.args[1]
-        rest = code_line.args[2:end]
 
-        intersection_code = :($(var) = $(var) ∩ $(rest...))
+    # change z10=a+b to z10=z10 ∩ (a+b) ?
+    # for code_line in code.args  # each of form z10 = a + b
+    #     var = code_line.args[1]
+    #     rest = code_line.args[2:end]
+    #
+    #     intersection_code = :($(var) = $(var) ∩ $(rest...))
+    #
+    #     push!(new_code.args, intersection_code)
+    # end
 
-        push!(new_code.args, intersection_code)
-    end
+
 
 
     if ex.head == :comparison
@@ -117,7 +125,7 @@ function transform(ex::Expr)
 
     else
         # if just an expression with no comparison, assume that == 0
-        constraint_code = :($(root_var) = $(root_var) ∩ @interval(0))
+        constraint_code = :($(root_var) = $(root_var) ∩ :(@interval(0)))
         push!(new_code.args, constraint_code)
 
     end
@@ -160,3 +168,28 @@ function transform(ex::Expr)
 
     new_code
 end
+
+"""Call as
+```
+C = @constructor(x, y, x^2 + y^2 <= 1)
+x = y = @interval(0.5, 1.5)
+C(x, y)
+```
+
+"""
+macro constructor(ex...)
+    @show ex
+
+    inner_code = transform(ex[end])
+
+    vars = :()
+    append!(vars.args, [ex[1:end-1]...])
+
+    push!(inner_code.args, :(return $vars))
+
+
+    function_code = :( $(vars) -> $(inner_code) )
+    @show function_code
+end
+
+# USAGE
