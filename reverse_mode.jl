@@ -6,6 +6,14 @@ function plusRev(a, b, c)  # a = b + c
     a, b, c
 end
 
+function minusRev(a, b, c)  # a = b - c
+    a = a ∩ (b - c)
+    b = b ∩ (a + c)
+    c = c ∩ (b - a)
+
+    a, b, c
+end
+
 function mulRev(a, b, c)  # a = b * c
     a = a ∩ (b * c)
     b = b ∩ (a / c)

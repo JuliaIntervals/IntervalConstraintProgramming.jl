@@ -33,6 +33,11 @@ function make_explicit(ex::Expr)
 
     op = ex.args[1]
 
+    # rewrite +(a,b,c) as +(a,+(b,c))
+    if op in (:+, :*) && length(ex.args) > 3
+        return make_explicit( :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
+    end
+
     new_code = quote end
     vars = []
 
@@ -80,7 +85,7 @@ function parse_comparison(ex)
 end
 
 
-const rev_ops = Dict(:+ => :plusRev, :* => :mulRev, :^ => :powerRev)
+const rev_ops = Dict(:+ => :plusRev, :* => :mulRev, :^ => :powerRev, :- => :minusRev)
 
 doc"""
 `transform` takes in an expression like `x^2 + y^2 <= 1` and outputs
@@ -125,7 +130,7 @@ function transform(ex::Expr)
 
     else
         # if just an expression with no comparison, assume that == 0
-        constraint_code = :($(root_var) = $(root_var) ∩ :(@interval(0)))
+        constraint_code = :($(root_var) = $(root_var) ∩ @interval(0))
         push!(new_code.args, constraint_code)
 
     end
@@ -171,13 +176,13 @@ end
 
 """Call as
 ```
-C = @constructor(x, y, x^2 + y^2 <= 1)
+C = @contractor(x, y, x^2 + y^2 <= 1)
 x = y = @interval(0.5, 1.5)
 C(x, y)
 ```
 
 """
-macro constructor(ex...)
+macro contractor(ex...)
     @show ex
 
     inner_code = transform(ex[end])
