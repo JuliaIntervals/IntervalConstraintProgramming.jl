@@ -30,7 +30,7 @@ doc"""
 `insert_variables` recursively replaces operations like `a+b` by assignments of the form `z10 = a+b`, where `z10` is a distinct symbol created using `make_symbol` (like `gensym` but more readable).
 
 Returns: (i) new variable at head of tree
-        (ii) variables contained in tree
+        (ii) variables contained in tree, in sorted order
         (iii) generated code.
 """
 
@@ -60,7 +60,7 @@ function insert_variables(ex::Expr)
     top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
     push!(new_code.args, top_level_code)
 
-    return new_var, all_vars, new_code
+    return new_var, sort(all_vars), new_code
 
 end
 
@@ -168,28 +168,37 @@ function forward_backward(ex::Expr)
         push!(new_code.args, new_line)
     end
 
-    new_code
+    all_vars, new_code
 end
 
-"""Call as
+"""Call `@contractor` as
 ```
-C = @contractor(x, y, x^2 + y^2 <= 1)
+C = @contractor(x^2 + y^2 <= 1)
 x = y = @interval(0.5, 1.5)
 C(x, y)
+
+`@contractor` makes a function that takes as arguments the variables contained in the expression, in lexicographic order
+
+
 ```
 
 TODO: Hygiene for global variables, or pass in parameters
 """
-macro contractor(ex...)
+macro contractor(ex)
 
-    code = forward_backward(ex[end])
+    all_vars, code = forward_backward(ex)
 
-    vars = Expr(:tuple, ex[1:end-1]...)  # make a tuple out of the variables
+    vars = Expr(:tuple, all_vars...)  # make a tuple out of the variables
 
     push!(code.args, :(return $vars))
 
     function_code = :( $(vars) -> $(code) )
+
+    #@show function_code
     #function_code, ex[1:end-1]
+
+    println("Contractor, function of $vars")
+
     function_code
 end
 
