@@ -14,12 +14,15 @@ function make_symbol()
 end
 
 
-
 doc"""`insert_variables` returns the head symbol (variable name) and the code
 constructed by the tree beneath it in a depth-first search"""
 
-function insert_variables(ex)  # symbols and numbers are leaves
-    return ex, quote end
+function insert_variables(ex)  # numbers are leaves
+    ex, Symbol[], quote end
+end
+
+function insert_variables(ex::Symbol)  # symbols are leaves
+    ex, [ex], quote end
 end
 
 
@@ -27,7 +30,8 @@ doc"""insert_variables replaces operations like `a+b` by assignments of the form
 in a recursive way,
 using `make_symbol` to create a distinct symbol name of the form `z10`.
 
-TODO: For later use, + and * should be split up into pairwise"""
+Returns: the variable at the head of the tree; the variables contained in the tree;
+the code."""
 
 function insert_variables(ex::Expr)
 
@@ -39,21 +43,23 @@ function insert_variables(ex::Expr)
     end
 
     new_code = quote end
-    vars = []
+    current_args = []  # the arguments in the current expression that will be added
+    all_vars = Symbol[]  # all variables contained in the sub-expressions
 
     for arg in ex.args[2:end]
-        var, code = insert_variables(arg)
+        top, contained_vars, code = insert_variables(arg)
 
-        push!(vars, var)
+        push!(current_args, top)
+        append!(all_vars, contained_vars)
         append!(new_code.args, code.args)  # add previously-generated code
     end
 
     new_var = make_symbol()
 
-    top_level_code = :($(new_var) = ($op)($(vars...)))  # current top-level code
+    top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
     push!(new_code.args, top_level_code)
 
-    return new_var, new_code
+    return new_var, all_vars, new_code
 
 end
 
@@ -99,10 +105,11 @@ function transform(ex::Expr)
     code = quote end
 
     # insert_variables generates code for the forward pass
+    # the following is for Julia 0.4
     if ex.head == :comparison  # of form xˆ2 + y^2 <= 1
-        root_var, code = insert_variables(ex.args[1])
+        root_var, all_vars, code = insert_variables(ex.args[1])
     else
-        root_var, code = insert_variables(ex)
+        root_var, all_vars, code = insert_variables(ex)
     end
 
     new_code = copy(code)
@@ -117,8 +124,6 @@ function transform(ex::Expr)
     #
     #     push!(new_code.args, intersection_code)
     # end
-
-
 
 
     if ex.head == :comparison
@@ -184,7 +189,6 @@ C(x, y)
 TODO: Hygiene for global variables, or pass in parameters
 """
 macro contractor(ex...)
-    @show ex
 
     code = transform(ex[end])
 
@@ -192,9 +196,9 @@ macro contractor(ex...)
 
     push!(code.args, :(return $vars))
 
-
     function_code = :( $(vars) -> $(code) )
-    function_code, ex[1:end-1]
+    #function_code, ex[1:end-1]
+    function_code
 end
 
 #= TODO:
