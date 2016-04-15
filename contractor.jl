@@ -15,34 +15,34 @@ end
 
 
 
-doc"""`make_explicit` returns the head symbol (variable name) and the code
+doc"""`insert_variables` returns the head symbol (variable name) and the code
 constructed by the tree beneath it in a depth-first search"""
 
-function make_explicit(ex)  # symbols and numbers are leaves
+function insert_variables(ex)  # symbols and numbers are leaves
     return ex, quote end
 end
 
 
-doc"""make_explicit replaces operations like `a+b` by assignments of the form `z10 = a+b`
+doc"""insert_variables replaces operations like `a+b` by assignments of the form `z10 = a+b`
 in a recursive way,
 using `make_symbol` to create a distinct symbol name of the form `z10`.
 
 TODO: For later use, + and * should be split up into pairwise"""
 
-function make_explicit(ex::Expr)
+function insert_variables(ex::Expr)
 
     op = ex.args[1]
 
     # rewrite +(a,b,c) as +(a,+(b,c))
     if op in (:+, :*) && length(ex.args) > 3
-        return make_explicit( :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
+        return insert_variables( :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
     end
 
     new_code = quote end
     vars = []
 
     for arg in ex.args[2:end]
-        var, code = make_explicit(arg)
+        var, code = insert_variables(arg)
 
         push!(vars, var)
         append!(new_code.args, code.args)  # add previously-generated code
@@ -98,11 +98,11 @@ function transform(ex::Expr)
     root_var = :empty
     code = quote end
 
-    # make_explicit generates code for the forward pass
+    # insert_variables generates code for the forward pass
     if ex.head == :comparison  # of form xˆ2 + y^2 <= 1
-        root_var, code = make_explicit(ex.args[1])
+        root_var, code = insert_variables(ex.args[1])
     else
-        root_var, code = make_explicit(ex)
+        root_var, code = insert_variables(ex)
     end
 
     new_code = copy(code)
@@ -181,20 +181,27 @@ x = y = @interval(0.5, 1.5)
 C(x, y)
 ```
 
+TODO: Hygiene for global variables, or pass in parameters
 """
 macro contractor(ex...)
     @show ex
 
-    inner_code = transform(ex[end])
+    code = transform(ex[end])
 
-    vars = :()
-    append!(vars.args, [ex[1:end-1]...])
+    vars = Expr(:tuple, ex[1:end-1]...)  # make a tuple out of the variables
 
-    push!(inner_code.args, :(return $vars))
+    push!(code.args, :(return $vars))
 
 
-    function_code = :( $(vars) -> $(inner_code) )
-    @show function_code
+    function_code = :( $(vars) -> $(code) )
+    function_code, ex[1:end-1]
 end
+
+#= TODO:
+
+=#
+
+#function constraint_propagation(Cs::Vector{Function}, var)
+
 
 # USAGE
