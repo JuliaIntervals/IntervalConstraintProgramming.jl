@@ -26,12 +26,13 @@ function insert_variables(ex::Symbol)  # symbols are leaves
 end
 
 
-doc"""insert_variables replaces operations like `a+b` by assignments of the form `z10 = a+b`
-in a recursive way,
-using `make_symbol` to create a distinct symbol name of the form `z10`.
+doc"""
+`insert_variables` recursively replaces operations like `a+b` by assignments of the form `z10 = a+b`, where `z10` is a distinct symbol created using `make_symbol` (like `gensym` but more readable).
 
-Returns: the variable at the head of the tree; the variables contained in the tree;
-the code."""
+Returns: (i) new variable at head of tree
+        (ii) variables contained in tree
+        (iii) generated code.
+"""
 
 function insert_variables(ex::Expr)
 
@@ -66,11 +67,15 @@ end
 doc"""`parse_comparison` parses single comparison expressions like `x >= 10`
 into interval intersections
 
+TODO: Allow comparison like ∈ [3,4]
 TODO: Allow something like [3,4]' for the complement of [3,4]'"""
 
 function parse_comparison(ex)
     if ex.head != :comparison  # THIS IS ONLY JULIA 0.4; CHANGED IN 0.5
-        throw(ArgumentError("Attempting to parse non-comparison $ex as comparison"))
+        constraint = :(@interval(0))  # assume expression = 0
+
+        return :($var = $var ∩ $constraint)
+
     end
 
     op = ex.args[2]
@@ -94,55 +99,42 @@ end
 const rev_ops = Dict(:+ => :plusRev, :* => :mulRev, :^ => :powerRev, :- => :minusRev)
 
 doc"""
-`transform` takes in an expression like `x^2 + y^2 <= 1` and outputs
+`forward_backward` takes in an expression like `x^2 + y^2 <= 1` and outputs
 code for the forward-backward contractor
 
 TODO: Add intersections in forward direction
 """
-function transform(ex::Expr)
+function forward_backward(ex::Expr)
 
     root_var = :empty
+    all_vars = Symbol[]
     code = quote end
 
-    # insert_variables generates code for the forward pass
+    # Step 1: Forward pass using insert_variables
     # the following is for Julia 0.4
     if ex.head == :comparison  # of form xˆ2 + y^2 <= 1
-        root_var, all_vars, code = insert_variables(ex.args[1])
-    else
+
+        lhs = ex.args[1]  # the expression in the comparison
+        root_var, all_vars, code = insert_variables(lhs)
+
+        ex.args[1] = root_var
+        constraint_code = parse_comparison(ex)
+
+    else  # expression like x^2 + y^2 - 1 without explicit comparison -- assume = 0
         root_var, all_vars, code = insert_variables(ex)
+
+        constraint_code = :($(root_var) = $(root_var) ∩ @interval(0))
+
     end
+
+    # Step 2: Add constraint code:
 
     new_code = copy(code)
+    push!(new_code.args, constraint_code)
 
 
-    # change z10=a+b to z10=z10 ∩ (a+b) ?
-    # for code_line in code.args  # each of form z10 = a + b
-    #     var = code_line.args[1]
-    #     rest = code_line.args[2:end]
-    #
-    #     intersection_code = :($(var) = $(var) ∩ $(rest...))
-    #
-    #     push!(new_code.args, intersection_code)
-    # end
-
-
-    if ex.head == :comparison
-
-        new_ex = copy(ex)
-        new_ex.args[1] = root_var
-
-        push!(new_code.args, parse_comparison(new_ex))
-
-    else
-        # if just an expression with no comparison, assume that == 0
-        constraint_code = :($(root_var) = $(root_var) ∩ @interval(0))
-        push!(new_code.args, constraint_code)
-
-    end
-
-
-    # backwards pass: replace e.g. z = a + b with reverse mode functions like
-    # plusRev(z, a, b)
+    # Step 3: Backwards pass
+    # replace e.g. z = a + b with reverse mode function plusRev(z, a, b)
 
     for i in reverse(code.args)  # run backwards
         if i.head == :(=)
@@ -190,7 +182,7 @@ TODO: Hygiene for global variables, or pass in parameters
 """
 macro contractor(ex...)
 
-    code = transform(ex[end])
+    code = forward_backward(ex[end])
 
     vars = Expr(:tuple, ex[1:end-1]...)  # make a tuple out of the variables
 
