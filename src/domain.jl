@@ -42,3 +42,9 @@ function apply_contractor(d::Domain, i)
     which = d.inputs[i]
     d.variables[which] = [d.contractors[i](d.variables[which]...)...]
 end
+
+function apply_all_contractors(d::Domain)
+    for i in 1:length(d.contractors)
+        apply_contractor(d, i)
+    end
+end
