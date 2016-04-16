@@ -106,22 +106,24 @@ TODO: Add intersections in forward direction
 """
 function forward_backward(ex::Expr)
 
+    new_ex = copy(ex)
+
     root_var = :empty
     all_vars = Symbol[]
     code = quote end
 
     # Step 1: Forward pass using insert_variables
     # the following is for Julia 0.4
-    if ex.head == :comparison  # of form xˆ2 + y^2 <= 1
+    if new_ex.head == :comparison  # of form xˆ2 + y^2 <= 1
 
-        lhs = ex.args[1]  # the expression in the comparison
+        lhs = new_ex.args[1]  # the expression in the comparison
         root_var, all_vars, code = insert_variables(lhs)
 
-        ex.args[1] = root_var
-        constraint_code = parse_comparison(ex)
+        new_ex.args[1] = root_var
+        constraint_code = parse_comparison(new_ex)
 
     else  # expression like x^2 + y^2 - 1 without explicit comparison -- assume = 0
-        root_var, all_vars, code = insert_variables(ex)
+        root_var, all_vars, code = insert_variables(new_ex)
 
         constraint_code = :($(root_var) = $(root_var) ∩ @interval(0))
 
@@ -184,9 +186,14 @@ C(x, y)
 
 TODO: Hygiene for global variables, or pass in parameters
 """
-macro contractor(ex)
+# function contractor(ex)
+#
+#     all_vars, code = forward_backward(ex)
+#
+#     make_function(all_vars, code)
+# end
 
-    all_vars, code = forward_backward(ex)
+function make_function(all_vars, code)
 
     vars = Expr(:tuple, all_vars...)  # make a tuple out of the variables
 
@@ -200,6 +207,12 @@ macro contractor(ex)
     println("Contractor, function of $vars")
 
     function_code
+end
+
+macro contractor(ex)
+    all_vars, code = forward_backward(ex)
+
+    make_function(all_vars, code)
 end
 
 #= TODO:
