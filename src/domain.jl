@@ -26,13 +26,19 @@ function input_number(d::Domain, x::Symbol)
 end
 
 function add_constraint(d::Domain, C::Expr)
-
+@show d, C
     vars, code = forward_backward(C)
 
     push!(d.constraint_expressions, C)
     push!(d.contractors, eval(make_function(vars, code)))
     push!(d.inputs, [input_number(d, var) for var in vars])
 end
+
+macro add_constraint(d, C)
+    @show d, C
+    :(add_constraint(esc($d), $C))
+end
+
 
 function initialize(d::Domain)
     d.variables = [entireinterval(Float64) for i in 1:d.num_variables]
