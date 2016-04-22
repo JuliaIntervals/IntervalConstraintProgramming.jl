@@ -1,4 +1,5 @@
 using ValidatedNumerics
+using MacroTools
 
 include("reverse_mode.jl")
 
@@ -14,9 +15,6 @@ function make_symbol()
 end
 
 
-doc"""`insert_variables` returns the head symbol (variable name) and the code
-constructed by the tree beneath it in a depth-first search"""
-
 function insert_variables(ex)  # numbers are leaves
     ex, Symbol[], quote end
 end
@@ -25,7 +23,6 @@ function insert_variables(ex::Symbol)  # symbols are leaves
     ex, [ex], quote end
 end
 
-
 doc"""
 `insert_variables` recursively replaces operations like `a+b` by assignments of the form `z10 = a+b`, where `z10` is a distinct symbol created using `make_symbol` (like `gensym` but more readable).
 
@@ -33,8 +30,6 @@ Returns: (i) new variable at head of tree
         (ii) variables contained in tree, in sorted order
         (iii) generated code.
 """
-
-
 function insert_variables(ex::Expr)
 
     op = ex.args[1]
@@ -65,36 +60,41 @@ function insert_variables(ex::Expr)
 
 end
 
-doc"""`parse_comparison` parses single comparison expressions like `x >= 10`
-into interval intersections
 
-TODO: Allow comparison like ∈ [3,4]
+doc"""`parse_comparison` parses comparisons like `x >= 10`
+into the corresponding interval.
+
+Returns the expression and the constraint interval
+
 TODO: Allow something like [3,4]' for the complement of [3,4]'"""
 
+
 function parse_comparison(ex)
-    if ex.head != :comparison  # THIS IS ONLY JULIA 0.4; CHANGED IN 0.5
-        constraint = :(@interval(0))  # assume expression = 0
+    expr, limits =
+    @match ex begin
+       ((a_ <= b_) | (a_ < b_))   => (a, (-∞, b))
+       ((a_ >= b_) | (a_ > b_))   => (a, (b, ∞))
 
-        return :($var = $var ∩ $constraint)
+       a_ == b_                   => (a, (b, b))
 
-    end
+       ((a_ <= b_ <= c_)
+        | (a_ < b_ < c_))         => (b, (a, c))
 
-    op = ex.args[2]
-    var = ex.args[1]
-    value = ex.args[3]
+       ((a_ >= b_ >= c_)
+       | (a_ > b_ > c_))          => (b, (c, a))
 
-    constraint = :()
+       ((a_ ∈ [b_, c_])
+       | (a_ in [b_, c_]))        => (a, (b, c))
 
-    if op in (:<=, :≤)
-        constraint = :(@interval(-∞, $value))
-    elseif op in (:>=, :≥)
-        constraint = :(@interval($value, ∞))
-    elseif op in (:(==), :(=))
-        constraint = :(@interval($value))
-    end
+   end
 
-    :($var = $var ∩ $constraint)
+   a, b = limits
+
+   expr, :(@interval($a, $b))
+
 end
+
+
 
 
 const rev_ops = Dict(:+ => :plusRev, :* => :mulRev, :^ => :powerRev, :- => :minusRev)
