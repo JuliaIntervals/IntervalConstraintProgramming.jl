@@ -68,7 +68,6 @@ Returns the expression and the constraint interval
 
 TODO: Allow something like [3,4]' for the complement of [3,4]'"""
 
-
 function parse_comparison(ex)
     expr, limits =
     @match ex begin
@@ -96,11 +95,10 @@ end
 
 
 
-
 const rev_ops = Dict(:+ => :plusRev, :* => :mulRev, :^ => :powerRev, :- => :minusRev)
 
 doc"""
-`forward_backward` takes in an expression like `x^2 + y^2 <= 1` and outputs
+`forward_backward` takes in an expression like `x^2 + y^2` and outputs
 code for the forward-backward contractor
 
 TODO: Add intersections in forward direction
@@ -113,7 +111,6 @@ function forward_backward(ex::Expr)
     all_vars = Symbol[]
     code = quote end
 
-    # Step 1: Forward pass using insert_variables
     # the following is for Julia 0.4
     # if new_ex.head == :comparison  # of form xˆ2 + y^2 <= 1
     #
@@ -130,11 +127,16 @@ function forward_backward(ex::Expr)
     #
     # end
 
+
+    # Step 1: Forward pass using insert_variables
+
     root_var, all_vars, code = insert_variables(new_ex)
-    constraint = :($(root_var) = $(root_var) ∩ _A_)
-    push!(all_vars, :_A_)
+
 
     # Step 2: Add constraint code:
+
+    constraint = :($(root_var) = $(root_var) ∩ _A_)
+    push!(all_vars, :_A_)
 
     new_code = copy(code)
     push!(new_code.args, constraint)
@@ -143,33 +145,32 @@ function forward_backward(ex::Expr)
     # Step 3: Backwards pass
     # replace e.g. z = a + b with reverse mode function plusRev(z, a, b)
 
-    for i in reverse(code.args)  # run backwards
-        if i.head == :(=)
-            var = i.args[1]
-            op = i.args[2].args[1]
-            args = i.args[2].args[2:end]
+    for line in reverse(code.args)  # run backwards
 
-            new_args = []
-            push!(new_args, var)
-            append!(new_args, args)
-
-            rev_op = rev_ops[op]  # find the reverse operation
-
-            rev_code = :($(rev_op)($(new_args...)))
-
-            return_args = copy(new_args)
-
-            # delete non-symbols in return args:
-            for i in 1:length(return_args)
-                if !(isa(return_args[i], Symbol))
-                    return_args[i] = :_
-                end
-            end
-
-            return_tuple = :()
-            append!(return_tuple.args, return_args)
-
+        var, op, args =
+        @match line begin
+            (var_ = op_(args__))  => (var, op, args)
         end
+
+        new_args = []
+        push!(new_args, var)
+        append!(new_args, args)
+
+        rev_op = rev_ops[op]  # find the reverse operation
+
+        rev_code = :($(rev_op)($(new_args...)))
+
+        return_args = copy(new_args)
+
+        # delete non-symbols in return args:
+        for (i, arg) in enumerate(return_args)
+            if !(isa(arg, Symbol))
+                return_args[i] = :_
+            end
+        end
+
+        return_tuple = Expr(:tuple, return_args...)  # make tuple out of array
+        # or: :($(return_args...),)
 
         new_line = :($(return_tuple) = $(rev_code))
         push!(new_code.args, new_line)
