@@ -115,25 +115,29 @@ function forward_backward(ex::Expr)
 
     # Step 1: Forward pass using insert_variables
     # the following is for Julia 0.4
-    if new_ex.head == :comparison  # of form xˆ2 + y^2 <= 1
+    # if new_ex.head == :comparison  # of form xˆ2 + y^2 <= 1
+    #
+    #     lhs = new_ex.args[1]  # the expression in the comparison
+    #     root_var, all_vars, code = insert_variables(lhs)
+    #
+    #     new_ex.args[1] = root_var
+    #     constraint_code = parse_comparison(new_ex)
+    #
+    # else  # expression like x^2 + y^2 - 1 without explicit comparison -- assume = 0
+    #     root_var, all_vars, code = insert_variables(new_ex)
+    #
+    #     constraint_code = :($(root_var) = $(root_var) ∩ @interval(0))
+    #
+    # end
 
-        lhs = new_ex.args[1]  # the expression in the comparison
-        root_var, all_vars, code = insert_variables(lhs)
-
-        new_ex.args[1] = root_var
-        constraint_code = parse_comparison(new_ex)
-
-    else  # expression like x^2 + y^2 - 1 without explicit comparison -- assume = 0
-        root_var, all_vars, code = insert_variables(new_ex)
-
-        constraint_code = :($(root_var) = $(root_var) ∩ @interval(0))
-
-    end
+    root_var, all_vars, code = insert_variables(new_ex)
+    constraint = :($(root_var) = $(root_var) ∩ _A_)
+    push!(all_vars, :_A_)
 
     # Step 2: Add constraint code:
 
     new_code = copy(code)
-    push!(new_code.args, constraint_code)
+    push!(new_code.args, constraint)
 
 
     # Step 3: Backwards pass
@@ -171,22 +175,10 @@ function forward_backward(ex::Expr)
         push!(new_code.args, new_line)
     end
 
-    all_vars, new_code
+    sort(all_vars), new_code
 end
 
-"""Call `@contractor` as
-```
-C = @contractor(x^2 + y^2 <= 1)
-x = y = @interval(0.5, 1.5)
-C(x, y)
 
-`@contractor` makes a function that takes as arguments the variables contained in the expression, in lexicographic order
-
-
-```
-
-TODO: Hygiene for global variables, or pass in parameters
-"""
 # function contractor(ex)
 #
 #     all_vars, code = forward_backward(ex)
@@ -210,6 +202,19 @@ function make_function(all_vars, code)
     function_code
 end
 
+doc"""Call `@contractor` as
+```
+C = @contractor(x^2 + y^2 <= 1)
+x = y = @interval(0.5, 1.5)
+C(x, y)
+
+`@contractor` makes a function that takes as arguments the variables contained in the expression, in lexicographic order
+
+
+```
+
+TODO: Hygiene for global variables, or pass in parameters
+"""
 macro contractor(ex)
     all_vars, code = forward_backward(ex)
 
