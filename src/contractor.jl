@@ -34,6 +34,7 @@ Returns: (i) new variable at head of tree
         (iii) generated code.
 """
 
+
 function insert_variables(ex::Expr)
 
     op = ex.args[1]
@@ -45,13 +46,13 @@ function insert_variables(ex::Expr)
 
     new_code = quote end
     current_args = []  # the arguments in the current expression that will be added
-    all_vars = Symbol[]  # all variables contained in the sub-expressions
+    all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
 
     for arg in ex.args[2:end]
         top, contained_vars, code = insert_variables(arg)
 
         push!(current_args, top)
-        append!(all_vars, contained_vars)
+        union!(all_vars, contained_vars)
         append!(new_code.args, code.args)  # add previously-generated code
     end
 
@@ -60,7 +61,7 @@ function insert_variables(ex::Expr)
     top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
     push!(new_code.args, top_level_code)
 
-    return new_var, sort(all_vars), new_code
+    return new_var, collect(all_vars), new_code
 
 end
 

@@ -47,3 +47,15 @@ facts("Reverse square") do
     C = @contractor x^2 + y^2 <= 1
     @fact C(x,y) --> (Interval(-1.0, 1.0), Interval(-1.0, 1.0))
 end
+
+facts("Internal") do
+
+    vars, code = ConstraintPropagation.forward_backward(:(x <= 1))
+    @fact length(vars) --> 1
+
+    vars, code = ConstraintPropagation.forward_backward(:(x+y <= 1))
+    @fact length(vars) --> 2
+
+    vars, code = ConstraintPropagation.forward_backward(:(x^2 + x <= 1))
+    @fact length(vars) --> 1
+end
