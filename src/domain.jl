@@ -25,8 +25,14 @@ function input_number(d::Domain, x::Symbol)
 
 end
 
+doc"""Usage:
+```
+d = Domain()
+add_constraint(d, :(x^2 + y^2 <= 1))
+Use @add_constraint for nicer syntax
+```
+"""
 function add_constraint(d::Domain, C::Expr)
-@show d, C
     vars, code = forward_backward(C)
 
     push!(d.constraint_expressions, C)
@@ -34,9 +40,15 @@ function add_constraint(d::Domain, C::Expr)
     push!(d.inputs, [input_number(d, var) for var in vars])
 end
 
+doc"""Usage:
+```
+d = Domain()
+@add_constraint d x^2 + y^2 <= 1
+```
+"""
 macro add_constraint(d, C)
-    @show d, C
-    :(add_constraint(esc($d), $C))
+    C = Meta.quot(C)
+    :(add_constraint($(esc(d)), $C))
 end
 
 
