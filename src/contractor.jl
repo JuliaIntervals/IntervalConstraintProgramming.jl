@@ -61,7 +61,7 @@ function insert_variables(ex::Expr)
     top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
     push!(new_code.args, top_level_code)
 
-    return new_var, collect(all_vars), new_code
+    return new_var, sort(collect(all_vars)), new_code
 
 end
 
