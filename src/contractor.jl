@@ -61,40 +61,6 @@ function insert_variables(ex::Expr)
 end
 
 
-doc"""`parse_comparison` parses comparisons like `x >= 10`
-into the corresponding interval.
-
-Returns the expression and the constraint interval
-
-TODO: Allow something like [3,4]' for the complement of [3,4]'"""
-
-function parse_comparison(ex)
-    expr, limits =
-    @match ex begin
-       ((a_ <= b_) | (a_ < b_))   => (a, (-∞, b))
-       ((a_ >= b_) | (a_ > b_))   => (a, (b, ∞))
-
-       a_ == b_                   => (a, (b, b))
-
-       ((a_ <= b_ <= c_)
-        | (a_ < b_ < c_))         => (b, (a, c))
-
-       ((a_ >= b_ >= c_)
-       | (a_ > b_ > c_))          => (b, (c, a))
-
-       ((a_ ∈ [b_, c_])
-       | (a_ in [b_, c_]))        => (a, (b, c))
-
-   end
-
-   a, b = limits
-
-   expr, :(@interval($a, $b))
-
-end
-
-
-
 const rev_ops = Dict(:+ => :plusRev, :* => :mulRev, :^ => :powerRev, :- => :minusRev)
 
 doc"""
@@ -103,29 +69,13 @@ code for the forward-backward contractor
 
 TODO: Add intersections in forward direction
 """
-function forward_backward(ex::Expr)
+function forward_backward(ex::Expr, constraint::Interval=entireinterval())
 
     new_ex = copy(ex)
 
     root_var = :empty
     all_vars = Symbol[]
     code = quote end
-
-    # the following is for Julia 0.4
-    # if new_ex.head == :comparison  # of form xˆ2 + y^2 <= 1
-    #
-    #     lhs = new_ex.args[1]  # the expression in the comparison
-    #     root_var, all_vars, code = insert_variables(lhs)
-    #
-    #     new_ex.args[1] = root_var
-    #     constraint_code = parse_comparison(new_ex)
-    #
-    # else  # expression like x^2 + y^2 - 1 without explicit comparison -- assume = 0
-    #     root_var, all_vars, code = insert_variables(new_ex)
-    #
-    #     constraint_code = :($(root_var) = $(root_var) ∩ @interval(0))
-    #
-    # end
 
 
     # Step 1: Forward pass using insert_variables
@@ -135,11 +85,19 @@ function forward_backward(ex::Expr)
 
     # Step 2: Add constraint code:
 
-    constraint = :($(root_var) = $(root_var) ∩ _A_)
-    push!(all_vars, :_A_)
+    local constraint_code
+
+    if constraint == Interval(-∞, ∞)
+        constraint_code = :($(root_var) = $(root_var) ∩ _A_)
+        push!(all_vars, :_A_)
+
+    else
+        constraint_code = :($(root_var) = $(root_var) ∩ $constraint)
+    end
+
 
     new_code = copy(code)
-    push!(new_code.args, constraint)
+    push!(new_code.args, constraint_code)
 
 
     # Step 3: Backwards pass
@@ -180,18 +138,19 @@ function forward_backward(ex::Expr)
 end
 
 
-# function contractor(ex)
-#
-#     all_vars, code = forward_backward(ex)
-#
-#     make_function(all_vars, code)
-# end
 
 function make_function(all_vars, code)
 
     vars = Expr(:tuple, all_vars...)  # make a tuple out of the variables
 
-    push!(code.args, :(return $vars))
+    @show all_vars[1]
+    if all_vars[1] == :_A_
+        vars2 = Expr(:tuple, (all_vars[2:end])...)  # miss out _A_
+        push!(code.args, :(return $(vars2)))
+    else
+        push!(code.args, :(return $(vars)))
+    end
+
 
     function_code = :( $(vars) -> $(code) )
 
@@ -203,23 +162,63 @@ function make_function(all_vars, code)
     function_code
 end
 
-doc"""Call `@contractor` as
+
+doc"""`parse_comparison` parses comparisons like `x >= 10`
+into the corresponding interval, expressed as `x ∈ [10,∞]  `
+
+Returns the expression and the constraint interval
+
+TODO: Allow something like [3,4]' for the complement of [3,4]'"""
+
+function parse_comparison(ex)
+    expr, limits =
+    @match ex begin
+       ((a_ <= b_) | (a_ < b_))   => (a, (-∞, b))
+       ((a_ >= b_) | (a_ > b_))   => (a, (b, ∞))
+
+       a_ == b_                   => (a, (b, b))
+
+       ((a_ <= b_ <= c_)
+        | (a_ < b_ < c_))         => (b, (a, c))
+
+       ((a_ >= b_ >= c_)
+       | (a_ > b_ > c_))          => (b, (c, a))
+
+       ((a_ ∈ [b_, c_])
+       | (a_ in [b_, c_]))        => (a, (b, c))
+
+       _                          => (ex, (-∞, ∞))
+
+   end
+
+   a, b = limits
+
+   expr, @interval(a, b)   # expr ∈ [a,b]
+
+end
+
+
+doc"""Usage:
 ```
 C = @contractor(x^2 + y^2 <= 1)
 x = y = @interval(0.5, 1.5)
 C(x, y)
 
 `@contractor` makes a function that takes as arguments the variables contained in the expression, in lexicographic order
-
-
 ```
 
 TODO: Hygiene for global variables, or pass in parameters
 """
 macro contractor(ex)
-    all_vars, code = forward_backward(ex)
+
+    expr, constraint = parse_comparison(ex)
+    @show expr, constraint
+
+    all_vars, code = forward_backward(expr, constraint)
+    @show all_vars, code
 
     make_function(all_vars, code)
+
 end
 
 #= TODO:
