@@ -34,6 +34,7 @@ function insert_variables(ex::Expr)
 
     op = ex.args[1]
 
+    # TODO: Use @match here!
     # rewrite +(a,b,c) as +(a,+(b,c))
     if op in (:+, :*) && length(ex.args) > 3
         return insert_variables( :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
