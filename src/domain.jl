@@ -33,7 +33,9 @@ Use @add_constraint for nicer syntax
 ```
 """
 function add_constraint(d::Domain, C::Expr)
-    vars, code = forward_backward(C)
+
+    expr, constraint = parse_comparison(C)
+    vars, code = forward_backward(expr, constraint)
 
     push!(d.constraint_expressions, C)
     push!(d.contractors, eval(make_function(vars, code)))
