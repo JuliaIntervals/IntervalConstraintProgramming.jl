@@ -40,10 +40,10 @@ end
 doc"""Usage:
 ```
 d = Domain()
-@add_constraint d x^2 + y^2 <= 1
+@constraint d x^2 + y^2 <= 1
 ```
 """
-macro add_constraint(d, C)
+macro constraint(d, C)
     C = Meta.quot(C)
     :(add_constraint($(esc(d)), $C))
 end
