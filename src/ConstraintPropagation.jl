@@ -1,9 +1,17 @@
+__precompile__(true)
+
 module ConstraintPropagation
 
-export Domain, add_constraint, apply_contractor, initialize, @contractor, apply_all_contractors, @add_constraint
+using ValidatedNumerics
+using MacroTools
 
-include("contractor.jl")
+
+export
+    Domain, add_constraint, apply_contractor, initialize, @contractor, apply_all_contractors, @add_constraint
+
+
 include("reverse_mode.jl")
+include("contractor.jl")
 include("domain.jl")
 
 

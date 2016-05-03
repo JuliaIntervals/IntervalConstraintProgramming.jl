@@ -1,8 +1,3 @@
-using ValidatedNumerics
-using MacroTools
-
-include("reverse_mode.jl")
-
 # Own version of gensym:
 const symbol_number = [1]
 
