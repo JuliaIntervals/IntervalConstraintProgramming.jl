@@ -1,8 +1,3 @@
-
-using ValidatedNumerics
-
-include("contractor.jl")
-
 type Domain
     num_variables::Int
     constraint_expressions::Vector{Expr}
