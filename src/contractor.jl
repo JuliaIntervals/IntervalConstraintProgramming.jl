@@ -205,8 +205,8 @@ C(x, y)
 
 TODO: Hygiene for global variables, or pass in parameters
 """
-macro contractor(ex)
 
+function contractor(ex)
     expr, constraint = parse_comparison(ex)
     @show expr, constraint
 
@@ -214,6 +214,10 @@ macro contractor(ex)
     @show all_vars, code
 
     make_function(all_vars, code)
+end
+
+macro contractor(ex)
+    contractor(ex)
 
 end
 
