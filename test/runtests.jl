@@ -2,9 +2,6 @@
 using ConstraintPropagation
 using ValidatedNumerics
 
-include("../src/contractor.jl")
-
-
 using FactCheck
 
 facts("insert_variables") do
