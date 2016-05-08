@@ -33,6 +33,6 @@ macro separator(ex::Expr)
     :(separator($ex))
 end
 
-S = ConstraintPropagation.separator(:(x^2 + y^2 <= 1))
+S = @separator x^2 + y^2 <= 1
 x = y = 0.5..1.5
 S(x,y)
