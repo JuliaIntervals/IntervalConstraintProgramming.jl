@@ -194,6 +194,28 @@ function parse_comparison(ex)
 end
 
 
+type Contractor
+    constraint::Expr
+    variables::Vector{Symbol}
+    contractor::Function
+end
+
+function make_contractor(ex::Expr)
+    expr, constraint_interval = parse_comparison(ex)
+    @show expr, constraint_interval
+
+    all_vars, code = forward_backward(expr, constraint_interval)
+    @show all_vars, code
+
+    fn = eval(make_function(all_vars, code))
+
+    Contractor(expr, all_vars, fn)
+end
+
+# new call syntax to define a "functor" (object that behaves like a function)
+@compat (C::Contractor)(x...) = C.contractor(x...)
+
+
 doc"""Usage:
 ```
 C = @contractor(x^2 + y^2 <= 1)
