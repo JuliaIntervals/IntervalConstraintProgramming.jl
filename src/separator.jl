@@ -39,7 +39,7 @@ function separator(ex::Expr)
 
 
     return (x, y) -> begin
-        inner = C(a..b, x, y)
+        inner = C(a..b, x, y)  # closure over the function C
 
         outer1 = C(-∞..a, x, y)
         outer2 = C(b..∞, x, y)
@@ -52,7 +52,7 @@ function separator(ex::Expr)
 
         outer = (x, y)
 
-        (inner, outer)
+        return (inner, outer)
 
     end
 
@@ -65,8 +65,34 @@ macro separator(ex::Expr)
     :(separator($ex))
 end
 
+function Base.∩(S1, S2)
+    return (x, y) -> begin
+        inner1, outer1 = S1(x, y)
+        inner2, outer2 = S2(x, y)
+
+        X = map(x -> x[1] ∩ x[2], zip(inner1, inner2))
+        Y = map(x -> x[1] ∪ x[2], zip(outer1, outer2))
+
+        return (X, Y)
+    end
+end
+
+function Base.∪(S1, S2)
+    return (x, y) -> begin
+        inner1, outer1 = S1(x, y)
+        inner2, outer2 = S2(x, y)
+
+        X = map(x -> x[1] ∪ x[2], zip(inner1, inner2))
+        Y = map(x -> x[1] ∩ x[2], zip(outer1, outer2))
+
+        return (X, Y)
+    end
+end
+
+
+
 S = @separator x^2 + y^2 <= 1
 x = y = 0.5..1.5
 S(x,y)
 
-S2 = @separator x^2 + y^2 ∈ [3,4]
+S2 = @separator x^2 + y^2 ∈ [0.5,2]
