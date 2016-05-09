@@ -200,7 +200,7 @@ type Contractor
     contractor::Function
 end
 
-function make_contractor(ex::Expr)
+function Contractor(ex::Expr)
     expr, constraint_interval = parse_comparison(ex)
     @show expr, constraint_interval
 
