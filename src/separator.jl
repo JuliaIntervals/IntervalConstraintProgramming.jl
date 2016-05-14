@@ -60,17 +60,20 @@ end
 
 @compat (S::Separator)(X) = S.separator(X)
 
-
+# TODO: when S1 and S2 have different variables -- amalgamate!
 function Base.∩(S1, S2)
-    return (x, y) -> begin
-        inner1, outer1 = S1(x, y)
-        inner2, outer2 = S2(x, y)
+    f = X -> begin
+        inner1, outer1 = S1(X)
+        inner2, outer2 = S2(X)
 
-        X = map(x -> x[1] ∩ x[2], zip(inner1, inner2))
-        Y = map(x -> x[1] ∪ x[2], zip(outer1, outer2))
+        Y1 = tuple( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
+        Y2 = tuple( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
 
-        return (X, Y)
+        return (Y1, Y2)
     end
+
+    return Separator(S1.variables, f)
+
 end
 
 function Base.∪(S1, S2)
