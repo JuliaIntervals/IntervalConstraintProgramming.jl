@@ -139,7 +139,6 @@ function make_function(all_vars, code)
 
     vars = Expr(:tuple, all_vars...)  # make a tuple out of the variables
 
-    @show all_vars[1]
     if all_vars[1] == :_A_
         vars2 = Expr(:tuple, (all_vars[2:end])...)  # miss out _A_
         push!(code.args, :(return $(vars2)))
@@ -153,7 +152,7 @@ function make_function(all_vars, code)
     #@show function_code
     #function_code, ex[1:end-1]
 
-    println("Contractor, function of $vars")
+    # println("Contractor, function of $vars")
 
     function_code
 end
@@ -195,26 +194,33 @@ end
 
 
 type Contractor
-    constraint::Expr
     variables::Vector{Symbol}
+    constraint_expression::Expr
     contractor::Function
+    code::Expr
 end
 
 function Contractor(ex::Expr)
     expr, constraint_interval = parse_comparison(ex)
-    @show expr, constraint_interval
+    #@show expr, constraint_interval
 
     all_vars, code = forward_backward(expr, constraint_interval)
-    @show all_vars, code
+    #@show all_vars, code
 
     fn = eval(make_function(all_vars, code))
 
-    Contractor(expr, all_vars, fn)
+    Contractor(all_vars, expr, fn, code)
 end
 
 # new call syntax to define a "functor" (object that behaves like a function)
 @compat (C::Contractor)(x...) = C.contractor(x...)
 
+
+function Base.show(io::IO, C::Contractor)
+    println(io, "Contractor:")
+    println(io, "  - variables: $(C.variables)")
+    print(io, "  - constraint: $(C.constraint_expression)")
+end
 
 doc"""Usage:
 ```
@@ -239,7 +245,8 @@ function contractor(ex)
 end
 
 macro contractor(ex)
-    contractor(ex)
+    ex = Meta.quot(ex)
+    :(Contractor($ex))
 
 end
 
