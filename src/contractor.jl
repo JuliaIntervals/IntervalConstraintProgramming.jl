@@ -137,7 +137,7 @@ end
 
 function make_function(all_vars, code)
 
-    vars = Expr(:tuple, all_vars...)  # make a tuple out of the variables
+    vars = Expr(:tuple, all_vars...)  # make a tuple of the variables
 
     if all_vars[1] == :_A_
         vars2 = Expr(:tuple, (all_vars[2:end])...)  # miss out _A_
@@ -148,11 +148,6 @@ function make_function(all_vars, code)
 
 
     function_code = :( $(vars) -> $(code) )
-
-    #@show function_code
-    #function_code, ex[1:end-1]
-
-    # println("Contractor, function of $vars")
 
     function_code
 end
@@ -202,14 +197,12 @@ end
 
 function Contractor(ex::Expr)
     expr, constraint_interval = parse_comparison(ex)
-    #@show expr, constraint_interval
 
-    all_vars, code = forward_backward(expr, constraint_interval)
-    #@show all_vars, code
+    vars, code = forward_backward(expr, constraint_interval)
 
-    fn = eval(make_function(all_vars, code))
+    fn = eval(make_function(vars, code))
 
-    Contractor(all_vars, expr, fn, code)
+    Contractor(vars, expr, fn, code)
 end
 
 # new call syntax to define a "functor" (object that behaves like a function)
