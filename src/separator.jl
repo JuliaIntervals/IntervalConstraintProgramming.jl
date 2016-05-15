@@ -39,8 +39,7 @@ end
 
 function Base.show(io::IO, S::Separator)
     println(io, "Separator:")
-    println(io, "  - variables: $(S.variables)")
-
+    print(io, "  - variables: $(S.variables)")
 end
 
 
@@ -64,7 +63,7 @@ function Base.∩(S1, S2)
 end
 
 function Base.∪(S1, S2)
-    return X -> begin
+    f = X -> begin
         inner1, outer1 = S1(X)
         inner2, outer2 = S2(X)
 
