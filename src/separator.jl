@@ -13,7 +13,6 @@ function Separator(ex::Expr)
 
     a = constraint.lo
     b = constraint.hi
-    @show C
 
 
     f = X -> begin
@@ -23,37 +22,25 @@ function Separator(ex::Expr)
         outer1 = C(-∞..a, X...)
         outer2 = C(b..∞, X...)
 
-        # x1, y1 = outer1
-        # x2, y2 = outer2
-        #
-        # x = hull(x1, x2)
-        # y = hull(y1, y2)
-
         outer = [ hull(x1, x2) for (x1,x2) in zip(outer1, outer2) ]
-
-        # outer = (x, y)
 
         return (inner, (outer...))
 
     end
 
-    #function_code = :( $(vars) -> $(code) )
-
     return Separator(variables, f)
-    #return (x, y) -> ( C_inner(x, y), C_outer(x, y) )
+
 
 end
 
 macro separator(ex::Expr)
-    #ex = Meta.quot(ex)
-    #:(separator($ex))
     Separator(ex)
 end
 
 function Base.show(io::IO, S::Separator)
     println(io, "Separator:")
     println(io, "  - variables: $(S.variables)")
-    #print(io, "  - constraint: $(S.separator)")
+
 end
 
 
@@ -77,15 +64,18 @@ function Base.∩(S1, S2)
 end
 
 function Base.∪(S1, S2)
-    return (x, y) -> begin
-        inner1, outer1 = S1(x, y)
-        inner2, outer2 = S2(x, y)
+    return X -> begin
+        inner1, outer1 = S1(X)
+        inner2, outer2 = S2(X)
 
-        X = map(x -> x[1] ∪ x[2], zip(inner1, inner2))
-        Y = map(x -> x[1] ∩ x[2], zip(outer1, outer2))
+        Y1 = tuple( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
+        Y2 = tuple( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
 
-        return (X, Y)
+        return (Y1, Y2)
     end
+
+    return Separator(S1.variables, f)
+
 end
 
 
