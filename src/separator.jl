@@ -47,7 +47,7 @@ end
 @compat (S::Separator)(X) = S.separator(X)
 
 # TODO: when S1 and S2 have different variables -- amalgamate!
-function Base.∩(S1, S2)
+function Base.∩(S1::Separator, S2::Separator)
     f = X -> begin
         inner1, outer1 = S1(X)
         inner2, outer2 = S2(X)
@@ -62,7 +62,7 @@ function Base.∩(S1, S2)
 
 end
 
-function Base.∪(S1, S2)
+function Base.∪(S1::Separator, S2::Separator)
     f = X -> begin
         inner1, outer1 = S1(X)
         inner2, outer2 = S2(X)
@@ -75,6 +75,16 @@ function Base.∪(S1, S2)
 
     return Separator(S1.variables, f)
 
+end
+
+import Base.!
+function !(S::Separator)
+    f = X -> begin
+        inner, outer = S(X)
+        return (outer, inner)
+    end
+
+    return Separator(S.variables, f)
 end
 
 
