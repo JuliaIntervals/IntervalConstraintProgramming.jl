@@ -37,6 +37,10 @@ macro separator(ex::Expr)
     Separator(ex)
 end
 
+macro constraint(ex::Expr)
+    Separator(ex)
+end
+
 function Base.show(io::IO, S::Separator)
     println(io, "Separator:")
     print(io, "  - variables: $(S.variables)")
