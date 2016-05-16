@@ -27,7 +27,7 @@ doc"""
 Find the domain defined by the constraints represented by the separator `S`.
 Returns pavings `inner` and `boundary`.
 """
-function set_inversion(S::Separator, X::IntervalBox, ϵ=1e-2)
+function set_inversion(S::Separator, X::IntervalBox, ϵ = 1e-2)
     working = [X]
 
     inner_list = typeof(X)[]
@@ -36,23 +36,25 @@ function set_inversion(S::Separator, X::IntervalBox, ϵ=1e-2)
     while length(working) > 0
         X = pop!(working)
 
-        if diam(X) < ϵ
-            push!(boundary_list, X)
-            continue
-        end
-
         # should use setdiff to remove boundary part from inner part?
 
-        inner, outer = S(X.intervals)
+        inner, outer = S(X)
         inner2 = IntervalBox(inner)
         outer2 = IntervalBox(outer)
 
-        boundary = inner2 ∩ outer2
-        if !isempty(boundary)
-            append!(working, bisect(X))
+        inside = setdiff(inner2, outer2)
+        if !(isempty(inside))
+            push!(inner_list, inside)
+        end
 
-        elseif isempty(outer2)
-            push!(inner_list, X)
+        boundary = inner2 ∩ outer2
+
+        if diam(boundary) < ϵ
+            push!(boundary_list, boundary)
+            continue
+
+        else
+            append!(working, bisect(boundary))
         end
 
     end
