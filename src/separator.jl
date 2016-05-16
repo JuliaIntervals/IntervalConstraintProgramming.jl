@@ -1,5 +1,3 @@
-# Example of separator:
-
 type Separator
     variables::Vector{Symbol}
     separator::Function
@@ -13,7 +11,6 @@ function Separator(ex::Expr)
 
     a = constraint.lo
     b = constraint.hi
-
 
     f = X -> begin
 
@@ -30,7 +27,6 @@ function Separator(ex::Expr)
 
     return Separator(variables, f)
 
-
 end
 
 macro separator(ex::Expr)
@@ -44,31 +40,6 @@ end
 function Base.show(io::IO, S::Separator)
     println(io, "Separator:")
     print(io, "  - variables: $(S.variables)")
-end
-
-
-import Base.setdiff
-doc"""
-    setdiff(x::Interval, y::Interval)
-
-Calculate the set difference `x \ y`, i.e. the set of values
-inside `x` but not inside `y`.
-"""
-function setdiff(x::Interval, y::Interval)
-    intersection = x ∩ y
-
-    isempty(intersection) && return x
-    intersection == x && return emptyinterval(x)
-
-    x.lo == intersection.lo && return Interval(intersection.hi, x.hi)
-    x.hi == intersection.hi && return Interval(x.lo, intersection.lo)
-
-    return x   # intersection is inside x; the hull of the setdiff is the whole interval
-
-end
-
-function setdiff(X::IntervalBox, Y::IntervalBox)
-    IntervalBox( [setdiff(x,y) for (x,y) in zip(X, Y)] )
 end
 
 
@@ -114,11 +85,3 @@ function !(S::Separator)
 
     return Separator(S.variables, f)
 end
-
-
-
-#     S = @separator x^2 + y^2 <= 1
-# x = y = 0.5..1.5; X = (x, y)
-# S(X)
-#
-# S2 = @separator x^2 + y^2 ∈ [0.5,2]
