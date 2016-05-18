@@ -4,7 +4,7 @@ using ConstraintPropagation
 S = @separator 1 <= x^2 + y^2 <= 3
 X = IntervalBox(-10..10, -10..10)
 
-@time inner, boundary = set_inversion(S, X, ldexp(1., -6))
+@time inner, boundary = set_inversion(S, X, ldexp(1., -2))
 
 @show length(inner), length(boundary)
 

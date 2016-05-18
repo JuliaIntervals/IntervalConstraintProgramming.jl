@@ -12,14 +12,25 @@ function Separator(ex::Expr)
     a = constraint.lo
     b = constraint.hi
 
+    local outer
+
     f = X -> begin
 
         inner = C(a..b, X...)  # closure over the function C
 
-        outer1 = C(-∞..a, X...)
-        outer2 = C(b..∞, X...)
+        if a == -∞
+            outer = C(b..∞, X...)
 
-        outer = [ hull(x1, x2) for (x1,x2) in zip(outer1, outer2) ]
+        elseif b == ∞
+            outer = C(-∞..a, X...)
+
+        else
+
+            outer1 = C(-∞..a, X...)
+            outer2 = C(b..∞, X...)
+
+            outer = [ hull(x1, x2) for (x1,x2) in zip(outer1, outer2) ]
+        end
 
         return (inner, (outer...))
 

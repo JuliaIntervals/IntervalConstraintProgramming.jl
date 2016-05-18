@@ -28,30 +28,31 @@ Find the domain defined by the constraints represented by the separator `S`.
 Returns pavings `inner` and `boundary`.
 """
 function set_inversion(S::Separator, X::IntervalBox, ϵ = 1e-2)
-    working = [X]
+    working = [X]  # stack of boxes that are waiting to be processed
 
     inner_list = typeof(X)[]
     boundary_list = typeof(X)[]
 
-    while length(working) > 0
+    while !isempty(working)
         X = pop!(working)
 
-        # should use setdiff to remove boundary part from inner part?
-
-        inner, outer = S(X)
+        inner, outer = S(X)   # here inner and outer are reversed compared to Jaulin
+        # S(X) returns the pair (contractor with respect to the inside of the constraing, contractor with respect to outside)
         inner2 = IntervalBox(inner)
         outer2 = IntervalBox(outer)
 
-        inside = setdiff(inner2, outer2)
+        @show inner2, outer2
+
+        inside = setdiff(X, outer2)
         if !(isempty(inside))
             push!(inner_list, inside)
         end
+
 
         boundary = inner2 ∩ outer2
 
         if diam(boundary) < ϵ
             push!(boundary_list, boundary)
-            continue
 
         else
             append!(working, bisect(boundary))
