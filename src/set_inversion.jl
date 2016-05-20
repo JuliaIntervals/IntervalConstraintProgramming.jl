@@ -41,15 +41,27 @@ function set_inversion(S::Separator, X::IntervalBox, ϵ = 1e-2)
         inner2 = IntervalBox(inner)
         outer2 = IntervalBox(outer)
 
-        @show inner2, outer2
+        #@show inner2, outer2
 
         inside = setdiff(X, outer2)
+
+        @assert inside ⊆ X
         if !(isempty(inside))
             push!(inner_list, inside)
         end
 
 
         boundary = inner2 ∩ outer2
+
+        #if !(boundary ⊆ inside)
+            @show X
+            @show inner2
+            @show outer2
+            @show inside
+            @show boundary
+            println()
+            #exit(1)
+        #end
 
         if diam(boundary) < ϵ
             push!(boundary_list, boundary)

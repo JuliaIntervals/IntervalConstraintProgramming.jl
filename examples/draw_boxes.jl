@@ -2,6 +2,8 @@
 using PyCall
 using PyPlot
 
+using ValidatedNumerics
+
 @pyimport matplotlib.patches as patches
 @pyimport matplotlib.collections as collections
 
