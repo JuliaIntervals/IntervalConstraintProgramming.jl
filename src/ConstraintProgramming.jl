@@ -18,7 +18,7 @@ export
 include("reverse_mode.jl")
 include("contractor.jl")
 include("separator.jl")
-include("domain.jl")
+# include("domain.jl")
 include("set_inversion.jl")
 
 

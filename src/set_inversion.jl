@@ -43,23 +43,23 @@ function set_inversion(S::Separator, X::IntervalBox, ϵ = 1e-2)
 
         #@show inner2, outer2
 
-        inside = setdiff(X, outer2)
+        inside_list = setdiff(X, outer2)
 
-        @assert inside ⊆ X
-        if !(isempty(inside))
-            push!(inner_list, inside)
+        #@assert inside ⊆ X
+        if length(inside_list) > 0
+            append!(inner_list, inside_list)
         end
 
 
         boundary = inner2 ∩ outer2
 
         #if !(boundary ⊆ inside)
-            @show X
-            @show inner2
-            @show outer2
-            @show inside
-            @show boundary
-            println()
+            # @show X
+            # @show inner2
+            # @show outer2
+            # @show inside
+            # @show boundary
+            # println()
             #exit(1)
         #end
 
