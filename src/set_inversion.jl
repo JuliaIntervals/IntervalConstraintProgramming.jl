@@ -34,7 +34,13 @@ function set_inversion(S::Separator, X::IntervalBox, ϵ = 1e-2)
     boundary_list = typeof(X)[]
 
     while !isempty(working)
+
+
+
         X = pop!(working)
+        # @show working
+        # @show X
+        # #s = readline(STDIN)
 
         inner, outer = S(X)   # here inner and outer are reversed compared to Jaulin
         # S(X) returns the pair (contractor with respect to the inside of the constraing, contractor with respect to outside)
@@ -53,12 +59,16 @@ function set_inversion(S::Separator, X::IntervalBox, ϵ = 1e-2)
 
         boundary = inner2 ∩ outer2
 
+        if isempty(boundary)
+            continue
+        end
+
         #if !(boundary ⊆ inside)
             # @show X
             # @show inner2
             # @show outer2
-            # @show inside
             # @show boundary
+            # @show inside_list
             # println()
             #exit(1)
         #end

@@ -57,6 +57,13 @@ end
 @compat (S::Separator)(X) = S.separator(X)
 
 # TODO: when S1 and S2 have different variables -- amalgamate!
+
+doc"""
+    ∩(S1::Separator, S2::Separator)
+
+Separator for the intersection of two sets given by the separators `S1` and `S2`.
+Can take a tuple, `IntervalBox`, etc.; returns inner and outer tuples.
+"""
 function Base.∩(S1::Separator, S2::Separator)
     f = X -> begin
         inner1, outer1 = S1(X)
