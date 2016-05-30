@@ -60,8 +60,16 @@ draw_boxes(inner, "green", 0.5, 1)
 The second argument is the color; the third (optional) is the alpha value (transparency);
 and the fourth is the linewidth (default is 0).
 
+The output should look like this:
+
 ![Ring](examples/ring.png)
+
+
+The green boxes have been **rigorously** proved to be contained within the feasible set,
+while the grey boxes show those on the boundary, whose status is unknown.
+The white area outside and inside the ring has been **rigorously** proved to be outside
+the feasible set.
 
 ## Set operations
 Separators may be combined using the operators `!` (complement), `∩` and `∪` to make
-more complicated sets.
+more complicated sets; see the notebook in the `examples` directory.
