@@ -60,6 +60,7 @@ draw_boxes(inner, "green", 0.5, 1)
 The second argument is the color; the third (optional) is the alpha value (transparency);
 and the fourth is the linewidth (default is 0).
 
+![Ring](examples/ring.png)
 
 ## Set operations
 Separators may be combined using the operators `!` (complement), `∩` and `∪` to make
