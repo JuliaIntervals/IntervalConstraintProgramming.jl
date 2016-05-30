@@ -1,6 +1,6 @@
 __precompile__(true)
 
-module ConstraintPropagation
+module ConstraintProgramming
 
 using ValidatedNumerics
 using MacroTools
