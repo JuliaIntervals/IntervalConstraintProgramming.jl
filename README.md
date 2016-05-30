@@ -1,46 +1,66 @@
-# `ConstraintPropagation.jl`
+# `ConstraintProgramming.jl`
 
-- `d = Domain()`:  creates a new `Domain` object, representing a domain defined by (in)equality constraints
+This package carries out "interval constraint programming".
+It uses intervals from the
+`ValidatedNumerics.jl`[https://github.com/dpsanders/ValidatedNumerics.jl] package,
+and the multi-dimensional version, called `IntervalBox`es.
 
-- `add_constraint(d, ex::Expr)`:  adds a constraint to the Domain object
+The goal is to impose constraints, given by inequalities, and find the set that
+satisfies the constraints, known as the **feasible set**.
 
-- `initialize(d)`:  initializes a number of interval variables equal to the total number of variables used in all the constraints
-
-- `apply_contractor(d, i)`  applies the contractor corresponding to the ith constraint.
-
-
+## Separators
+First we define a constraint using the `@constraint` macro:
 ```julia
-julia> d = Domain()
-Domain(0,Expr[],Function[],Array{Int64,1}[],Dict{Symbol,Int64}(),ValidatedNumerics.Interval{Float64}[])
-
-julia> add_constraint(d, :(x>=0.1));
-julia> add_constraint(d, :( (0.5x)^2+y^2 <= 1 ));
-julia> add_constraint(d, :(y <= 0.9));
-
-julia> initialize(d)
-2-element Array{ValidatedNumerics.Interval{Float64},1}:
- [-∞, ∞]
- [-∞, ∞]
-
-julia> apply_contractor(d,2)
-2-element Array{ValidatedNumerics.Interval{Float64},1}:
- [0.0, 2.0]
- [0.0, 1.0]
-
-julia> apply_contractor(d,1)
-1-element Array{ValidatedNumerics.Interval{Float64},1}:
- [0.09999999999999999, 2.0]
-
-julia> apply_contractor(d,3)
-1-element Array{ValidatedNumerics.Interval{Float64},1}:
- [0.0, 0.9]
-
-julia> d
-Domain(2,[:(x >= 0.1),:((0.5x) ^ 2 + y ^ 2 <= 1),:(y <= 0.9)],[(anonymous function),(anonymous function),(anonymous function)],[[1],[1,2],[2]],Dict(:y=>2,:x=>1),ValidatedNumerics.Interval{Float64}[[0.09999999999999999, 2.0],[0.0, 0.9]])
-
-julia> d.variables
-2-element Array{ValidatedNumerics.Interval{Float64},1}:
- [0.09999999999999999, 2.0]
- [0.0, 0.9]
+S = @constraint x^2 + y^2 <= 1
+```
+and an initial interval in the $x$--$y$ plane, `X`:
+```julia
+x = y = -100..100
+X = IntervalBox(x, y)
 ```
 
+The `@constraint` macro defines an object `S`, of type `Separator`,
+which is basically a function. This function,
+when applied to the box $X = x \times y$
+in the x--y plane, applies two *contractors*, an inner one and an outer one.
+
+The inner contractor tries to shrink down, or *contract*, the box, to the smallest subbox
+of $X$ that contains the part of $X$ that satisfies the constraint; the
+outer contractor tries to contract $X$ to the smallest subbox that contains the
+region where the constraint is not satisfied.
+
+When `S` is applied to the box `X`, it returns the result of the inner and outer contractors:
+```julia
+julia> inner, outer = S(X);
+
+julia> inner
+([-1, 1],[-1, 1])
+
+julia> outer
+([-100, 100],[-100, 100])
+```
+
+## Set inversion
+To make progress, we must recursively bisect and apply the contractors, keeping
+track of the region proved to be inside the feasible set, and the region that is
+on the boundary ("both inside and outside"). This is done by the `set_inversion` function,
+that takes a separator, an initial set, and an optional tolerance.
+
+```julia
+inner, boundary = set_inversion(S, X, 0.125);
+```
+We may draw the result using the code in the `draw_boxes` file in the examples directory,
+which uses `PyPlot.jl`:
+```julia
+julia> filename = joinpath(Pkg.dir("ConstraintProgramming"), "examples", "draw_boxes.jl");
+julia> include(filename);
+
+draw_boxes(inner, "green", 0.5, 1)
+```
+The second argument is the color; the third (optional) is the alpha value (transparency);
+and the fourth is the linewidth (default is 0).
+
+
+## Set operations
+Separators may be combined using the operators `!` (complement), `∩` and `∪` to make
+more complicated sets.
