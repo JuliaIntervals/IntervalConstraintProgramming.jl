@@ -62,20 +62,52 @@ doc"""
     ∩(S1::Separator, S2::Separator)
 
 Separator for the intersection of two sets given by the separators `S1` and `S2`.
-Can take a tuple, `IntervalBox`, etc.; returns inner and outer tuples.
+Takes an iterator of intervals (`IntervalBox`, tuple, array, etc.), of length
+equal to the total number of variables in `S1` and `S2`;
+it returns inner and outer tuples of the same length
 """
 function Base.∩(S1::Separator, S2::Separator)
-    f = X -> begin
-        inner1, outer1 = S1(X)
-        inner2, outer2 = S2(X)
 
-        Y1 = tuple( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
-        Y2 = tuple( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
+    vars1 = S1.variables
+    vars2 = S2.variables
 
-        return (Y1, Y2)
+    variables = unique(sort(vcat(vars1, vars2)))
+    n = length(variables)
+
+    indices1 = indexin(vars1, variables)
+    indices2 = indexin(vars2, variables)
+    overlap = indices1 ∩ indices2
+
+    where1 = zeros(Int, n)  # inverse of indices1
+    where2 = zeros(Int, n)
+
+    for (i, which) in enumerate(indices1)
+        where1[which] = i
     end
 
-    return Separator(S1.variables, f)
+    for (i, which) in enumerate(indices2)
+        where2[which] = i
+    end
+
+    f = X -> begin
+
+        inner1, outer1 = S1(X[indices1]...)
+        inner2, outer2 = S2(X[indices2]...)
+
+        inner = [ i ∈ overlap ? inner1[where1[i]] ∩ inner2[where2[i]] :
+                i ∈ indices1 ? inner1[where1[i]] :
+                inner2[where2[i]]
+                for i in 1:n ]
+
+        outer = [ i ∈ overlap ? outer1[where1[i]] ∩ outer2[where2[i]] :
+                i ∈ indices1 ? outer1[where1[i]] :
+                outer2[where2[i]]
+                for i in 1:n ]
+
+        return (inner, outer)
+    end
+
+    return Separator(variables, f)
 
 end
 
