@@ -1,14 +1,24 @@
-# `ConstraintProgramming.jl`
+# ConstraintProgramming.jl
 
-This package carries out "interval constraint programming".
-It uses intervals from the
+
+
+This Julia package allows us to specify a set of constraints on real-valued variables, 
+given by inequalities, and 
+rigorously calculate (inner and outer approximations to) the *feasible set*, 
+i.e. the set that satisfies the constraints.
+
+The package is based on interval arithmetic using the author's 
 `ValidatedNumerics.jl`[https://github.com/dpsanders/ValidatedNumerics.jl] package,
-and the multi-dimensional version, called `IntervalBox`es.
+in particular multi-dimensional `IntervalBox`es (i.e. Cartesian products of one-dimensional intervals).
 
 The goal is to impose constraints, given by inequalities, and find the set that
 satisfies the constraints, known as the **feasible set**.
 
-## Separators
+The method used to do this is known as *interval constraint programming*, in particular the 
+so-called "forward--backward contractor". This is implemented in terms of *separators*; see 
+[Jaulin & Desrochers].
+
+## Constraints
 First we define a constraint using the `@constraint` macro:
 ```julia
 S = @constraint x^2 + y^2 <= 1
@@ -19,8 +29,8 @@ x = y = -100..100
 X = IntervalBox(x, y)
 ```
 
-The `@constraint` macro defines an object `S`, of type `Separator`,
-which is basically a function. This function,
+The `@constraint` macro defines an object `S`, of type `Separator`.
+This is a function which,
 when applied to the box $X = x \times y$
 in the x--y plane, applies two *contractors*, an inner one and an outer one.
 
@@ -40,15 +50,17 @@ julia> outer
 ([-100, 100],[-100, 100])
 ```
 
-## Set inversion
+## Set inversion: finding the feasible set
+
 To make progress, we must recursively bisect and apply the contractors, keeping
 track of the region proved to be inside the feasible set, and the region that is
 on the boundary ("both inside and outside"). This is done by the `setinverse` function,
-that takes a separator, an initial set, and an optional tolerance.
+that takes a separator, a domain to search inside, and an optional tolerance:
 
 ```julia
 inner, boundary = setinverse(S, X, 0.125);
 ```
+
 We may draw the result using the code in the `draw_boxes` file in the examples directory,
 which uses `PyPlot.jl`:
 ```julia
@@ -72,4 +84,18 @@ the feasible set.
 
 ## Set operations
 Separators may be combined using the operators `!` (complement), `∩` and `∪` to make
-more complicated sets; see the notebook in the `examples` directory.
+more complicated sets; see the [notebook](examples/Set inversion with separators examples.ipynb) for several examples.
+
+## Author
+
+- [David P. Sanders](http://sistemas.fciencias.unam.mx/~dsanders),
+Departamento de Física, Facultad de Ciencias, Universidad Nacional Autónoma de México (UNAM)
+
+
+## References:
+- *Applied Interval Analysis*, Luc Jaulin, Michel Kieffer, Olivier Didrit, Eric Walter (2001)
+- Introduction to the Algebra of Separators with Application to Path Planning, Luc Jaulin and Benoît Desrochers,
+*Engineering Applications of Artificial Intelligence* **33**, 141–147 (2014)
+
+## Acknowledements
+Financial support is acknowledged from DGAPA-UNAM PAPIME grants PE-105911 and PE-107114, and DGAPA-UNAM PAPIIT grant IN-117214, and from a CONACYT-Mexico sabbatical fellowship. The author thanks Alan Edelman and the Julia group for hospitality during his sabbatical visit. He also thanks Luc Jaulin and Jordan Ninin for the [IAMOOC](http://iamooc.ensta-bretagne.fr/) online course, which introduced him to this subject.
