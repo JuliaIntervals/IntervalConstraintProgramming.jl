@@ -10,8 +10,8 @@ using Compat
 
 
 export
-    Domain, add_constraint, apply_contractor, initialize, @contractor, apply_all_contractors, @constraint,
-    Separator, separator, @separator,
+    @contractor,
+    Separator, separator, @separator, @constraint,
     setinverse
 
 
