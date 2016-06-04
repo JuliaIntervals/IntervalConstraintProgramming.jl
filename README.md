@@ -8,7 +8,7 @@ rigorously calculate (inner and outer approximations to) the *feasible set*,
 i.e. the set that satisfies the constraints.
 
 The package is based on interval arithmetic using the author's 
-`ValidatedNumerics.jl`[https://github.com/dpsanders/ValidatedNumerics.jl] package,
+[`ValidatedNumerics.jl`](https://github.com/dpsanders/ValidatedNumerics.jl) package,
 in particular multi-dimensional `IntervalBox`es (i.e. Cartesian products of one-dimensional intervals).
 
 The goal is to impose constraints, given by inequalities, and find the set that
