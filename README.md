@@ -58,7 +58,7 @@ on the boundary ("both inside and outside"). This is done by the `setinverse` fu
 that takes a separator, a domain to search inside, and an optional tolerance:
 
 ```julia
-julia> S = @constraint x^2 + y^2 <= 1
+julia> S = @constraint 1 <= x^2 + y^2 <= 3
 julia> inner, boundary = setinverse(S, X, 0.125);
 ```
 
