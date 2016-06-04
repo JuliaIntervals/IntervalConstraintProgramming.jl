@@ -56,6 +56,30 @@ end
 
 @compat (S::Separator)(X) = S.separator(X)
 
+doc"Unify the variables of two separators"
+function unify_variables(vars1, vars2)
+
+    variables = unique(sort(vcat(vars1, vars2)))
+    numvars = length(variables)  # total number of variables
+
+    indices1 = indexin(vars1, variables)
+    indices2 = indexin(vars2, variables)
+
+    where1 = zeros(Int, numvars)  # inverse of indices1
+    where2 = zeros(Int, numvars)
+
+    for (i, which) in enumerate(indices1)
+        where1[which] = i
+    end
+
+    for (i, which) in enumerate(indices2)
+        where2[which] = i
+    end
+
+    return variables, indices1, indices2, where1, where2
+end
+
+
 # TODO: when S1 and S2 have different variables -- amalgamate!
 
 doc"""
@@ -68,31 +92,8 @@ it returns inner and outer tuples of the same length
 """
 function Base.∩(S1::Separator, S2::Separator)
 
-    vars1 = S1.variables
-    vars2 = S2.variables
-
-    variables = unique(sort(vcat(vars1, vars2)))
-    n = length(variables)
-
-    indices1 = indexin(vars1, variables)
-    indices2 = indexin(vars2, variables)
-
-    # @show indices1, indices2
-
-    overlap = indices1 ∩ indices2
-
-    where1 = zeros(Int, n)  # inverse of indices1
-    where2 = zeros(Int, n)
-
-    for (i, which) in enumerate(indices1)
-        where1[which] = i
-    end
-
-    for (i, which) in enumerate(indices2)
-        where2[which] = i
-    end
-
-    # @show where1, where2
+    variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
+    numvars = length(variables)
 
     f = X -> begin
 
@@ -102,25 +103,25 @@ function Base.∩(S1::Separator, S2::Separator)
         if any(isempty, inner1)
             inner1 = emptyinterval(X)
         else
-            inner1 = [i ∈ indices1 ? inner1[where1[i]] : X[i] for i in 1:n]
+            inner1 = [i ∈ indices1 ? inner1[where1[i]] : X[i] for i in 1:numvars]
         end
 
         if any(isempty, outer1)
             outer1 = emptyinterval(X)
         else
-            outer1 = [i ∈ indices1 ? outer1[where1[i]] : X[i] for i in 1:n ]
+            outer1 = [i ∈ indices1 ? outer1[where1[i]] : X[i] for i in 1:numvars]
         end
 
         if any(isempty, inner2)
             inner2 = emptyinterval(X)
         else
-            inner2 = [i ∈ indices2 ? inner2[where2[i]] : X[i] for i in 1:n ]
+            inner2 = [i ∈ indices2 ? inner2[where2[i]] : X[i] for i in 1:numvars]
         end
 
         if any(isempty, outer2)
             outer2 = emptyinterval(X)
         else
-            outer2 = [i ∈ indices2 ? outer2[where2[i]] : X[i] for i in 1:n ]
+            outer2 = [i ∈ indices2 ? outer2[where2[i]] : X[i] for i in 1:numvars]
         end
 
 
@@ -138,17 +139,47 @@ function Base.∩(S1::Separator, S2::Separator)
 end
 
 function Base.∪(S1::Separator, S2::Separator)
+
+    variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
+    numvars = length(variables)
+
     f = X -> begin
-        inner1, outer1 = S1(X)
-        inner2, outer2 = S2(X)
+        inner1, outer1 = S1([X[i] for i in indices1]...)
+        inner2, outer2 = S2(tuple([X[i] for i in indices2]...))
 
-        Y1 = tuple( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
-        Y2 = tuple( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
+        if any(isempty, inner1)
+            inner1 = emptyinterval(X)
+        else
+            inner1 = [i ∈ indices1 ? inner1[where1[i]] : X[i] for i in 1:numvars]
+        end
 
-        return (Y1, Y2)
+        if any(isempty, outer1)
+            outer1 = emptyinterval(X)
+        else
+            outer1 = [i ∈ indices1 ? outer1[where1[i]] : X[i] for i in 1:numvars]
+        end
+
+        if any(isempty, inner2)
+            inner2 = emptyinterval(X)
+        else
+            inner2 = [i ∈ indices2 ? inner2[where2[i]] : X[i] for i in 1:numvars]
+        end
+
+        if any(isempty, outer2)
+            outer2 = emptyinterval(X)
+        else
+            outer2 = [i ∈ indices2 ? outer2[where2[i]] : X[i] for i in 1:numvars]
+        end
+
+
+        inner = tuple( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
+        outer = tuple( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
+
+        return (inner, outer)
     end
 
-    return Separator(S1.variables, f)
+
+    return Separator(variables, f)
 
 end
 
