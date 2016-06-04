@@ -22,12 +22,12 @@ end
 
 
 doc"""
-    set_inversion(S::Separator, X::IntervalBox, eps)`
+    setinverse(S::Separator, domain::IntervalBox, eps)`
 
-Find the domain defined by the constraints represented by the separator `S`.
-Returns pavings `inner` and `boundary`.
+Find the subset of `domain` defined by the constraints specified by the separator `S`.
+Returns (sub)pavings `inner` and `boundary`, i.e. lists of `IntervalBox`.
 """
-function set_inversion(S::Separator, X::IntervalBox, ϵ = 1e-2)
+function setinverse(S::Separator, X::IntervalBox, ϵ = 1e-2)
     working = [X]  # stack of boxes that are waiting to be processed
 
     inner_list = typeof(X)[]

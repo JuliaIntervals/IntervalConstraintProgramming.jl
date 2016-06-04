@@ -105,25 +105,25 @@ function Base.∩(S1::Separator, S2::Separator)
         inner2, outer2 = S2(tuple([X[i] for i in indices2]...))
 
         if any(isempty, inner1)
-            inner1 = emptyinterval(X)
+            inner1 = emptyinterval(IntervalBox(X))
         else
             inner1 = [i ∈ indices1 ? inner1[where1[i]] : X[i] for i in 1:numvars]
         end
 
         if any(isempty, outer1)
-            outer1 = emptyinterval(X)
+            outer1 = emptyinterval(IntervalBox(X))
         else
             outer1 = [i ∈ indices1 ? outer1[where1[i]] : X[i] for i in 1:numvars]
         end
 
         if any(isempty, inner2)
-            inner2 = emptyinterval(X)
+            inner2 = emptyinterval(IntervalBox(X))
         else
             inner2 = [i ∈ indices2 ? inner2[where2[i]] : X[i] for i in 1:numvars]
         end
 
         if any(isempty, outer2)
-            outer2 = emptyinterval(X)
+            outer2 = emptyinterval(IntervalBox(X))
         else
             outer2 = [i ∈ indices2 ? outer2[where2[i]] : X[i] for i in 1:numvars]
         end
@@ -148,29 +148,29 @@ function Base.∪(S1::Separator, S2::Separator)
     numvars = length(variables)
 
     f = X -> begin
-        inner1, outer1 = S1([X[i] for i in indices1]...)
+        inner1, outer1 = S1(tuple([X[i] for i in indices1]...))
         inner2, outer2 = S2(tuple([X[i] for i in indices2]...))
 
         if any(isempty, inner1)
-            inner1 = emptyinterval(X)
+            inner1 = emptyinterval(IntervalBox(X))
         else
             inner1 = [i ∈ indices1 ? inner1[where1[i]] : X[i] for i in 1:numvars]
         end
 
         if any(isempty, outer1)
-            outer1 = emptyinterval(X)
+            outer1 = emptyinterval(IntervalBox(X))
         else
             outer1 = [i ∈ indices1 ? outer1[where1[i]] : X[i] for i in 1:numvars]
         end
 
         if any(isempty, inner2)
-            inner2 = emptyinterval(X)
+            inner2 = emptyinterval(IntervalBox(X))
         else
             inner2 = [i ∈ indices2 ? inner2[where2[i]] : X[i] for i in 1:numvars]
         end
 
         if any(isempty, outer2)
-            outer2 = emptyinterval(X)
+            outer2 = emptyinterval(IntervalBox(X))
         else
             outer2 = [i ∈ indices2 ? outer2[where2[i]] : X[i] for i in 1:numvars]
         end

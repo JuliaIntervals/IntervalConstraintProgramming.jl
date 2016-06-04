@@ -24,11 +24,11 @@ facts("Separator tests") do
     S1b = @constraint y > 0
 
     S1 = S1a ∩ S1b
-    inner, boundary = set_inversion(S1, IntervalBox(-3..3, -3..3), 0.1)
+    inner, boundary = setinverse(S1, IntervalBox(-3..3, -3..3), 0.1)
     @fact inner --> [IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 0..3)]
 
     S2 = S1a ∪ S1b
-    inner, boundary = set_inversion(S2, IntervalBox(-3..3, -3..3), 0.1)
+    inner, boundary = setinverse(S2, IntervalBox(-3..3, -3..3), 0.1)
     @fact inner --> [IntervalBox(-3..0, 0..3), IntervalBox(0..3, -3..3)]
 
 end

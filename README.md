@@ -43,11 +43,11 @@ julia> outer
 ## Set inversion
 To make progress, we must recursively bisect and apply the contractors, keeping
 track of the region proved to be inside the feasible set, and the region that is
-on the boundary ("both inside and outside"). This is done by the `set_inversion` function,
+on the boundary ("both inside and outside"). This is done by the `setinverse` function,
 that takes a separator, an initial set, and an optional tolerance.
 
 ```julia
-inner, boundary = set_inversion(S, X, 0.125);
+inner, boundary = setinverse(S, X, 0.125);
 ```
 We may draw the result using the code in the `draw_boxes` file in the examples directory,
 which uses `PyPlot.jl`:
