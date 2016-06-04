@@ -28,3 +28,14 @@ function draw_boxes{T<:IntervalBox}(box_list::Vector{T}, color="grey", alpha=0.5
     ax[:add_collection](collections.PatchCollection(patch_list, color=color, alpha=alpha,
     edgecolor="black", linewidths=linewidth))
 end
+
+function draw(X, color="green", alpha=0.5, linewidth=0)
+    draw_boxes(X, color, alpha, linewidth)
+    axis("image")
+end
+
+function draw(inner, boundary)
+    draw(inner, "green", 0.5, 1)
+    draw(boundary, "gray", 0.2, 1)
+    axis("image")
+end

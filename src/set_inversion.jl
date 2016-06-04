@@ -13,8 +13,8 @@ function bisect(X::IntervalBox)
 
     # the following is ugly -- replace by iterators once https://github.com/JuliaLang/julia/pull/15516
     # has landed?
-    X1 = tuple(X[1:i-1]..., x1, X[i+1:end]...)  # insert x1 in i'th place
-    X2 = tuple(X[1:i-1]..., x2, X[i+1:end]...)
+    X1 = IntervalBox(X[1:i-1]..., x1, X[i+1:end]...)  # insert x1 in i'th place
+    X2 = IntervalBox(X[1:i-1]..., x2, X[i+1:end]...)
 
     return [X1, X2]
 end
@@ -35,20 +35,21 @@ function set_inversion(S::Separator, X::IntervalBox, ϵ = 1e-2)
 
     while !isempty(working)
 
-
-
         X = pop!(working)
         # @show working
-        # @show X
+        #@show X
         # #s = readline(STDIN)
 
         inner, outer = S(X)   # here inner and outer are reversed compared to Jaulin
         # S(X) returns the pair (contractor with respect to the inside of the constraing, contractor with respect to outside)
+
+        #@show inner, outer
         inner2 = IntervalBox(inner)
         outer2 = IntervalBox(outer)
 
         #@show inner2, outer2
 
+        #@show X, outer2
         inside_list = setdiff(X, outer2)
 
         #@assert inside ⊆ X

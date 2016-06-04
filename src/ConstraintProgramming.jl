@@ -11,7 +11,7 @@ using Compat
 
 export
     Domain, add_constraint, apply_contractor, initialize, @contractor, apply_all_contractors, @constraint,
-    separator, @separator,
+    Separator, separator, @separator,
     set_inversion
 
 
