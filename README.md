@@ -69,6 +69,7 @@ julia> filename = joinpath(Pkg.dir("ConstraintProgramming"), "examples", "draw_b
 julia> include(filename);
 
 julia> draw_boxes(inner, "green", 0.5, 1)
+julia> draw_boxes(boundary, "grey", 0.2)
 ```
 The second argument is the color; the third (optional) is the alpha value (transparency);
 and the fourth is the linewidth (default is 0).
