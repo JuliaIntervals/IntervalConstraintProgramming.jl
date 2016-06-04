@@ -6,6 +6,10 @@ end
 function Separator(ex::Expr)
     expr, constraint = parse_comparison(ex)
 
+    if isa(expr, Symbol)
+        expr = :(1 * $expr)  # convert symbol into expression
+    end
+
     C = Contractor(expr)
     variables = C.variables[2:end]
 
