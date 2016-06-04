@@ -58,7 +58,8 @@ on the boundary ("both inside and outside"). This is done by the `setinverse` fu
 that takes a separator, a domain to search inside, and an optional tolerance:
 
 ```julia
-inner, boundary = setinverse(S, X, 0.125);
+julia> S = @constraint x^2 + y^2 <= 1
+julia> inner, boundary = setinverse(S, X, 0.125);
 ```
 
 We may draw the result using the code in the `draw_boxes` file in the examples directory,
@@ -67,7 +68,7 @@ which uses `PyPlot.jl`:
 julia> filename = joinpath(Pkg.dir("ConstraintProgramming"), "examples", "draw_boxes.jl");
 julia> include(filename);
 
-draw_boxes(inner, "green", 0.5, 1)
+julia> draw_boxes(inner, "green", 0.5, 1)
 ```
 The second argument is the color; the third (optional) is the alpha value (transparency);
 and the fourth is the linewidth (default is 0).
