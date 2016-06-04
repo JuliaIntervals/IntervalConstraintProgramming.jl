@@ -6,6 +6,10 @@ end
 function Separator(ex::Expr)
     expr, constraint = parse_comparison(ex)
 
+    if isa(expr, Symbol)
+        expr = :(1 * $expr)  # convert symbol into expression
+    end
+
     C = Contractor(expr)
     variables = C.variables[2:end]
 
@@ -56,41 +60,130 @@ end
 
 @compat (S::Separator)(X) = S.separator(X)
 
+doc"Unify the variables of two separators"
+function unify_variables(vars1, vars2)
+
+    variables = unique(sort(vcat(vars1, vars2)))
+    numvars = length(variables)  # total number of variables
+
+    indices1 = indexin(vars1, variables)
+    indices2 = indexin(vars2, variables)
+
+    where1 = zeros(Int, numvars)  # inverse of indices1
+    where2 = zeros(Int, numvars)
+
+    for (i, which) in enumerate(indices1)
+        where1[which] = i
+    end
+
+    for (i, which) in enumerate(indices2)
+        where2[which] = i
+    end
+
+    return variables, indices1, indices2, where1, where2
+end
+
+
 # TODO: when S1 and S2 have different variables -- amalgamate!
 
 doc"""
     ∩(S1::Separator, S2::Separator)
 
 Separator for the intersection of two sets given by the separators `S1` and `S2`.
-Can take a tuple, `IntervalBox`, etc.; returns inner and outer tuples.
+Takes an iterator of intervals (`IntervalBox`, tuple, array, etc.), of length
+equal to the total number of variables in `S1` and `S2`;
+it returns inner and outer tuples of the same length
 """
 function Base.∩(S1::Separator, S2::Separator)
+
+    variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
+    numvars = length(variables)
+
     f = X -> begin
-        inner1, outer1 = S1(X)
-        inner2, outer2 = S2(X)
 
-        Y1 = tuple( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
-        Y2 = tuple( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
+        inner1, outer1 = S1(tuple([X[i] for i in indices1]...))
+        inner2, outer2 = S2(tuple([X[i] for i in indices2]...))
 
-        return (Y1, Y2)
+        if any(isempty, inner1)
+            inner1 = emptyinterval(IntervalBox(X))
+        else
+            inner1 = [i ∈ indices1 ? inner1[where1[i]] : X[i] for i in 1:numvars]
+        end
+
+        if any(isempty, outer1)
+            outer1 = emptyinterval(IntervalBox(X))
+        else
+            outer1 = [i ∈ indices1 ? outer1[where1[i]] : X[i] for i in 1:numvars]
+        end
+
+        if any(isempty, inner2)
+            inner2 = emptyinterval(IntervalBox(X))
+        else
+            inner2 = [i ∈ indices2 ? inner2[where2[i]] : X[i] for i in 1:numvars]
+        end
+
+        if any(isempty, outer2)
+            outer2 = emptyinterval(IntervalBox(X))
+        else
+            outer2 = [i ∈ indices2 ? outer2[where2[i]] : X[i] for i in 1:numvars]
+        end
+
+
+        # Treat as if had X[i] in the other directions, except if empty
+
+        inner = tuple( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
+        outer = tuple( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
+
+        return (inner, outer)
+
     end
 
-    return Separator(S1.variables, f)
+    return Separator(variables, f)
 
 end
 
 function Base.∪(S1::Separator, S2::Separator)
+
+    variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
+    numvars = length(variables)
+
     f = X -> begin
-        inner1, outer1 = S1(X)
-        inner2, outer2 = S2(X)
+        inner1, outer1 = S1(tuple([X[i] for i in indices1]...))
+        inner2, outer2 = S2(tuple([X[i] for i in indices2]...))
 
-        Y1 = tuple( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
-        Y2 = tuple( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
+        if any(isempty, inner1)
+            inner1 = emptyinterval(IntervalBox(X))
+        else
+            inner1 = [i ∈ indices1 ? inner1[where1[i]] : X[i] for i in 1:numvars]
+        end
 
-        return (Y1, Y2)
+        if any(isempty, outer1)
+            outer1 = emptyinterval(IntervalBox(X))
+        else
+            outer1 = [i ∈ indices1 ? outer1[where1[i]] : X[i] for i in 1:numvars]
+        end
+
+        if any(isempty, inner2)
+            inner2 = emptyinterval(IntervalBox(X))
+        else
+            inner2 = [i ∈ indices2 ? inner2[where2[i]] : X[i] for i in 1:numvars]
+        end
+
+        if any(isempty, outer2)
+            outer2 = emptyinterval(IntervalBox(X))
+        else
+            outer2 = [i ∈ indices2 ? outer2[where2[i]] : X[i] for i in 1:numvars]
+        end
+
+
+        inner = tuple( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
+        outer = tuple( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
+
+        return (inner, outer)
     end
 
-    return Separator(S1.variables, f)
+
+    return Separator(variables, f)
 
 end
 

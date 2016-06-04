@@ -10,16 +10,15 @@ using Compat
 
 
 export
-    Domain, add_constraint, apply_contractor, initialize, @contractor, apply_all_contractors, @constraint,
-    separator, @separator,
-    set_inversion
+    @contractor,
+    Separator, separator, @separator, @constraint,
+    setinverse
 
 
 include("reverse_mode.jl")
 include("contractor.jl")
 include("separator.jl")
-# include("domain.jl")
-include("set_inversion.jl")
+include("setinversion.jl")
 
 
 end # module
