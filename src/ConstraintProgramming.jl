@@ -18,8 +18,7 @@ export
 include("reverse_mode.jl")
 include("contractor.jl")
 include("separator.jl")
-# include("domain.jl")
-include("setinverse.jl")
+include("setinversion.jl")
 
 
 end # module
