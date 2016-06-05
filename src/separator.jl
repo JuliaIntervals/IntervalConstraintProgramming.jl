@@ -53,8 +53,9 @@ macro constraint(ex::Expr)
 end
 
 function Base.show(io::IO, S::Separator)
-    println(io, "Separator:")
-    print(io, "  - variables: $(S.variables)")
+    print(io, "Separator with variables ")
+    print(io, join(map(string, S.variables), ", "))
+    #print(io, "  - variables: $(S.variables)")
 end
 
 

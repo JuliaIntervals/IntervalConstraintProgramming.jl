@@ -41,3 +41,13 @@ facts("setinverse") do
     @fact isempty(boundary) --> true
 
 end
+
+facts("Volume") do
+    x = 3..5
+    @fact vol(x).bounds --> 2
+
+    V = vol(IntervalBox(-1..1.5, 2..3.5))
+    @fact typeof(V) --> ConstraintProgramming.Vol{2, Float64}
+    @fact V.bounds --> 3.75
+
+end
