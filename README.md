@@ -1,4 +1,4 @@
-# ConstraintProgramming.jl
+# IntervalConstraintProgramming.jl
 
 
 
@@ -65,7 +65,7 @@ julia> inner, boundary = setinverse(S, X, 0.125);
 We may draw the result using the code in the `draw_boxes` file in the examples directory,
 which uses `PyPlot.jl`:
 ```julia
-julia> filename = joinpath(Pkg.dir("ConstraintProgramming"), "examples", "draw_boxes.jl");
+julia> filename = joinpath(Pkg.dir("IntervalConstraintProgramming"), "examples", "draw_boxes.jl");
 julia> include(filename);
 
 julia> draw_boxes(inner, "green", 0.5, 1)

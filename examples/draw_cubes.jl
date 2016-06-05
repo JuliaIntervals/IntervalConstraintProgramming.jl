@@ -5,7 +5,7 @@ using GLVisualize, GeometryTypes, GLAbstraction, Colors
 println("Visualization packages loaded.")
 
 using ValidatedNumerics
-using ConstraintProgramming
+using IntervalConstraintProgramming
 
 println("Constraint packages loaded.")
 

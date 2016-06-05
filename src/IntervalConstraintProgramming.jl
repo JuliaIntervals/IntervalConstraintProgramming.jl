@@ -1,6 +1,6 @@
 __precompile__(true)
 
-module ConstraintProgramming
+module IntervalConstraintProgramming
 
 using ValidatedNumerics
 using MacroTools
