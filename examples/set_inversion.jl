@@ -1,5 +1,5 @@
 using ValidatedNumerics
-using ConstraintProgramming
+using IntervalConstraintProgramming
 
 S = @separator 1 <= x^2 + y^2 <= 3
 X = IntervalBox(-10..10, -10..10)
