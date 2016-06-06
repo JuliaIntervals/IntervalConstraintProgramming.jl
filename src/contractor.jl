@@ -57,8 +57,6 @@ function insert_variables(ex::Expr)
 end
 
 
-const rev_ops = Dict(:+ => :plusRev, :* => :mulRev, :^ => :powerRev, :- => :minusRev)
-
 doc"""
 `forward_backward` takes in an expression like `x^2 + y^2` and outputs
 code for the forward-backward contractor
@@ -149,6 +147,7 @@ function make_function(all_vars, code)
         push!(code.args, :(return $(vars)))
     end
 
+    @show code
 
     function_code = :( $(vars) -> $(code) )
 
