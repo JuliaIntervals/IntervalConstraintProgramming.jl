@@ -99,8 +99,6 @@ function forward_backward(ex::Expr, constraint::Interval=entireinterval())
     # Step 3: Backwards pass
     # replace e.g. z = a + b with reverse mode function plusRev(z, a, b)
 
-    Meta.show_sexpr(code.args)
-
     for line in reverse(code.args)  # run backwards
 
         if line.head == :line  # line number node
@@ -120,8 +118,6 @@ function forward_backward(ex::Expr, constraint::Interval=entireinterval())
         rev_code = :($(rev_op)($(new_args...)))
 
         return_args = copy(new_args)
-
-        println("HI")
 
         # delete non-symbols in return args:
         for (i, arg) in enumerate(return_args)
