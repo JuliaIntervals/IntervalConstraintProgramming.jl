@@ -101,8 +101,11 @@ function forward_backward(ex::Expr, constraint::Interval=entireinterval())
 
     for line in reverse(code.args)  # run backwards
 
-        var, op, args =
-        @match line begin
+        if line.head == :line  # line number node
+            continue
+        end
+
+        (var, op, args) = @match line begin
             (var_ = op_(args__))  => (var, op, args)
         end
 
