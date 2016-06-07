@@ -1,4 +1,4 @@
-__precompile__(true)
+#__precompile__(false)
 
 module IntervalConstraintProgramming
 
@@ -10,7 +10,7 @@ export
     @contractor,
     Separator, separator, @separator, @constraint,
     setinverse,
-    vol 
+    vol
 
 
 include("reverse_mode.jl")
