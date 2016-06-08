@@ -39,7 +39,7 @@ end
 mulRev(a,b,c) = mulRev(promote(a,b,c)...)
 
 
-Base.iseven(x::Interval) = isinteger(x) && iseven(x.lo)
+Base.iseven(x::Interval) = isinteger(x) && iseven(round(Int, x.lo))
 
 function powerRev(a::Interval, b::Interval, c::Interval)  # a = b^c,  log(a) = c.log(b),  b = a^(1/c)
 
