@@ -1,6 +1,6 @@
 # IntervalConstraintProgramming.jl
 
-
+[![Build Status](https://travis-ci.org/dpsanders/IntervalConstraintProgramming.jl.svg?branch=master)](https://travis-ci.org/dpsanders/IntervalConstraintProgramming.jl)
 
 This Julia package allows us to specify a set of constraints on real-valued variables, 
 given by inequalities, and 
