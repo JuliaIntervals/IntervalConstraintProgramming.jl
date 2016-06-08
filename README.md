@@ -84,6 +84,13 @@ while the grey boxes show those on the boundary, whose status is unknown.
 The white area outside and inside the ring has been **rigorously** proved to be outside
 the feasible set.
 
+### 3D
+
+The package works in any number of dimensions, although it suffers from the usual exponential slowdown ("combinatorial explosion") in higher dimensions. In 3D, it is still relatively fast. There are sample 3D calculations in the `examples` directory, in particular in the `Solid torus` notebook, which uses [`GLVisualize.gl`](https://github.com/JuliaGL/GLVisualize.jl) to provide a 3D visualization which may be rotated and zoomed. The output for the solid torus looks like this:
+
+![Coloured solid torus](examples/coloured_solid_torus.png)
+
+
 ## Set operations
 Separators may be combined using the operators `!` (complement), `∩` and `∪` to make
 more complicated sets; see the [notebook](examples/Set inversion with separators examples.ipynb) for several examples.
