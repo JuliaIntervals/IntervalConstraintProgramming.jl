@@ -83,6 +83,6 @@ function setinverse(S::Separator, X::IntervalBox, ϵ = 1e-2)
 
     end
 
-    inner_list, boundary_list
+    return Paving(inner_list, boundary_list, ϵ)
 
 end

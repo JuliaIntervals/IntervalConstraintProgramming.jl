@@ -3,6 +3,7 @@ using PyCall
 using PyPlot
 
 using ValidatedNumerics
+using IntervalConstraintProgramming
 
 @pyimport matplotlib.patches as patches
 @pyimport matplotlib.collections as collections
@@ -29,13 +30,18 @@ function draw_boxes{T<:IntervalBox}(box_list::Vector{T}, color="grey", alpha=0.5
     edgecolor="black", linewidths=linewidth))
 end
 
-function draw(X, color="green", alpha=0.5, linewidth=0)
+function draw{N,T}(X::Vector{IntervalBox{N,T}}, color="green", alpha=0.5, linewidth=0)
     draw_boxes(X, color, alpha, linewidth)
     axis("image")
 end
 
-function draw(inner, boundary)
-    draw(inner, "green", 0.5, 1)
-    draw(boundary, "gray", 0.2, 1)
+function draw{N,T}(inner::Vector{IntervalBox{N,T}}, boundary::Vector{IntervalBox{N,T}},
+                    color="green", alpha=0.5, linewidth=0)
+    draw(inner, color, alpha, linewidth)
+    draw(boundary, "gray", 0.2, 0)
     axis("image")
+end
+
+function draw(P::Paving, color="green", alpha=0.5, linewidth=0)
+    draw(P.inner, P.boundary, color, alpha, linewidth)
 end

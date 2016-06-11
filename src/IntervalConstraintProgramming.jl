@@ -9,6 +9,7 @@ using Compat
 export
     @contractor,
     Separator, separator, @separator, @constraint,
+    Paving,
     setinverse,
     vol
 
@@ -16,6 +17,7 @@ export
 include("reverse_mode.jl")
 include("contractor.jl")
 include("separator.jl")
+include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
 
