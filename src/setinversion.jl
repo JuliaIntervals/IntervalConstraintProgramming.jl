@@ -19,40 +19,27 @@ function bisect(X::IntervalBox)
     return [X1, X2]
 end
 
-
-
 doc"""
-    setinverse(S::Separator, domain::IntervalBox, eps)`
-
-Find the subset of `domain` defined by the constraints specified by the separator `S`.
-Returns (sub)pavings `inner` and `boundary`, i.e. lists of `IntervalBox`.
+`pave` takes the given working list of boxes and splits them into inner and boundary
+lists with the given separator
 """
-function setinverse(S::Separator, X::IntervalBox, ϵ = 1e-2)
-    working = [X]  # stack of boxes that are waiting to be processed
+function pave{N,T}(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ)
 
-    inner_list = typeof(X)[]
-    boundary_list = typeof(X)[]
+    inner_list = IntervalBox{N,T}[]
+    boundary_list = IntervalBox{N,T}[]
 
     while !isempty(working)
 
         X = pop!(working)
-        # @show working
-        #@show X
-        # #s = readline(STDIN)
 
         inner, outer = S(X)   # here inner and outer are reversed compared to Jaulin
         # S(X) returns the pair (contractor with respect to the inside of the constraing, contractor with respect to outside)
 
-        #@show inner, outer
         inner2 = IntervalBox(inner)
         outer2 = IntervalBox(outer)
 
-        #@show inner2, outer2
-
-        #@show X, outer2
         inside_list = setdiff(X, outer2)
 
-        #@assert inside ⊆ X
         if length(inside_list) > 0
             append!(inner_list, inside_list)
         end
@@ -64,16 +51,6 @@ function setinverse(S::Separator, X::IntervalBox, ϵ = 1e-2)
             continue
         end
 
-        #if !(boundary ⊆ inside)
-            # @show X
-            # @show inner2
-            # @show outer2
-            # @show boundary
-            # @show inside_list
-            # println()
-            #exit(1)
-        #end
-
         if diam(boundary) < ϵ
             push!(boundary_list, boundary)
 
@@ -83,6 +60,35 @@ function setinverse(S::Separator, X::IntervalBox, ϵ = 1e-2)
 
     end
 
-    return Paving(inner_list, boundary_list, ϵ)
+    return inner_list, boundary_list
 
+end
+
+
+doc"""
+    setinverse(S::Separator, domain::IntervalBox, eps)`
+
+Find the subset of `domain` defined by the constraints specified by the separator `S`.
+Returns (sub)pavings `inner` and `boundary`, i.e. lists of `IntervalBox`.
+"""
+function setinverse(S::Separator, X::IntervalBox, ϵ = 1e-2)
+
+    inner_list, boundary_list = pave(S, [X], ϵ)
+
+    return Paving(S, inner_list, boundary_list, ϵ)
+
+end
+
+
+doc"""Refine a paving to tolerance ϵ"""
+function refine!(P::Paving, ϵ = 1e-2)
+    if P.ϵ <= ϵ  # already refined
+        return
+    end
+
+    new_inner, new_boundary = pave(P.separator, P.boundary, ϵ)
+
+    append!(P.inner, new_inner)
+    P.boundary = new_boundary
+    P.ϵ = ϵ
 end

@@ -10,7 +10,7 @@ export
     @contractor,
     Separator, separator, @separator, @constraint,
     Paving,
-    setinverse,
+    setinverse, refine!
     vol
 
 
