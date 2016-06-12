@@ -8,7 +8,7 @@ const rev_ops = Dict(
 
 
 function plusRev(a::Interval, b::Interval, c::Interval)  # a = b + c
-    a = a ∩ (b + c)
+    # a = a ∩ (b + c)
     b = b ∩ (a - c)
     c = c ∩ (a - b)
 
@@ -18,7 +18,7 @@ end
 plusRev(a,b,c) = plusRev(promote(a,b,c)...)
 
 function minusRev(a::Interval, b::Interval, c::Interval)  # a = b - c
-    a = a ∩ (b - c)
+    # a = a ∩ (b - c)
     b = b ∩ (a + c)
     c = c ∩ (b - a)
 
@@ -29,7 +29,7 @@ minusRev(a,b,c) = minusRev(promote(a,b,c)...)
 
 
 function mulRev(a::Interval, b::Interval, c::Interval)  # a = b * c
-    a = a ∩ (b * c)
+    # a = a ∩ (b * c)
     b = b ∩ (a / c)
     c = c ∩ (a / b)
 
@@ -62,7 +62,7 @@ function powerRev(a::Interval, b::Interval, c::Interval)  # a = b^c,  log(a) = c
         b = b ∩ ( a^(inv(c) ))
     end
 
-    a = a ∩ (b ^ c)
+    # a = a ∩ (b ^ c)
     c = c ∩ (log(a) / log(b))
 
     return a, b, c
@@ -72,9 +72,9 @@ powerRev(a,b,c) = powerRev(promote(a,b,c)...)
 
 
 function sqrtRev(a::Interval, b::Interval)  # a = sqrt(b)
-    a1 = a ∩ √b
-    a2 = a ∩ (-(√b))
-    a = hull(a1, a2)
+    # a1 = a ∩ √b
+    # a2 = a ∩ (-(√b))
+    # a = hull(a1, a2)
 
     b = b ∩ (a^2)
 
