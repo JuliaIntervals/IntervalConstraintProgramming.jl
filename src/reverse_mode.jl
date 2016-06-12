@@ -82,3 +82,34 @@ function sqrtRev(a::Interval, b::Interval)  # a = sqrt(b)
 end
 
 sqrtRev(a,b) = sqrtRev(promote(a,b)...)
+
+
+# IEEE-1788 style
+
+function sqrRev(c, x)   # c = x^2;  refine x
+    x1 = sqrt(c) ∩ x
+    x2 = -(sqrt(c)) ∩ x
+
+    return hull(x1, x2)
+end
+
+sqrRev(c) = sqrRev(c, -∞..∞)
+
+"""
+∘Rev1(b, c, x) is the subset of x such that x ∘ b is defined and in c
+∘Rev2(a, c, x) is the subset of x such that a ∘ x is defined and in c
+
+If these agree (∘ is commutative) then call it ∘Rev(b, c, x)
+"""
+
+function mulRev_new(b, c, x)   # c = b*x
+    return x ∩ (c / b)
+end
+
+function powRev1(b, c, x)   # c = x^b
+    return x ∩ c^(1/b)
+end
+
+function powRev2(a, c, x)   # c = a^x
+    return x ∩ (log(c) / lob(a))
+end
