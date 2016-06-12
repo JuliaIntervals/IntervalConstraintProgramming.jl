@@ -9,8 +9,8 @@ using Compat
 export
     @contractor,
     Separator, separator, @separator, @constraint,
-    Paving,
-    setinverse, refine!
+    SubPaving, Paving,
+    setinverse, refine!,
     vol
 
 
