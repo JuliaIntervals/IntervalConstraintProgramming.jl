@@ -1,47 +1,47 @@
 const rev_ops = Dict(
-                    :+     => :plusRev,
-                    :*     => :mulRev,
-                    :^     => :powerRev,
-                    :-     => :minusRev,
-                    :sqrt  => :sqrtRev
+                    :+     => :plus_rev,
+                    :*     => :mul_rev,
+                    :^     => :power_rev,
+                    :-     => :minus_rev,
+                    :sqrt  => :sqrt_rev
                     )
 
 
-function plusRev(a::Interval, b::Interval, c::Interval)  # a = b + c
-    a = a ∩ (b + c)
+function plus_rev(a::Interval, b::Interval, c::Interval)  # a = b + c
+    # a = a ∩ (b + c)
     b = b ∩ (a - c)
     c = c ∩ (a - b)
 
     return a, b, c
 end
 
-plusRev(a,b,c) = plusRev(promote(a,b,c)...)
+plus_rev(a,b,c) = plus_rev(promote(a,b,c)...)
 
-function minusRev(a::Interval, b::Interval, c::Interval)  # a = b - c
-    a = a ∩ (b - c)
+function minus_rev(a::Interval, b::Interval, c::Interval)  # a = b - c
+    # a = a ∩ (b - c)
     b = b ∩ (a + c)
     c = c ∩ (b - a)
 
     return a, b, c
 end
 
-minusRev(a,b,c) = minusRev(promote(a,b,c)...)
+minus_rev(a,b,c) = minus_rev(promote(a,b,c)...)
 
 
-function mulRev(a::Interval, b::Interval, c::Interval)  # a = b * c
-    a = a ∩ (b * c)
+function mul_rev(a::Interval, b::Interval, c::Interval)  # a = b * c
+    # a = a ∩ (b * c)
     b = b ∩ (a / c)
     c = c ∩ (a / b)
 
     return a, b, c
 end
 
-mulRev(a,b,c) = mulRev(promote(a,b,c)...)
+mul_rev(a,b,c) = mul_rev(promote(a,b,c)...)
 
 
 Base.iseven(x::Interval) = isinteger(x) && iseven(round(Int, x.lo))
 
-function powerRev(a::Interval, b::Interval, c::Interval)  # a = b^c,  log(a) = c.log(b),  b = a^(1/c)
+function power_rev(a::Interval, b::Interval, c::Interval)  # a = b^c,  log(a) = c.log(b),  b = a^(1/c)
 
     # special if c is an even integer: include the possibility of the negative root
 
@@ -62,23 +62,54 @@ function powerRev(a::Interval, b::Interval, c::Interval)  # a = b^c,  log(a) = c
         b = b ∩ ( a^(inv(c) ))
     end
 
-    a = a ∩ (b ^ c)
+    # a = a ∩ (b ^ c)
     c = c ∩ (log(a) / log(b))
 
     return a, b, c
 end
 
-powerRev(a,b,c) = powerRev(promote(a,b,c)...)
+power_rev(a,b,c) = power_rev(promote(a,b,c)...)
 
 
-function sqrtRev(a::Interval, b::Interval)  # a = sqrt(b)
-    a1 = a ∩ √b
-    a2 = a ∩ (-(√b))
-    a = hull(a1, a2)
+function sqrt_rev(a::Interval, b::Interval)  # a = sqrt(b)
+    # a1 = a ∩ √b
+    # a2 = a ∩ (-(√b))
+    # a = hull(a1, a2)
 
     b = b ∩ (a^2)
 
     return a, b
 end
 
-sqrtRev(a,b) = sqrtRev(promote(a,b)...)
+sqrt_rev(a,b) = sqrt_rev(promote(a,b)...)
+
+
+# IEEE-1788 style
+
+function sqr_rev(c, x)   # c = x^2;  refine x
+    x1 = sqrt(c) ∩ x
+    x2 = -(sqrt(c)) ∩ x
+
+    return hull(x1, x2)
+end
+
+sqr_rev(c) = sqr_rev(c, -∞..∞)
+
+"""
+∘_rev1(b, c, x) is the subset of x such that x ∘ b is defined and in c
+∘_rev2(a, c, x) is the subset of x such that a ∘ x is defined and in c
+
+If these agree (∘ is commutative) then call it ∘_rev(b, c, x)
+"""
+
+function mul_rev_new(b, c, x)   # c = b*x
+    return x ∩ (c / b)
+end
+
+function pow_rev1(b, c, x)   # c = x^b
+    return x ∩ c^(1/b)
+end
+
+function pow_rev2(a, c, x)   # c = a^x
+    return x ∩ (log(c) / lob(a))
+end
