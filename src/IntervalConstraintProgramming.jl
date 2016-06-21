@@ -19,7 +19,7 @@ include("contractor.jl")
 include("separator.jl")
 include("paving.jl")
 include("setinversion.jl")
-include("Volume.jl")
+include("volume.jl")
 
 
 end # module
