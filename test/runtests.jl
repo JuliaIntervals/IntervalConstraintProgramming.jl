@@ -30,26 +30,26 @@ facts("setinverse") do
     S1b = @constraint y > 0
 
     S1 = S1a ∩ S1b
-    inner, boundary = setinverse(S1, IntervalBox(-3..3, -3..3), 0.1)
-    @fact inner --> [IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 0..3)]
-    @fact isempty(boundary) --> true
+    paving = setinverse(S1, IntervalBox(-3..3, -3..3), 0.1)
+    @fact paving.inner --> [IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 0..3)]
+    @fact isempty(paving.boundary) --> true
 
     S2 = S1a ∪ S1b
-    inner, boundary = setinverse(S2, IntervalBox(-3..3, -3..3), 0.1)
-    @fact inner --> [IntervalBox(-3..0, 0..3), IntervalBox(0..3, -3..3)]
-    @fact isempty(boundary) --> true
+    paving = setinverse(S2, IntervalBox(-3..3, -3..3), 0.1)
+    @fact paving.inner --> [IntervalBox(-3..0, 0..3), IntervalBox(0..3, -3..3)]
+    @fact isempty(paving.boundary) --> true
 
 
     S3 = @constraint x^2 + y^2 <= 1
     X = IntervalBox(-Inf..Inf, -Inf..Inf)
-    inner, boundary = setinverse(S3, X, 1)
+    paving = setinverse(S3, X, 1)
 
-    @fact inner --> [IntervalBox(Interval(0.0, 0.5), Interval(0.0, 0.8660254037844386)),
+    @fact paving.inner --> [IntervalBox(Interval(0.0, 0.5), Interval(0.0, 0.8660254037844386)),
                     IntervalBox(Interval(0.0, 0.5), Interval(-0.8660254037844386, 0.0)),
                     IntervalBox(Interval(-0.5, 0.0), Interval(0.0, 0.8660254037844386)),
                     IntervalBox(Interval(-0.5, 0.0), Interval(-0.8660254037844386, 0.0))]
 
-    @fact boundary --> [ IntervalBox(Interval(0.5, 1.0), Interval(0.0, 0.8660254037844387)),
+    @fact paving.boundary --> [ IntervalBox(Interval(0.5, 1.0), Interval(0.0, 0.8660254037844387)),
                         IntervalBox(Interval(0.0, 0.5), Interval(0.8660254037844386, 1.0)),
                         IntervalBox(Interval(0.5, 1.0), Interval(-0.8660254037844387, 0.0)),
                         IntervalBox(Interval(0.0, 0.5), Interval(-1.0, -0.8660254037844386)),
@@ -61,9 +61,9 @@ end
 
 facts("Volume") do
     x = 3..5
-    @fact vol(x).bounds --> 2
+    @fact Vol(x).bounds --> 2
 
-    V = vol(IntervalBox(-1..1.5, 2..3.5))
+    V = Vol(IntervalBox(-1..1.5, 2..3.5))
     @fact typeof(V) --> IntervalConstraintProgramming.Vol{2, Float64}
     @fact V.bounds --> 3.75
 
