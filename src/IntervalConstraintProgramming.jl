@@ -11,7 +11,7 @@ export
     Separator, separator, @separator, @constraint,
     SubPaving, Paving,
     setinverse, refine!,
-    vol
+    Vol
 
 
 include("reverse_mode.jl")
@@ -19,7 +19,7 @@ include("contractor.jl")
 include("separator.jl")
 include("paving.jl")
 include("setinversion.jl")
-include("volume.jl")
+include("Volume.jl")
 
 
 end # module
