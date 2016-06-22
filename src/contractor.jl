@@ -6,7 +6,7 @@ function make_symbol()
     i = symbol_number[1]
     symbol_number[1] += 1
 
-    symbol("z", i)
+    symbol("_z", i, "_")
 end
 
 
