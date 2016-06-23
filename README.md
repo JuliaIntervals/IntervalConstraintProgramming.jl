@@ -59,17 +59,26 @@ that takes a separator, a domain to search inside, and an optional tolerance:
 
 ```julia
 julia> S = @constraint 1 <= x^2 + y^2 <= 3
-julia> inner, boundary = setinverse(S, X, 0.125);
+julia> paving = setinverse(S, X, 0.125);
 ```
+
+`setinverse` returns an object of type `Paving`. This contains: the separator itself; 
+an `inner` approximation, of type `SubPaving`, which is an alias for a `Vector` of `IntervalBox`es;
+a `SubPaving` representing the boxes on the boundary that could not be assigned either to the inside or outside of the set;
+and the tolerance.
 
 We may draw the result using the code in the `draw_boxes` file in the examples directory,
 which uses `PyPlot.jl`:
 ```julia
 julia> filename = joinpath(Pkg.dir("IntervalConstraintProgramming"), "examples", "draw_boxes.jl");
 julia> include(filename);
+julia> draw(paving)
+```
 
-julia> draw_boxes(inner, "green", 0.5, 1)
-julia> draw_boxes(boundary, "grey", 0.2)
+We can get more control with
+```
+julia> draw(paving.inner, "green", 0.5, 1)
+julia> draw(paving.boundary, "grey", 0.2)
 ```
 The second argument is the color; the third (optional) is the alpha value (transparency);
 and the fourth is the linewidth (default is 0).
@@ -80,9 +89,7 @@ The output should look like this:
 
 
 The green boxes have been **rigorously** proved to be contained within the feasible set,
-while the grey boxes show those on the boundary, whose status is unknown.
-The white area outside and inside the ring has been **rigorously** proved to be outside
-the feasible set.
+and the white boxes to be outside the set. The grey boxes show those that lie on the boundary, whose status is unknown.
 
 ### 3D
 
@@ -93,7 +100,7 @@ The package works in any number of dimensions, although it suffers from the usua
 
 ## Set operations
 Separators may be combined using the operators `!` (complement), `∩` and `∪` to make
-more complicated sets; see the [notebook](examples/Set inversion with separators examples.ipynb) for several examples.
+more complicated sets; see the [notebook](examples/Set inversion.ipynb) for several examples.
 
 ## Author
 
