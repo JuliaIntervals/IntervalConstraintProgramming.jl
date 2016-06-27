@@ -13,8 +13,10 @@ function bisect(X::IntervalBox)
 
     # the following is ugly -- replace by iterators once https://github.com/JuliaLang/julia/pull/15516
     # has landed?
-    X1 = IntervalBox(X[1:i-1]..., x1, X[i+1:end]...)  # insert x1 in i'th place
-    X2 = IntervalBox(X[1:i-1]..., x2, X[i+1:end]...)
+    # X1 = IntervalBox(X[1:i-1]..., x1, X[i+1:end]...)  # insert x1 in i'th place
+    # X2 = IntervalBox(X[1:i-1]..., x2, X[i+1:end]...)
+    X1 = setindex(X, x1, i)
+    X2 = setindex(X, x2, i)
 
     return [X1, X2]
 end
