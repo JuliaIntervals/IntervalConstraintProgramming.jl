@@ -86,6 +86,7 @@ function unify_variables(vars1, vars2)
         where2[which] = i
     end
 
+
     return variables, indices1, indices2, where1, where2
 end
 
@@ -107,8 +108,8 @@ function ∩(S1::Separator, S2::Separator)
 
     f = X -> begin
 
-        inner1, outer1 = S1(tuple([X[i] for i in indices1]...))
-        inner2, outer2 = S2(tuple([X[i] for i in indices2]...))
+        inner1, outer1 = S1([X[i] for i in indices1])
+        inner2, outer2 = S2([X[i] for i in indices2])
 
         if any(isempty, inner1)
             inner1 = emptyinterval(IntervalBox(X))

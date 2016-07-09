@@ -2,7 +2,7 @@
 
 function bisect(X::Interval)
     m = mid(X)
-    return [Interval(X.lo, m), Interval(m, X.hi)]
+    return ( Interval(X.lo, m), Interval(m, X.hi) )
 end
 
 
@@ -18,7 +18,7 @@ function bisect(X::IntervalBox)
     X1 = setindex(X, x1, i)
     X2 = setindex(X, x2, i)
 
-    return [X1, X2]
+    return (X1, X2)
 end
 
 doc"""
@@ -57,7 +57,7 @@ function pave{N,T}(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ)
             push!(boundary_list, boundary)
 
         else
-            append!(working, bisect(boundary))
+            push!(working, bisect(boundary)...)
         end
 
     end
