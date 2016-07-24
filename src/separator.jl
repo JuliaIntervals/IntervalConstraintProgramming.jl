@@ -52,7 +52,9 @@ macro constraint(ex::Expr)
     Separator(ex)
 end
 
-function Base.show(io::IO, S::Separator)
+import Base: show, ∩, ∪, !
+
+function show(io::IO, S::Separator)
     print(io, "Separator with variables ")
     print(io, join(map(string, S.variables), ", "))
     #print(io, "  - variables: $(S.variables)")
@@ -95,7 +97,7 @@ Takes an iterator of intervals (`IntervalBox`, tuple, array, etc.), of length
 equal to the total number of variables in `S1` and `S2`;
 it returns inner and outer tuples of the same length
 """
-function Base.∩(S1::Separator, S2::Separator)
+function ∩(S1::Separator, S2::Separator)
 
     variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
     numvars = length(variables)
@@ -143,7 +145,7 @@ function Base.∩(S1::Separator, S2::Separator)
 
 end
 
-function Base.∪(S1::Separator, S2::Separator)
+function ∪(S1::Separator, S2::Separator)
 
     variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
     numvars = length(variables)
@@ -188,7 +190,6 @@ function Base.∪(S1::Separator, S2::Separator)
 
 end
 
-import Base.!
 function !(S::Separator)
     f = X -> begin
         inner, outer = S(X)
