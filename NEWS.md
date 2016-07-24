@@ -1,5 +1,16 @@
 # IntervalConstraintProgramming.jl
 
+# v0.2
+- `setinverse` now returns an object of type `Paving`  [#17](https://github.com/dpsanders/IntervalConstraintProgramming.jl/pull/17)
+
+- `refine!` function added to refine an existing `Paving` to a lower tolerance  [#17](https://github.com/dpsanders/IntervalConstraintProgramming.jl/pull/17)
+
+- `vol` has been renamed to `Vol`, and is applied directly to a `Paving` object.
+
+- Internal variable names in generated code are now of form `_z_1_` instead of `z1`
+to eliminate collisions with user-defined variables [#20](https://github.com/dpsanders/IntervalConstraintProgramming.jl/pull/20)
+
+
 ## v0.1.1
 - Add `sqrtRev` reverse-mode function
 
