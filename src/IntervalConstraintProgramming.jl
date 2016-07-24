@@ -5,6 +5,7 @@ module IntervalConstraintProgramming
 using ValidatedNumerics
 using MacroTools
 using Compat
+using FixedSizeArrays: setindex
 
 import Base:
     show
