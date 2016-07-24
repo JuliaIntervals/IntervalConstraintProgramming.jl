@@ -1,4 +1,4 @@
-#__precompile__(false)
+__precompile__(true)
 
 module IntervalConstraintProgramming
 
@@ -6,12 +6,16 @@ using ValidatedNumerics
 using MacroTools
 using Compat
 
+import Base:
+    show
+
 export
     @contractor,
     Separator, separator, @separator, @constraint,
     SubPaving, Paving,
     setinverse, refine!,
-    Vol
+    Vol,
+    show_code
 
 
 include("reverse_mode.jl")

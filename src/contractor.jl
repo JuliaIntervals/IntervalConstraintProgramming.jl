@@ -6,7 +6,7 @@ function make_symbol()
     i = symbol_number[1]
     symbol_number[1] += 1
 
-    symbol("z", i)
+    symbol("_z", i, "_")
 end
 
 
@@ -147,7 +147,7 @@ function make_function(all_vars, code)
         push!(code.args, :(return $(vars)))
     end
 
-    @show code
+    # @show code
 
     function_code = :( $(vars) -> $(code) )
 
@@ -244,6 +244,9 @@ macro contractor(ex)
     :(Contractor($ex))
 
 end
+
+
+show_code(c::Contractor) = c.code
 
 #= TODO:
 

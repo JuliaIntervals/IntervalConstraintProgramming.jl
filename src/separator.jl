@@ -63,6 +63,9 @@ end
 
 @compat (S::Separator)(X) = S.separator(X)
 
+# show_code(S::Separator) = show_code(S.contractor)
+
+
 doc"Unify the variables of two separators"
 function unify_variables(vars1, vars2)
 
