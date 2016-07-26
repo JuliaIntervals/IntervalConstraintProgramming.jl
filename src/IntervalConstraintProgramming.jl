@@ -8,7 +8,8 @@ using Compat
 using FixedSizeArrays: setindex
 
 import Base:
-    show
+    show, ∩, ∪, !, ⊆
+
 
 export
     @contractor,
