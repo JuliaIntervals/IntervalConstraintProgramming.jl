@@ -44,6 +44,10 @@ function insert_variables(ex::Expr)
         return insert_variables( :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
     end
 
+    if op ∉ keys(rev_ops)
+        throw(ArgumentError("Operation $op not currently supported"))
+    end
+
     new_code = quote end
     current_args = []  # the arguments in the current expression that will be added
     all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
@@ -68,6 +72,73 @@ function insert_variables(ex::Expr)
 
 end
 
+function forward_pass(ex::Expr)
+    root, all_vars, generated, code = insert_variables(ex)
+
+    make_function(all_vars, generated, code)
+end
+
+function backward_pass(ex::Expr) #, constraint::Interval)
+    root_var, all_vars, generated, code = insert_variables(ex)
+
+    # Step 2: Add constraint code:
+
+    # local constraint_code
+    #
+    # if constraint == Interval(-∞, ∞)
+    #     constraint_code = :($(root_var) = $(root_var) ∩ _A_)
+    #     push!(all_vars, :_A_)
+    #
+    # else
+    #     constraint_code = :($(root_var) = $(root_var) ∩ $constraint)
+    # end
+
+
+    new_code = quote end
+    #push!(new_code.args, constraint_code)
+
+
+    # Step 3: Backwards pass
+    # replace e.g. z = a + b with reverse mode function plusRev(z, a, b)
+
+    for line in reverse(code.args)  # run backwards
+
+        if line.head == :line  # line number node
+            continue
+        end
+
+        (var, op, args) = @match line begin
+            (var_ = op_(args__))  => (var, op, args)
+        end
+
+        new_args = []
+        push!(new_args, var)
+        append!(new_args, args)
+
+        rev_op = rev_ops[op]  # find the reverse operation
+
+        rev_code = :($(rev_op)($(new_args...)))
+
+        return_args = copy(new_args)
+
+        # delete non-symbols in return args:
+        for (i, arg) in enumerate(return_args)
+            if !(isa(arg, Symbol))
+                return_args[i] = :_
+            end
+        end
+
+        return_tuple = Expr(:tuple, return_args...)  # make tuple out of array
+        # or: :($(return_args...),)
+
+        new_line = :($(return_tuple) = $(rev_code))
+        push!(new_code.args, new_line)
+    end
+
+    all_vars = sort(all_vars)
+
+    make_function(vcat(all_vars, generated), all_vars, new_code)
+end
 
 doc"""
 `forward_backward` takes in an expression like `x^2 + y^2` and outputs
