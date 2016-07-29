@@ -1,5 +1,4 @@
-
-doc"""
+#=
 
 Want to process `@constraint f(f(x)) ∈ [0.3, 0.4]`
 where `f(x) = 4x * (1-x)`
@@ -21,7 +20,7 @@ should generate these forward and backward functions, and register the function
 `f`.
 
 """
-
+=#
 
 doc"""
 A `ConstraintFunction` contains the created forward and backward
@@ -47,16 +46,37 @@ end
 const registered_functions = Dict{Symbol, ConstraintFunction}()
 const function_wrappers = Dict{Symbol, FunctionWrapper}()
 
-macro function(ex)
-    (f, args, code) = @match ex begin
-        f_(args__) = code_  => (f, args, code)
-    end
-    @show (f, args, code)
 
-    forward_code = forward_pass(code)
-    backward_code = backward_pass(code)
+const function_counters = Dict{Symbol, Int}()
 
-    @show forward_code, backward_code
+function increment_counter!(f::Symbol)
+    function_counters[f] = get(function_counters, f, 0) + 1
+    counter = function_counters[f]
+
+    return counter, symbol("_", f, counter, "_")
 end
 
-function register_function(name::Symbol, )
+
+macro make_function(ex)
+    @show ex
+
+    (f, args, code) = @match ex begin
+        ( f_(args__) = code_ ) => (f, args, code)
+    end
+    @show f, args, code
+
+    forward_code = IntervalConstraintProgramming.forward_pass(code)
+    backward_code = IntervalConstraintProgramming.backward_pass(code)
+
+    @show forward_code, backward_code
+
+    forward_function = eval(forward_code)
+    backward_function = eval(backward_code)
+
+
+    return nothing
+end
+
+# usage:  @make_function f(x) = x^2
+
+#function register_function(name::Symbol, )

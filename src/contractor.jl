@@ -1,6 +1,8 @@
 # Own version of gensym:
 const symbol_number = [1]
 
+
+
 doc"""Return a new unique symbol like z10"""
 function make_symbol()
     i = symbol_number[1]
@@ -44,8 +46,15 @@ function insert_variables(ex::Expr)
         return insert_variables( :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
     end
 
+    # rename each occurrence of user-defined function:
     if op ∉ keys(rev_ops)
-        throw(ArgumentError("Operation $op not currently supported"))
+        # check if user-defined function
+        counter, op = increment_counter!(op)
+
+        if counter == 1
+            # create the function
+        end
+        # throw(ArgumentError("Operation $op not currently supported"))
     end
 
     new_code = quote end
