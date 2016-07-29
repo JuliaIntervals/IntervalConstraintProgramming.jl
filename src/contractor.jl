@@ -80,13 +80,13 @@ function insert_variables(ex::Expr)
 
 end
 
-function constraint_code(root_var, constraint)
+function constraint(root_var, constraint_interval)
     # if constraint == Interval(-∞, ∞)
     #     constraint_code = :($(root_var) = $(root_var) ∩ _A_)
     #     # push!(all_vars, :_A_)
     #
     # else
-        constraint_code = :($(root_var) = $(root_var) ∩ $constraint)
+        constraint_code = :( $(root_var) = $(root_var) ∩ $(constraint_interval) )
     # end
 
     return constraint_code
@@ -177,6 +177,7 @@ function forward_backward(ex::Expr, constraint::Interval=entireinterval())
 
     # Step 2: Add constraint code:
 
+    
     local constraint_code
 
     if constraint == Interval(-∞, ∞)

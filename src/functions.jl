@@ -65,16 +65,17 @@ macro make_function(ex)
     end
     @show f, args, code
 
-    forward_code = IntervalConstraintProgramming.forward_pass(code)
-    backward_code = IntervalConstraintProgramming.backward_pass(code)
+    root, all_vars, generated, code = IntervalConstraintProgramming.insert_variables(code)
+
+    forward_code = forward_pass(root, all_vars, generated, code)
+    backward_code = backward_pass(root, all_vars, generated, code)
 
     @show forward_code, backward_code
 
-    forward_function = eval(forward_code)
-    backward_function = eval(backward_code)
+    forward_name = :f_forward
+    backward_name = :f_backward
 
-
-    return nothing
+    :($(esc(f)) = ConstraintFunction([], [], $(forward_code), $(backward_code)))
 end
 
 # usage:  @make_function f(x) = x^2
