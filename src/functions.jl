@@ -27,34 +27,36 @@ A `ConstraintFunction` contains the created forward and backward
 code
 """
 type ConstraintFunction
-    input_args::Vector{Symbol}
-    output_args::Vector{Symbol}
-    forward_function::Function
-    backward_function::Function
+    input::Vector{Symbol}  # input arguments for forward function
+    output::Vector{Symbol} # output arguments for forward function
+    # forward_code::Expr
+    # backward_code::Expr
+    forward::Function
+    backward::Function
 end
 
-doc"""
-A `FunctionWrapper` specifies the actual variables that will be used as
-input and output for a given invocation of a given function.
-"""
-type FunctionWrapper
-    input_args::Vector{Symbol}
-    output_args::Vector{Symbol}
-    constraint_function::ConstraintFunction
-end
+# doc"""
+# A `FunctionWrapper` specifies the actual variables that will be used as
+# input and output for a given invocation of a given function.
+# """
+# type FunctionWrapper
+#     input_args::Vector{Symbol}
+#     output_args::Vector{Symbol}
+#     constraint_function::ConstraintFunction
+# end
 
-const registered_functions = Dict{Symbol, ConstraintFunction}()
-const function_wrappers = Dict{Symbol, FunctionWrapper}()
-
-
-const function_counters = Dict{Symbol, Int}()
-
-function increment_counter!(f::Symbol)
-    function_counters[f] = get(function_counters, f, 0) + 1
-    counter = function_counters[f]
-
-    return counter, symbol("_", f, counter, "_")
-end
+# const registered_functions = Dict{Symbol, ConstraintFunction}()
+# const function_wrappers = Dict{Symbol, FunctionWrapper}()
+#
+#
+# const function_counters = Dict{Symbol, Int}()
+#
+# function increment_counter!(f::Symbol)
+#     function_counters[f] = get(function_counters, f, 0) + 1
+#     counter = function_counters[f]
+#
+#     return counter, symbol("_", f, counter, "_")
+# end
 
 
 macro make_function(ex)
@@ -75,7 +77,7 @@ macro make_function(ex)
     forward_name = :f_forward
     backward_name = :f_backward
 
-    :($(esc(f)) = ConstraintFunction([], [], $(forward_code), $(backward_code)))
+    :($(esc(f)) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code)))
 end
 
 # usage:  @make_function f(x) = x^2

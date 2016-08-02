@@ -28,8 +28,8 @@ Returns:
 
 1. generated variable at head of tree;
 2. sorted vector of leaf (user) variables contained in tree;
-3. vector of generator intermediate variables;
-3. generated code.
+3. vector of generated intermediate variables;
+4. generated code.
 
 Usage: `IntervalConstraintProgramming.insert_variables(:(x^2 + y^2))`
 """
@@ -160,7 +160,7 @@ function backward_pass(root_var, all_vars, generated, code) #, constraint::Inter
         push!(new_code.args, new_line)
     end
 
-    all_vars = sort(all_vars)
+    sort!(all_vars)
 
     make_function(vcat(all_vars, generated), all_vars, new_code)
 end
