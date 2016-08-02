@@ -35,6 +35,11 @@ Usage: `IntervalConstraintProgramming.insert_variables(:(x^2 + y^2))`
 """
 function insert_variables(ex::Expr)
 
+    if ex.head == :$
+        return :(esc($(ex.args[1]))), Symbol[], Symbol[], quote end
+    end
+
+
     op = ex.args[1]
 
     # rewrite +(a,b,c) as +(a,+(b,c)):
@@ -177,7 +182,7 @@ function forward_backward(ex::Expr, constraint::Interval=entireinterval())
 
     # Step 2: Add constraint code:
 
-    
+
     local constraint_code
 
     if constraint == Interval(-∞, ∞)
