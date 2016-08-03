@@ -48,10 +48,14 @@ macro separator(ex::Expr)
     Separator(ex)
 end
 
-macro constraint(ex::Expr)
-    Separator(ex)
-end
+# macro constraint(ex::Expr)
+#     Separator(ex)
+# end
 
+macro constraint(ex::Expr)
+    ex = Meta.quot(ex)
+    :(Separator($ex))
+end
 
 function show(io::IO, S::Separator)
     print(io, "Separator with variables ")
