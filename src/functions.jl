@@ -45,7 +45,7 @@ end
 #     constraint_function::ConstraintFunction
 # end
 
-# const registered_functions = Dict{Symbol, ConstraintFunction}()
+const registered_functions = Dict{Symbol, ConstraintFunction}()
 # const function_wrappers = Dict{Symbol, FunctionWrapper}()
 #
 #
@@ -74,10 +74,10 @@ macro make_function(ex)
 
     @show forward_code, backward_code
 
-    forward_name = :f_forward
-    backward_name = :f_backward
-
-    :($(esc(f)) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code)))
+    return quote
+        #$(esc(f)) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
+        registered_functions[$(Meta.quot(f))] =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
+    end
 end
 
 # usage:  @make_function f(x) = x^2

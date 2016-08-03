@@ -67,18 +67,15 @@ function insert_variables(ex::Expr)
     push!(generated_variables, new_var)
 
 
-    # rename each occurrence of user-defined function:
-    if op ∉ keys(rev_ops)
-        # check if user-defined function
-        counter, op = increment_counter!(op)
+    if op ∈ keys(rev_ops)  # standard operator
+        top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
 
-        if counter == 1
-            # create the function
-        end
-        # throw(ArgumentError("Operation $op not currently supported"))
+    else  # assume user-defined function
+        
+
     end
 
-    top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
+
     push!(new_code.args, top_level_code)
 
     return new_var, sort(collect(all_vars)), generated_variables, new_code
