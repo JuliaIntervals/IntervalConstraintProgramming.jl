@@ -83,3 +83,19 @@ end
 # usage:  @make_function f(x) = x^2
 
 #function register_function(name::Symbol, )
+
+function match_function(ex)
+    try
+
+        f, args, body =
+            @match ex begin
+             ( (f_(args__) = body_) |
+              (function f_(args__) body_ end)) => (f, args, body)
+           end
+
+         return (f, args, body)
+
+    catch
+        throw(ArgumentError("$ex does not have the form of a function"))
+    end
+end
