@@ -21,6 +21,7 @@ type CombinationSeparator <: Separator
     expression::Expr
 end
 
+doc"""Create a ConstraintSeparator from a given constraint expression."""
 function ConstraintSeparator(ex::Expr)
     expr, constraint = parse_comparison(ex)
 
@@ -73,7 +74,19 @@ macro separator(ex::Expr)  # alternative name for constraint -- remove?
     :(ConstraintSeparator($ex))
 end
 
+doc"""Create a separator from a given constraint expression, written as
+standard Julia code.
 
+e.g. `C = @constraint x^2 + y^2 <= 1`
+
+The variables (`x` and `y`, in this case) are automatically inferred.
+External constants can be used as e.g. `$a`:
+
+```
+a = 3
+C = @constraint x^2 + y^2 <= $a
+```
+"""
 macro constraint(ex::Expr)
     ex = Meta.quot(ex)
     :(ConstraintSeparator($ex))
