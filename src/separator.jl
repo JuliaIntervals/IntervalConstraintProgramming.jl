@@ -1,6 +1,7 @@
 type Separator
     variables::Vector{Symbol}
     separator::Function
+    expression::Expr
 end
 
 function Separator(ex::Expr)
@@ -44,7 +45,9 @@ function Separator(ex::Expr)
 
     end
 
-    return Separator(variables, f)
+    expression = :($expr ∈ $constraint)
+
+    return Separator(variables, f, expression)
 
 end
 
@@ -60,9 +63,12 @@ macro constraint(ex::Expr)
 end
 
 function show(io::IO, S::Separator)
-    print(io, "Separator with variables ")
+    println(io, "Separator:")
+    print(io, "- variables: ")
     print(io, join(map(string, S.variables), ", "))
-    #print(io, "  - variables: $(S.variables)")
+    println(io)
+    print(io, "- expression: ")
+    println(io, S.expression)
 end
 
 
@@ -150,7 +156,9 @@ function ∩(S1::Separator, S2::Separator)
 
     end
 
-    return Separator(variables, f)
+    expression = :($(S1.expression) ∩ $(S2.expression))
+
+    return Separator(variables, f, expression)
 
 end
 
@@ -194,8 +202,10 @@ function ∪(S1::Separator, S2::Separator)
         return (inner, outer)
     end
 
+    expression = :($(S1.expression) ∪ $(S2.expression))
 
-    return Separator(variables, f)
+
+    return Separator(variables, f, expression)
 
 end
 
@@ -205,5 +215,7 @@ function !(S::Separator)
         return (outer, inner)
     end
 
-    return Separator(S.variables, f)
+    expression = :(!($(S.expression)))
+
+    return Separator(S.variables, f, expression)
 end
