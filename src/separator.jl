@@ -101,6 +101,7 @@ function show(io::IO, S::Separator)
     println(io, S.expression)
 end
 
+show_code(S::ConstraintSeparator) = show_code(S.contractor)
 
 @compat (S::Separator)(X) = S.separator(X)
 
