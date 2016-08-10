@@ -6,6 +6,10 @@ end
 function Separator(ex::Expr)
     expr, constraint = parse_comparison(ex)
 
+    if constraint == entireinterval()
+        throw(ArgumentError("Must give explicit constraint"))
+    end
+
     if isa(expr, Symbol)
         expr = :(1 * $expr)  # convert symbol into expression
     end
