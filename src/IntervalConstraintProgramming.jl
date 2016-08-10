@@ -14,7 +14,7 @@ export
     @contractor,
     Separator, separator, @separator, @constraint,
     SubPaving, Paving,
-    setinverse, refine!,
+    pave, refine!,
     Vol,
     show_code
 

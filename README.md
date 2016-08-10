@@ -2,20 +2,20 @@
 
 [![Build Status](https://travis-ci.org/dpsanders/IntervalConstraintProgramming.jl.svg?branch=master)](https://travis-ci.org/dpsanders/IntervalConstraintProgramming.jl)
 
-This Julia package allows us to specify a set of constraints on real-valued variables, 
-given by inequalities, and 
-rigorously calculate (inner and outer approximations to) the *feasible set*, 
+This Julia package allows us to specify a set of constraints on real-valued variables,
+given by inequalities, and
+rigorously calculate (inner and outer approximations to) the *feasible set*,
 i.e. the set that satisfies the constraints.
 
-The package is based on interval arithmetic using the author's 
+The package is based on interval arithmetic using the author's
 [`ValidatedNumerics.jl`](https://github.com/dpsanders/ValidatedNumerics.jl) package,
 in particular multi-dimensional `IntervalBox`es (i.e. Cartesian products of one-dimensional intervals).
 
 The goal is to impose constraints, given by inequalities, and find the set that
 satisfies the constraints, known as the **feasible set**.
 
-The method used to do this is known as *interval constraint programming*, in particular the 
-so-called "forward--backward contractor". This is implemented in terms of *separators*; see 
+The method used to do this is known as *interval constraint programming*, in particular the
+so-called "forward--backward contractor". This is implemented in terms of *separators*; see
 [Jaulin & Desrochers].
 
 ## Constraints
@@ -54,15 +54,15 @@ julia> outer
 
 To make progress, we must recursively bisect and apply the contractors, keeping
 track of the region proved to be inside the feasible set, and the region that is
-on the boundary ("both inside and outside"). This is done by the `setinverse` function,
+on the boundary ("both inside and outside"). This is done by the `pave` function,
 that takes a separator, a domain to search inside, and an optional tolerance:
 
 ```julia
 julia> S = @constraint 1 <= x^2 + y^2 <= 3
-julia> paving = setinverse(S, X, 0.125);
+julia> paving = pave(S, X, 0.125);
 ```
 
-`setinverse` returns an object of type `Paving`. This contains: the separator itself; 
+`pave` returns an object of type `Paving`. This contains: the separator itself;
 an `inner` approximation, of type `SubPaving`, which is an alias for a `Vector` of `IntervalBox`es;
 a `SubPaving` representing the boxes on the boundary that could not be assigned either to the inside or outside of the set;
 and the tolerance.

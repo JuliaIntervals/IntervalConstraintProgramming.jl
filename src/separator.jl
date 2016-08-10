@@ -44,13 +44,11 @@ function Separator(ex::Expr)
 
 end
 
-macro separator(ex::Expr)
-    Separator(ex)
+macro separator(ex::Expr)  # alternative name for constraint -- remove?
+    ex = Meta.quot(ex)
+    :(Separator($ex))
 end
 
-# macro constraint(ex::Expr)
-#     Separator(ex)
-# end
 
 macro constraint(ex::Expr)
     ex = Meta.quot(ex)

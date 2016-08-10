@@ -68,12 +68,12 @@ end
 
 
 doc"""
-    setinverse(S::Separator, domain::IntervalBox, eps)`
+    pave(S::Separator, domain::IntervalBox, eps)`
 
 Find the subset of `domain` defined by the constraints specified by the separator `S`.
 Returns (sub)pavings `inner` and `boundary`, i.e. lists of `IntervalBox`.
 """
-function setinverse{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ = 1e-2)
+function pave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ = 1e-2)
 
     inner_list, boundary_list = pave(S, [X], ϵ)
 
