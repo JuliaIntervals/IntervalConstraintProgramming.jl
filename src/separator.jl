@@ -1,10 +1,27 @@
-type Separator
+abstract Separator
+
+
+doc"""
+ConstraintSeparator is a separator that represents a constraint defined directly
+using `@constraint`.
+"""
+type ConstraintSeparator <: Separator
+    variables::Vector{Symbol}
+    separator::Function
+    contractor::Contractor
+    expression::Expr
+end
+
+doc"""CombinationSeparator is a separator that is a combination (union, intersection,
+or complement) of other separators.
+"""
+type CombinationSeparator <: Separator
     variables::Vector{Symbol}
     separator::Function
     expression::Expr
 end
 
-function Separator(ex::Expr)
+function ConstraintSeparator(ex::Expr)
     expr, constraint = parse_comparison(ex)
 
     if constraint == entireinterval()
@@ -47,19 +64,19 @@ function Separator(ex::Expr)
 
     expression = :($expr ∈ $constraint)
 
-    return Separator(variables, f, expression)
+    return ConstraintSeparator(variables, f, C, expression)
 
 end
 
 macro separator(ex::Expr)  # alternative name for constraint -- remove?
     ex = Meta.quot(ex)
-    :(Separator($ex))
+    :(ConstraintSeparator($ex))
 end
 
 
 macro constraint(ex::Expr)
     ex = Meta.quot(ex)
-    :(Separator($ex))
+    :(ConstraintSeparator($ex))
 end
 
 function show(io::IO, S::Separator)
@@ -158,7 +175,7 @@ function ∩(S1::Separator, S2::Separator)
 
     expression = :($(S1.expression) ∩ $(S2.expression))
 
-    return Separator(variables, f, expression)
+    return CombinationSeparator(variables, f, expression)
 
 end
 
@@ -205,7 +222,7 @@ function ∪(S1::Separator, S2::Separator)
     expression = :($(S1.expression) ∪ $(S2.expression))
 
 
-    return Separator(variables, f, expression)
+    return CombinationSeparator(variables, f, expression)
 
 end
 
@@ -217,5 +234,5 @@ function !(S::Separator)
 
     expression = :(!($(S.expression)))
 
-    return Separator(S.variables, f, expression)
+    return CombinationSeparator(S.variables, f, expression)
 end
