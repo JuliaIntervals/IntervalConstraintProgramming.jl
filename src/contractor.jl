@@ -71,7 +71,7 @@ function insert_variables(ex::Expr)
         top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
 
     else  # assume user-defined function
-        
+
 
     end
 
@@ -119,35 +119,26 @@ doc"""`backward_pass` replaces e.g. `z = a + b` with
 the corresponding reverse-mode function, `(z, a, b) = plusRev(z, a, b)`
 """
 
-function backward_pass(root_var, all_vars, generated, code) #, constraint::Interval)
+function backward_pass(root_var, all_vars, generated, code)
 
     new_code = quote end
 
     for line in reverse(code.args)  # run backwards
 
-        if line.head == :line  # line number node
-            continue
-        end
+        line.head == :line  && continue  # ignore line number nodes
 
         (var, op, args) = @match line begin
             (var_ = op_(args__))  => (var, op, args)
         end
 
-        new_args = []
-        push!(new_args, var)
-        append!(new_args, args)
+        return_args = [var, args...]
 
-        rev_op = rev_ops[op]  # find the reverse operation
-
-        rev_code = :($(rev_op)($(new_args...)))
-
-        return_args = copy(new_args)
+        rev_op = rev_ops[op]  # find reverse operation
+        rev_code = :($(rev_op)($(return_args...)))
 
         # delete non-symbols in return args:
         for (i, arg) in enumerate(return_args)
-            if !(isa(arg, Symbol))
-                return_args[i] = :_
-            end
+            !(isa(arg, Symbol)) && return_args[i] = :_
         end
 
         return_tuple = Expr(:tuple, return_args...)  # make tuple out of array

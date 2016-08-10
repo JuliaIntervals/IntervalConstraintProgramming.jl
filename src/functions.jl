@@ -58,9 +58,8 @@ const registered_functions = Dict{Symbol, ConstraintFunction}()
 #     return counter, symbol("_", f, counter, "_")
 # end
 
-
-macro make_function(ex)
-    @show ex
+@eval macro ($(:function))(ex)   # workaround to define macro @function
+    #@show ex
 
     (f, args, code) = @match ex begin
         ( f_(args__) = code_ ) => (f, args, code)
