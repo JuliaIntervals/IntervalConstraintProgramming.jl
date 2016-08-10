@@ -1,5 +1,16 @@
 # IntervalConstraintProgramming.jl
 
+# v0.3
+- Renamed `setinverse` to `pave`
+
+- External constants may now be used in `@constraint`, e.g.
+```
+a, b = 1, 2
+C = @constraint (x-$a)^2 + (y-$b)^2
+```
+The constraint will *not* change if the constants are changed, but may be
+updated (changed) by calling the same `@constraint` command again.  
+
 # v0.2
 - `setinverse` now returns an object of type `Paving`  [#17](https://github.com/dpsanders/IntervalConstraintProgramming.jl/pull/17)
 
