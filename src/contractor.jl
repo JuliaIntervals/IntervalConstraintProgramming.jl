@@ -138,7 +138,9 @@ function backward_pass(root_var, all_vars, generated, code)
 
         # delete non-symbols in return args:
         for (i, arg) in enumerate(return_args)
-            !(isa(arg, Symbol)) && return_args[i] = :_
+            if !(isa(arg, Symbol))
+                return_args[i] = :_
+            end
         end
 
         return_tuple = Expr(:tuple, return_args...)  # make tuple out of array
