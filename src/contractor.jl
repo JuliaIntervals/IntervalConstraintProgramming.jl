@@ -35,12 +35,21 @@ Usage: `IntervalConstraintProgramming.insert_variables(:(x^2 + y^2))`
 """
 function insert_variables(ex::Expr)
 
-    if ex.head == :$
+    @show "insert_vars", ex
+
+    if ex.head == :$   # process constants of form $a
         return :(esc($(ex.args[1]))), Symbol[], Symbol[], quote end
     end
 
-
     op = ex.args[1]
+    @show op
+    dump(STDOUT, op)
+
+    if isa(op, Expr) && op.head == :line
+         return quote end, Symbol[], Symbol[], quote end
+     end
+
+
 
     # rewrite +(a,b,c) as +(a,+(b,c)):
     # TODO: Use @match here!
@@ -55,6 +64,11 @@ function insert_variables(ex::Expr)
     generated_variables = Symbol[]
 
     for arg in ex.args[2:end]
+
+        #@show "arg", arg
+
+        isa(arg, LineNumberNode) && continue
+
         top, contained_vars, generated, code = insert_variables(arg)
 
         push!(current_args, top)
@@ -66,17 +80,18 @@ function insert_variables(ex::Expr)
     new_var = make_symbol()
     push!(generated_variables, new_var)
 
-
-    if op ∈ keys(rev_ops)  # standard operator
+    #if op ∈ keys(rev_ops)  # standard operator
         top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
 
-    else  # assume user-defined function
+    #else  # assume user-defined function
 
 
-    end
+    #end
 
 
     push!(new_code.args, top_level_code)
+
+    @show new_code
 
     return new_var, sort(collect(all_vars)), generated_variables, new_code
 

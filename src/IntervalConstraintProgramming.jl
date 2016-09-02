@@ -13,6 +13,7 @@ import Base:
 export
     @contractor,
     Separator, separator, @separator, @constraint,
+    @function,
     SubPaving, Paving,
     pave, refine!,
     Vol,
