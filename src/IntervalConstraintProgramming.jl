@@ -8,7 +8,7 @@ using Compat
 using FixedSizeArrays: setindex
 
 import Base:
-    show, ∩, ∪, !, ⊆, setdiff
+    show
 
 export
     @contractor,
@@ -25,7 +25,6 @@ include("separator.jl")
 include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
-include("functions.jl")
 
 
 end # module

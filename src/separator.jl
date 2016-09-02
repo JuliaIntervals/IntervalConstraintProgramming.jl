@@ -52,6 +52,7 @@ macro constraint(ex::Expr)
     Separator(ex)
 end
 
+import Base: show, ∩, ∪, !
 
 function show(io::IO, S::Separator)
     print(io, "Separator with variables ")
