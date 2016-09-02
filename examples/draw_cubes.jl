@@ -15,7 +15,7 @@ S = S1 ∩ S2
 
 X = IntervalBox(-10..10, -10..10, -10..10)
 
-@time inner, boundary = setinverse(S, X, 0.2)
+@time inner, boundary = pave(S, X, 0.2)
 @show length(inner)
 
 println("Set inversion finished")

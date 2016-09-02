@@ -1,10 +1,33 @@
-type Separator
+abstract Separator
+
+
+doc"""
+ConstraintSeparator is a separator that represents a constraint defined directly
+using `@constraint`.
+"""
+type ConstraintSeparator <: Separator
     variables::Vector{Symbol}
     separator::Function
+    contractor::Contractor
+    expression::Expr
 end
 
-function Separator(ex::Expr)
+doc"""CombinationSeparator is a separator that is a combination (union, intersection,
+or complement) of other separators.
+"""
+type CombinationSeparator <: Separator
+    variables::Vector{Symbol}
+    separator::Function
+    expression::Expr
+end
+
+doc"""Create a ConstraintSeparator from a given constraint expression."""
+function ConstraintSeparator(ex::Expr)
     expr, constraint = parse_comparison(ex)
+
+    if constraint == entireinterval()
+        throw(ArgumentError("Must give explicit constraint"))
+    end
 
     if isa(expr, Symbol)
         expr = :(1 * $expr)  # convert symbol into expression
@@ -40,26 +63,45 @@ function Separator(ex::Expr)
 
     end
 
-    return Separator(variables, f)
+    expression = :($expr ∈ $constraint)
+
+    return ConstraintSeparator(variables, f, C, expression)
 
 end
 
-macro separator(ex::Expr)
-    Separator(ex)
+macro separator(ex::Expr)  # alternative name for constraint -- remove?
+    ex = Meta.quot(ex)
+    :(ConstraintSeparator($ex))
 end
 
+doc"""Create a separator from a given constraint expression, written as
+standard Julia code.
+
+e.g. `C = @constraint x^2 + y^2 <= 1`
+
+The variables (`x` and `y`, in this case) are automatically inferred.
+External constants can be used as e.g. `$a`:
+
+```
+a = 3
+C = @constraint x^2 + y^2 <= $a
+```
+"""
 macro constraint(ex::Expr)
-    Separator(ex)
+    ex = Meta.quot(ex)
+    :(ConstraintSeparator($ex))
 end
-
-import Base: show, ∩, ∪, !
 
 function show(io::IO, S::Separator)
-    print(io, "Separator with variables ")
+    println(io, "Separator:")
+    print(io, "- variables: ")
     print(io, join(map(string, S.variables), ", "))
-    #print(io, "  - variables: $(S.variables)")
+    println(io)
+    print(io, "- expression: ")
+    println(io, S.expression)
 end
 
+show_code(S::ConstraintSeparator) = show_code(S.contractor)
 
 @compat (S::Separator)(X) = S.separator(X)
 
@@ -145,7 +187,9 @@ function ∩(S1::Separator, S2::Separator)
 
     end
 
-    return Separator(variables, f)
+    expression = :($(S1.expression) ∩ $(S2.expression))
+
+    return CombinationSeparator(variables, f, expression)
 
 end
 
@@ -189,8 +233,10 @@ function ∪(S1::Separator, S2::Separator)
         return (inner, outer)
     end
 
+    expression = :($(S1.expression) ∪ $(S2.expression))
 
-    return Separator(variables, f)
+
+    return CombinationSeparator(variables, f, expression)
 
 end
 
@@ -200,5 +246,7 @@ function !(S::Separator)
         return (outer, inner)
     end
 
-    return Separator(S.variables, f)
+    expression = :(!($(S.expression)))
+
+    return CombinationSeparator(S.variables, f, expression)
 end

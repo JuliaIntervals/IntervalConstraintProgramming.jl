@@ -8,13 +8,13 @@ using Compat
 using FixedSizeArrays: setindex
 
 import Base:
-    show
+    show, ∩, ∪, !, ⊆, setdiff
 
 export
     @contractor,
     Separator, separator, @separator, @constraint,
     SubPaving, Paving,
-    setinverse, refine!,
+    pave, refine!,
     Vol,
     show_code
 
@@ -25,6 +25,7 @@ include("separator.jl")
 include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
+include("functions.jl")
 
 
 end # module

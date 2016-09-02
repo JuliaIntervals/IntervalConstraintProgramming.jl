@@ -25,24 +25,24 @@ facts("Separators") do
     @fact outer --> (-∞..∞, -∞..∞)
 end
 
-facts("setinverse") do
+facts("pave") do
     S1a = @constraint x > 0
     S1b = @constraint y > 0
 
     S1 = S1a ∩ S1b
-    paving = setinverse(S1, IntervalBox(-3..3, -3..3), 0.1)
+    paving = pave(S1, IntervalBox(-3..3, -3..3), 0.1)
     @fact paving.inner --> [IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 0..3)]
     @fact isempty(paving.boundary) --> true
 
     S2 = S1a ∪ S1b
-    paving = setinverse(S2, IntervalBox(-3..3, -3..3), 0.1)
+    paving = pave(S2, IntervalBox(-3..3, -3..3), 0.1)
     @fact paving.inner --> [IntervalBox(-3..0, 0..3), IntervalBox(0..3, -3..3)]
     @fact isempty(paving.boundary) --> true
 
 
     S3 = @constraint x^2 + y^2 <= 1
     X = IntervalBox(-Inf..Inf, -Inf..Inf)
-    paving = setinverse(S3, X, 1)
+    paving = pave(S3, X, 1)
 
     @fact paving.inner --> [IntervalBox(Interval(0.0, 0.5), Interval(0.0, 0.8660254037844386)),
                     IntervalBox(Interval(0.0, 0.5), Interval(-0.8660254037844386, 0.0)),
@@ -58,6 +58,19 @@ facts("setinverse") do
                         IntervalBox(Interval(-0.5, 0.0), Interval(-1.0, -0.8660254037844386)),
                         IntervalBox(Interval(-1.0, -0.5), Interval(-0.8660254037844387, 0.0))]
 end
+
+facts("Constants") do
+    a = 3
+    x = y = -∞..∞
+    X = IntervalBox(x, y)
+    S4 = @constraint x^2 + y^2 <= $a
+    paving = pave(S4, X)
+
+    @fact paving.ϵ --> 0.01
+    @fact length(paving.inner) --> 1532
+    @fact length(paving.boundary) --> 1536
+end
+
 
 facts("Volume") do
     x = 3..5
