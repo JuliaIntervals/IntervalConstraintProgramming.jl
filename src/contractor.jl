@@ -1,7 +1,7 @@
 # Own version of gensym:
 const symbol_number = [1]
 
-doc"""Return a new, unique symbol like _z10_"""
+doc"""Return a new unique symbol like z10"""
 function make_symbol()
     i = symbol_number[1]
     symbol_number[1] += 1
@@ -11,35 +11,26 @@ end
 
 
 function insert_variables(ex)  # numbers are leaves
-    ex, Symbol[], Symbol[], quote end
+    ex, Symbol[], quote end
 end
 
 function insert_variables(ex::Symbol)  # symbols are leaves
-    ex, [ex], Symbol[], quote end
+    ex, [ex], quote end
 end
 
 doc"""
-`insert_variables` takes a Julia `Expr`ession and
-recursively replaces operations like `a+b` by assignments
-of the form `_z10_ = a+b`, where `_z10_` is a distinct symbol,
-created using `make_symbol` (which is like `gensym`, but more readable).
+`insert_variables` recursively replaces operations like `a+b` by assignments of the form `z10 = a+b`, where `z10` is a distinct symbol created using `make_symbol` (like `gensym` but more readable).
 
-Returns:
-
-1. generated variable at head of tree;
-2. sorted vector of leaf (user) variables contained in tree;
-3. vector of generator intermediate variables;
-3. generated code.
-
-Usage: `IntervalConstraintProgramming.insert_variables(:(x^2 + y^2))`
+Returns: (i) new variable at head of tree
+        (ii) variables contained in tree, in sorted order
+        (iii) generated code.
 """
 function insert_variables(ex::Expr)
 
     op = ex.args[1]
 
-    # rewrite +(a,b,c) as +(a,+(b,c)):
     # TODO: Use @match here!
-
+    # rewrite +(a,b,c) as +(a,+(b,c))
     if op in (:+, :*) && length(ex.args) > 3
         return insert_variables( :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
     end
@@ -47,118 +38,24 @@ function insert_variables(ex::Expr)
     new_code = quote end
     current_args = []  # the arguments in the current expression that will be added
     all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
-    generated_variables = Symbol[]
 
     for arg in ex.args[2:end]
-        top, contained_vars, generated, code = insert_variables(arg)
+        top, contained_vars, code = insert_variables(arg)
 
         push!(current_args, top)
         union!(all_vars, contained_vars)
         append!(new_code.args, code.args)  # add previously-generated code
-        append!(generated_variables, generated)
     end
 
     new_var = make_symbol()
-    push!(generated_variables, new_var)
-
-
-    # rename each occurrence of user-defined function:
-    if op ∉ keys(rev_ops)
-        # check if user-defined function
-        counter, op = increment_counter!(op)
-
-        if counter == 1
-            # create the function
-        end
-        # throw(ArgumentError("Operation $op not currently supported"))
-    end
 
     top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
     push!(new_code.args, top_level_code)
 
-    return new_var, sort(collect(all_vars)), generated_variables, new_code
+    return new_var, sort(collect(all_vars)), new_code
 
 end
 
-function constraint(root_var, constraint_interval)
-    # if constraint == Interval(-∞, ∞)
-    #     constraint_code = :($(root_var) = $(root_var) ∩ _A_)
-    #     # push!(all_vars, :_A_)
-    #
-    # else
-        constraint_code = :( $(root_var) = $(root_var) ∩ $(constraint_interval) )
-    # end
-
-    return constraint_code
-
-
-    # new_code = quote end
-    # push!(new_code.args, constraint_code)
-end
-
-
-function forward_pass(ex::Expr)
-    root, all_vars, generated, code = insert_variables(ex)
-    forward_pass(root, all_vars, generated, code)
-end
-
-function forward_pass(root, all_vars, generated, code)
-    make_function(all_vars, generated, code)
-end
-
-
-function backward_pass(ex::Expr) #, constraint::Interval)
-    root, all_vars, generated, code = insert_variables(ex)
-    backward_pass(root, all_vars, generated, code)
-end
-
-
-doc"""`backward_pass` replaces e.g. `z = a + b` with
-the corresponding reverse-mode function, `(z, a, b) = plusRev(z, a, b)`
-"""
-
-function backward_pass(root_var, all_vars, generated, code) #, constraint::Interval)
-
-    new_code = quote end
-
-    for line in reverse(code.args)  # run backwards
-
-        if line.head == :line  # line number node
-            continue
-        end
-
-        (var, op, args) = @match line begin
-            (var_ = op_(args__))  => (var, op, args)
-        end
-
-        new_args = []
-        push!(new_args, var)
-        append!(new_args, args)
-
-        rev_op = rev_ops[op]  # find the reverse operation
-
-        rev_code = :($(rev_op)($(new_args...)))
-
-        return_args = copy(new_args)
-
-        # delete non-symbols in return args:
-        for (i, arg) in enumerate(return_args)
-            if !(isa(arg, Symbol))
-                return_args[i] = :_
-            end
-        end
-
-        return_tuple = Expr(:tuple, return_args...)  # make tuple out of array
-        # or: :($(return_args...),)
-
-        new_line = :($(return_tuple) = $(rev_code))
-        push!(new_code.args, new_line)
-    end
-
-    all_vars = sort(all_vars)
-
-    make_function(vcat(all_vars, generated), all_vars, new_code)
-end
 
 doc"""
 `forward_backward` takes in an expression like `x^2 + y^2` and outputs
@@ -170,14 +67,18 @@ function forward_backward(ex::Expr, constraint::Interval=entireinterval())
 
     new_ex = copy(ex)
 
+    root_var = :empty
+    all_vars = Symbol[]
+    code = quote end
+
+
     # Step 1: Forward pass using insert_variables
 
-    root_var, all_vars, generated, code = insert_variables(new_ex)
+    root_var, all_vars, code = insert_variables(new_ex)
 
 
     # Step 2: Add constraint code:
 
-    
     local constraint_code
 
     if constraint == Interval(-∞, ∞)
@@ -253,25 +154,9 @@ function make_function(all_vars, code)
     function_code
 end
 
-doc"""
-Generate code for an anonymous function with given
-input arguments, output arguments, and code block.
-"""
-function make_function(input_args, output_args, code)
-
-    input = Expr(:tuple, input_args...)  # make a tuple of the variables
-    output = Expr(:tuple, output_args...)  # make a tuple of the variables
-
-    new_code = copy(code)
-    push!(new_code.args, :(return $output))
-
-    return :( $input -> $new_code )
-end
-
-
 
 doc"""`parse_comparison` parses comparisons like `x >= 10`
-into the corresponding interval, expressed as `x ∈ [10,∞]`
+into the corresponding interval, expressed as `x ∈ [10,∞]  `
 
 Returns the expression and the constraint interval
 
@@ -283,22 +168,16 @@ function parse_comparison(ex)
        ((a_ <= b_) | (a_ < b_))   => (a, (-∞, b))
        ((a_ >= b_) | (a_ > b_))   => (a, (b, ∞))
 
-       ((a_ == b_) | (a_ = b_))   => (a, (b, b))
+       a_ == b_                   => (a, (b, b))
 
        ((a_ <= b_ <= c_)
-        | (a_ < b_ < c_)
-        | (a_ <= b_ < c)
-        | (a_ < b_ <= c))         => (b, (a, c))
+        | (a_ < b_ < c_))         => (b, (a, c))
 
        ((a_ >= b_ >= c_)
-       | (a_ > b_ > c_)
-       | (a_ >= b_ > c_)
-       | (a_ > b_ >= c))          => (b, (c, a))
+       | (a_ > b_ > c_))          => (b, (c, a))
 
        ((a_ ∈ [b_, c_])
-       | (a_ in [b_, c_])
-       | (a_ ∈ b_ .. c_)
-       | (a_ in b_ .. c_))        => (a, (b, c))
+       | (a_ in [b_, c_]))        => (a, (b, c))
 
        _                          => (ex, (-∞, ∞))
 
@@ -306,7 +185,7 @@ function parse_comparison(ex)
 
    a, b = limits
 
-   return (expr, a..b)   # expr ∈ [a,b]
+   expr, @interval(a, b)   # expr ∈ [a,b]
 
 end
 
@@ -363,7 +242,17 @@ end
 macro contractor(ex)
     ex = Meta.quot(ex)
     :(Contractor($ex))
+
 end
 
 
 show_code(c::Contractor) = c.code
+
+#= TODO:
+
+=#
+
+#function constraint_propagation(Cs::Vector{Function}, var)
+
+
+# USAGE
