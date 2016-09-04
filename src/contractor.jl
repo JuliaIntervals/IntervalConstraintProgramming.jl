@@ -39,11 +39,22 @@ function insert_variables(ex::Expr)
 
     if ex.head == :$   # process constants of form $a
         return :(esc($(ex.args[1]))), Symbol[], Symbol[], quote end
-    end
 
+    elseif ex.head == :call
+        process_call(ex)
+
+    elseif ex.head == :(=)
+        process_assignment(ex)
+
+    elseif ex.head == :block
+        process_block(ex)
+    end
+end
+
+
+function process_call(ex)
+    
     op = ex.args[1]
-    @show op
-    dump(STDOUT, op)
 
     if isa(op, Expr) && op.head == :line
          return quote end, Symbol[], Symbol[], quote end
