@@ -52,6 +52,11 @@ function insert_variables(ex::Expr)
 end
 
 function process_block(ex)
+
+    println("process_block")
+
+    @show ex
+
     new_code = quote end
     current_args = []  # the arguments in the current expression that will be added
     all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
@@ -60,8 +65,11 @@ function process_block(ex)
     local top
 
     for arg in ex.args[1:end]
+        @show arg
+        dump(arg)
 
         isa(arg, LineNumberNode) && continue
+        (isa(arg, Expr) && arg.head == :line) && continue
 
         top, contained_vars, generated, code = insert_variables(arg)
 
@@ -76,16 +84,15 @@ end
 
 
 function process_assignment(ex)
-    (var, op, args) = @match ex begin
-        (var_ = op_(args__))  => (var, op, args)
-    end
-
-    process_call(:($(op)($(args...))), var)
+    # assumes ex is an assignment
+    process_call(ex.args[2], ex.args[1])
 
 end
 
 
 function process_call(ex, new_var=nothing)
+    # new_var is an optional variable name to assign the result of the call to
+    # if none is given, then a new, unique variable name is created
 
     op = ex.args[1]
 

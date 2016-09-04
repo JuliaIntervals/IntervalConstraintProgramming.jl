@@ -66,10 +66,12 @@ const registered_functions = Dict{Symbol, ConstraintFunction}()
     end
     @show f, args, code
 
-    root, all_vars, generated, code = IntervalConstraintProgramming.insert_variables(code)
+    root, all_vars, generated, code2 = IntervalConstraintProgramming.insert_variables(code)
 
-    forward_code = forward_pass(root, all_vars, generated, code)
-    backward_code = backward_pass(root, all_vars, generated, code)
+    @show root, all_vars, generated, code2
+
+    forward_code = forward_pass(root, all_vars, generated, code2)
+    backward_code = backward_pass(root, all_vars, generated, code2)
 
     @show forward_code, backward_code
 
