@@ -51,16 +51,47 @@ function insert_variables(ex::Expr)
     end
 end
 
+function process_block(ex)
+    new_code = quote end
+    current_args = []  # the arguments in the current expression that will be added
+    all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
+    generated_variables = Symbol[]
 
-function process_call(ex)
-    
+    local top
+
+    for arg in ex.args[1:end]
+
+        isa(arg, LineNumberNode) && continue
+
+        top, contained_vars, generated, code = insert_variables(arg)
+
+        push!(current_args, top)
+        union!(all_vars, contained_vars)
+        append!(new_code.args, code.args)  # add previously-generated code
+        append!(generated_variables, generated)
+    end
+
+    return top, sort(collect(all_vars)), generated_variables, new_code
+end
+
+
+function process_assignment(ex)
+    (var, op, args) = @match ex begin
+        (var_ = op_(args__))  => (var, op, args)
+    end
+
+    process_call(:($(op)($(args...))), var)
+
+end
+
+
+function process_call(ex, new_var=nothing)
+
     op = ex.args[1]
 
     if isa(op, Expr) && op.head == :line
          return quote end, Symbol[], Symbol[], quote end
      end
-
-
 
     # rewrite +(a,b,c) as +(a,+(b,c)):
     # TODO: Use @match here!
@@ -76,8 +107,6 @@ function process_call(ex)
 
     for arg in ex.args[2:end]
 
-        #@show "arg", arg
-
         isa(arg, LineNumberNode) && continue
 
         top, contained_vars, generated, code = insert_variables(arg)
@@ -88,7 +117,10 @@ function process_call(ex)
         append!(generated_variables, generated)
     end
 
-    new_var = make_symbol()
+    if new_var == nothing
+        new_var = make_symbol()
+    end
+
     push!(generated_variables, new_var)
 
     #if op ∈ keys(rev_ops)  # standard operator
