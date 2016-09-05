@@ -21,11 +21,11 @@ doc"""
 A `ConstraintFunction` contains the created forward and backward
 code
 """
-type ConstraintFunction
+type ConstraintFunction{F <: Function, G <: Function}
     input::Vector{Symbol}  # input arguments for forward function
     output::Vector{Symbol} # output arguments for forward function
-    forward::Function
-    backward::Function
+    forward::F
+    backward::G
 end
 
 #const registered_functions = Dict{Symbol, ConstraintFunction}()
