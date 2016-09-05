@@ -144,13 +144,14 @@ function process_call(ex, new_var=nothing)
 
     push!(generated_variables, new_var)
 
-    #if op ∈ keys(rev_ops)  # standard operator
+    if op ∈ keys(rev_ops)  # standard operator
         top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
 
-    #else  # assume user-defined function
+    else  # assume user-defined function
+        function_name = :($op.forward)
+        top_level_code = :($(new_var) = esc($function_name)($(current_args...)))  # new top-level code
 
-
-    #end
+    end
 
 
     push!(new_code.args, top_level_code)
