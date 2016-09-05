@@ -6,10 +6,24 @@ function make_symbol()
     i = symbol_number[1]
     symbol_number[1] += 1
 
-    symbol("_z", i, "_")
+    Symbol("_z", i, "_")
 end
 
+doc"""
+`insert_variables` takes a Julia `Expr`ession (i.e. an abstract syntax tree) and
+recursively replaces operations like `a+b` by assignments
+of the form `_z10_ = a+b`, where `_z10_` is a distinct symbol,
+created using `make_symbol` (which is like `gensym`, but more readable).
 
+Returns:
+
+1. generated variable at head (top) of tree, which will contain the result of the whole tree;
+2. sorted vector of (external) variables contained in the tree;
+3. vector of intermediate variables (both introduced by the user, and generated);
+4. code generated.
+
+Usage: `IntervalConstraintProgramming.insert_variables(:(x^2 + y^2))`
+"""
 function insert_variables(ex)  # numbers are leaves
     ex, Symbol[], Symbol[], quote end
 end
@@ -18,21 +32,7 @@ function insert_variables(ex::Symbol)  # symbols are leaves
     ex, [ex], Symbol[], quote end
 end
 
-doc"""
-`insert_variables` takes a Julia `Expr`ession and
-recursively replaces operations like `a+b` by assignments
-of the form `_z10_ = a+b`, where `_z10_` is a distinct symbol,
-created using `make_symbol` (which is like `gensym`, but more readable).
 
-Returns:
-
-1. generated variable at head of tree;
-2. sorted vector of leaf (user) variables contained in tree;
-3. vector of generated intermediate variables;
-4. generated code.
-
-Usage: `IntervalConstraintProgramming.insert_variables(:(x^2 + y^2))`
-"""
 function insert_variables(ex::Expr)
 
     @show "insert_vars", ex
@@ -48,8 +48,22 @@ function insert_variables(ex::Expr)
 
     elseif ex.head == :block
         process_block(ex)
+
+    elseif ex.head == :tuple
+        process_tuple(ex)
+
+    elseif ex.head == :return
+        process_return(ex)
     end
 end
+
+function process_return(ex)
+    top, contained_vars, generated, code = insert_variables(ex.args[1])
+    append!(code.args, :(return $top))
+
+    top, contained_vars, generated, code
+end
+
 
 function process_block(ex)
 
