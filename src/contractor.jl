@@ -35,8 +35,6 @@ end
 
 function insert_variables(ex::Expr)
 
-    @show "insert_vars", ex
-
     if ex.head == :$   # process constants of form $a
         return :(esc($(ex.args[1]))), Symbol[], Symbol[], quote end
 
@@ -67,10 +65,6 @@ end
 
 function process_block(ex)
 
-    println("process_block")
-
-    @show ex
-
     new_code = quote end
     current_args = []  # the arguments in the current expression that will be added
     all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
@@ -79,8 +73,6 @@ function process_block(ex)
     local top
 
     for arg in ex.args[1:end]
-        @show arg
-        dump(arg)
 
         isa(arg, LineNumberNode) && continue
         (isa(arg, Expr) && arg.head == :line) && continue
@@ -148,15 +140,18 @@ function process_call(ex, new_var=nothing)
         top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
 
     else  # assume user-defined function
-        function_name = :($op.forward)
-        top_level_code = :($(new_var) = esc($function_name)($(current_args...)))  # new top-level code
+        #function_name = :($(esc(op)).forward)
+        function_name = :($(op).forward)  # need esc?
+
+        func_args = function_arguments[op]
+        @show func_args
+
+        top_level_code = :($(new_var) = $(function_name)($(current_args...)))  # new top-level code
 
     end
 
 
     push!(new_code.args, top_level_code)
-
-    @show new_code
 
     return new_var, sort(collect(all_vars)), generated_variables, new_code
 

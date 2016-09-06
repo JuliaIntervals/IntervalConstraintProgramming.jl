@@ -28,7 +28,15 @@ type ConstraintFunction{F <: Function, G <: Function}
     backward::G
 end
 
+type FunctionArguments
+    input::Vector{Symbol}  # input arguments for forward function
+    generated::Vector{Symbol} # output arguments for forward function
+end
+
 #const registered_functions = Dict{Symbol, ConstraintFunction}()
+
+const function_arguments = Dict{Symbol, FunctionArguments}()
+
 
 @doc """
 `@function` registers a function to be used in forwards and backwards mode.
@@ -51,6 +59,9 @@ Example: `@function f(x, y) = x^2 + y^2`
     backward_code = backward_pass(root, all_vars, generated, code2)
 
     @show forward_code, backward_code
+
+    function_arguments[f] = FunctionArguments(all_vars, generated)
+
 
     return quote
         #$(esc(Meta.quot(f))) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
