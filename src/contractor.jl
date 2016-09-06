@@ -130,23 +130,38 @@ function process_call(ex, new_var=nothing)
         append!(generated_variables, generated)
     end
 
-    if new_var == nothing
-        new_var = make_symbol()
-    end
+    top_level_code = quote end
 
-    push!(generated_variables, new_var)
 
     if op ∈ keys(rev_ops)  # standard operator
+        if new_var == nothing
+            new_var = make_symbol()
+        end
+
+        push!(generated_variables, new_var)
+
         top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
 
     else  # assume user-defined function
-        #function_name = :($(esc(op)).forward)
+
         function_name = :($(op).forward)  # need esc?
 
         func_args = function_arguments[op]
         @show func_args
 
-        top_level_code = :($(new_var) = $(function_name)($(current_args...)))  # new top-level code
+        new_generated_vars = Symbol[]
+        for i in func_args.generated
+            push!(new_generated_vars, make_symbol())
+        end
+
+        append!(generated_variables, new_generated_vars)
+        new_var = new_generated_vars[end]
+
+        new_generated_vars = Expr(:tuple, new_generated_vars...)
+
+
+
+        top_level_code = :($(new_generated_vars) = $(function_name)($(current_args...)))  # new top-level code
 
     end
 
