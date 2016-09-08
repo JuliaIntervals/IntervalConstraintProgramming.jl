@@ -105,6 +105,7 @@ end
 show_code(S::ConstraintSeparator) = show_code(S.contractor)
 
 @compat (S::ConstraintSeparator)(X) = S.separator(X)
+@compat (S::CombinationSeparator)(X) = S.separator(X)
 
 # show_code(S::Separator) = show_code(S.contractor)
 

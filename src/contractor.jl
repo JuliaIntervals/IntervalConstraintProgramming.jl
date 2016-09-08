@@ -1,12 +1,17 @@
 # Own version of gensym:
-const symbol_number = [1]
+#const symbol_number = [1]
+const symbol_numbers = Dict{Symbol, Int}()
 
 doc"""Return a new, unique symbol like _z10_"""
-function make_symbol()
-    i = symbol_number[1]
-    symbol_number[1] += 1
 
-    Symbol("_z", i, "_")
+make_symbol() = make_symbol(:z)
+
+function make_symbol(s::Symbol)
+
+    i = get(symbol_numbers, s, 1)
+    symbol_numbers[s] = i + 1
+
+    Symbol("_", s, "_", i, "_")
 end
 
 doc"""
@@ -132,6 +137,7 @@ function process_call(ex, new_var=nothing)
 
     top_level_code = quote end
 
+    @show op
 
     if op ∈ keys(rev_ops)  # standard operator
         if new_var == nothing
@@ -221,23 +227,41 @@ function backward_pass(root_var, all_vars, generated, code)
             (var_ = op_(args__))  => (var, op, args)
         end
 
-        return_args = [var, args...]
+        @show "hello", op
 
-        rev_op = rev_ops[op]  # find reverse operation
-        rev_code = :($(rev_op)($(return_args...)))
 
-        # delete non-symbols in return args:
-        for (i, arg) in enumerate(return_args)
-            if !(isa(arg, Symbol))
-                return_args[i] = :_
+
+        if (@capture(op, f_.forward))  # user-defined forward
+            rev_op = :($f.backward)
+            println("Hello there")
+            @show var, op, args
+
+            return_args = [args...]
+
+
+        else
+            return_args = [var, args...]
+            rev_op = rev_ops[op]  # find reverse operation
+
+            rev_code = :($(rev_op)($(return_args...)))
+
+            # delete non-symbols in return args:
+            for (i, arg) in enumerate(return_args)
+                if !(isa(arg, Symbol))
+                    return_args[i] = :_
+                end
             end
         end
+
+
 
         return_tuple = Expr(:tuple, return_args...)  # make tuple out of array
         # or: :($(return_args...),)
 
         new_line = :($(return_tuple) = $(rev_code))
         push!(new_code.args, new_line)
+
+
     end
 
     sort!(all_vars)
