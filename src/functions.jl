@@ -17,6 +17,14 @@ should generate these forward and backward functions, and register the function
 """
 =#
 
+type FunctionObject
+    input_args::Vector{Symbol}
+    output_args::Vector{Symbol}
+    local_vars::Vector{Symbol}
+    code::Expr
+end
+
+
 doc"""
 A `ConstraintFunction` contains the created forward and backward
 code
@@ -30,7 +38,8 @@ end
 
 type FunctionArguments
     input::Vector{Symbol}  # input arguments for forward function
-    generated::Vector{Symbol} # output arguments for forward function
+    outpu::Vector{Symbol}  # output arguments
+    generated::Vector{Symbol} # local variables generated
 end
 
 #const registered_functions = Dict{Symbol, ConstraintFunction}()

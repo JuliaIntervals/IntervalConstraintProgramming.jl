@@ -60,6 +60,35 @@ function insert_variables(ex::Expr)
     end
 end
 
+function process_tuple(ex)
+    @show ex, ex.args
+
+    new_code = quote end
+    current_args = []  # the arguments in the current expression that will be added
+    all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
+    top_vars = Symbol[]
+    generated_variables = Symbol[]
+
+    top_vars = Symbol[]
+
+    for arg in ex.args
+        top, contained_vars, generated, code = insert_variables(arg)
+
+        union!(all_vars, contained_vars)
+        append!(new_code.args, code.args)  # add previously-generated code
+        append!(generated_variables, generated)
+
+        push!(top_vars, top)
+    end
+
+    @show top_vars
+    @show new_code
+    #exit(1)
+
+    return top_vars, sort(collect(all_vars)), generated_variables, new_code
+
+end
+
 function process_return(ex)
     top, contained_vars, generated, code = insert_variables(ex.args[1])
     append!(code.args, :(return $top))
@@ -137,7 +166,7 @@ function process_call(ex, new_var=nothing)
 
     top_level_code = quote end
 
-    @show op
+    #@show op
 
     if op ∈ keys(rev_ops)  # standard operator
         if new_var == nothing
@@ -227,17 +256,20 @@ function backward_pass(root_var, all_vars, generated, code)
             (var_ = op_(args__))  => (var, op, args)
         end
 
-        @show "hello", op
+        #@show "hello", op
+
 
 
 
         if (@capture(op, f_.forward))  # user-defined forward
             rev_op = :($f.backward)
-            println("Hello there")
+            #println("Hello there")
             @show var, op, args
 
-            return_args = [args...]
+            return_args = [args...; var.args...]
+            rev_code = :($(rev_op)($(return_args...)))
 
+            #return_args =
 
         else
             return_args = [var, args...]
@@ -245,13 +277,15 @@ function backward_pass(root_var, all_vars, generated, code)
 
             rev_code = :($(rev_op)($(return_args...)))
 
+
             # delete non-symbols in return args:
             for (i, arg) in enumerate(return_args)
                 if !(isa(arg, Symbol))
                     return_args[i] = :_
                 end
             end
-        end
+
+         end
 
 
 
