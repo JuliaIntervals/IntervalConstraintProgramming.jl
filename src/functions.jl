@@ -58,9 +58,12 @@ Example: `@function f(x, y) = x^2 + y^2`
 
 @eval macro ($(:function))(ex)   # workaround to define macro @function
 
-    (f, args, code) = @match ex begin
-        ( f_(args__) = code_ ) => (f, args, code)
-    end
+    # (f, args, code) = @match ex begin
+    #     ( f_(args__) = code_ ) => (f, args, code)
+    # end
+
+    (f, args, code) = match_function(ex)
+
     @show f, args, code
 
     #root, all_vars, generated, code2 = IntervalConstraintProgramming.insert_variables!(code)
@@ -86,15 +89,15 @@ end
 
 
 function match_function(ex)
-    try
 
-        f, args, body =
+    try
+        (f, args, body) =
             @match ex begin
              ( (f_(args__) = body_) |
-              (function f_(args__) body_ end)) => (f, args, body)
+              (function f_(args__) body_ end) ) => (f, args, body)
            end
 
-         return (f, args, body)
+         return (f, args, rmlines(body))  # rmlines is from MacroTools package
 
     catch
         throw(ArgumentError("$ex does not have the form of a function"))

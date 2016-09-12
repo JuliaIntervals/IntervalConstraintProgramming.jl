@@ -119,7 +119,11 @@ function process_tuple!(flatAST::FlattenedAST, ex)
 
 end
 
-function process_call!(flatAST::FlattenedAST, ex)
+function process_assignment!(flatAST::FlattenedAST, ex)
+    process_call!(flatAST, ex.args[2], ex.args[1])
+end
+
+function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
     # new_var is an optional variable name to assign the result of the call to
     # if none is given, then a new, unique variable name is created
 
@@ -155,13 +159,16 @@ function process_call!(flatAST::FlattenedAST, ex)
     #@show op
 
     if op ∈ keys(rev_ops)  # standard operator
-        #if new_var == nothing
+        if new_var == nothing
             new_var = make_symbol()
-        #end
+        end
 
         push!(flatAST.intermediate, new_var)
 
         top_level_code = Assignment(new_var, op, top_args)
+
+    else
+        throw(ArgumentError("Function $op not supported"))
     end
 
 
