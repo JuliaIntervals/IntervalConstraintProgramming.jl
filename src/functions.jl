@@ -37,9 +37,12 @@ type ConstraintFunction{F <: Function, G <: Function}
 end
 
 type FunctionArguments
-    input::Vector{Symbol}  # input arguments for forward function
-    outpu::Vector{Symbol}  # output arguments
-    generated::Vector{Symbol} # local variables generated
+    # input::Vector{Symbol}  # input arguments for forward function
+    # output::Vector{Symbol}  # output arguments
+    # generated::Vector{Symbol} # local variables generated
+
+    input
+    generated
 end
 
 #const registered_functions = Dict{Symbol, ConstraintFunction}()
@@ -60,21 +63,22 @@ Example: `@function f(x, y) = x^2 + y^2`
     end
     @show f, args, code
 
-    root, all_vars, generated, code2 = IntervalConstraintProgramming.insert_variables(code)
+    #root, all_vars, generated, code2 = IntervalConstraintProgramming.insert_variables!(code)
+    root, flatAST = IntervalConstraintProgramming.insert_variables!(code)
 
-    @show root, all_vars, generated, code2
+    #@show root, all_vars, generated, code2
 
-    forward_code = forward_pass(root, all_vars, generated, code2)
-    backward_code = backward_pass(root, all_vars, generated, code2)
+    forward_code = forward_pass(flatAST) #root, all_vars, generated, code2)
+    backward_code = backward_pass(flatAST) #root, all_vars, generated, code2)
 
     @show forward_code, backward_code
 
-    function_arguments[f] = FunctionArguments(all_vars, generated)
+    function_arguments[f] = FunctionArguments(flatAST.input_variables, flatAST.intermediate)
 
 
     return quote
         #$(esc(Meta.quot(f))) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
-        $(esc(f)) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
+        $(esc(f)) = ConstraintFunction($(flatAST.input_variables), $(flatAST.intermediate), $(forward_code), $(backward_code))
         #registered_functions[$(Meta.quot(f))] =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
         #$(Meta.quot(f)) =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
     end

@@ -67,6 +67,20 @@ function process_constant!(flatAST::FlattenedAST, ex)
     return :(esc($(ex.args[1])))  # return the value of the constant
 end
 
+function process_block!(flatAST::FlattenedAST, ex)
+
+    local top
+
+    for arg in ex.args
+
+        isa(arg, LineNumberNode) && continue
+
+        top = insert_variables!(flatAST, arg)
+#        push!(top_args, top)
+    end
+
+    return top
+end
 
 function process_tuple!(flatAST::FlattenedAST, ex)
     @show ex.args
