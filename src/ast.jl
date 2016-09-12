@@ -169,6 +169,33 @@ function emit_forward_code(a::Assignment)
     :($(a.lhs) = $(a.op)($(a.args...) ) )
 end
 
+function emit_backward_code(a::Assignment)
+    return_args = [a.lhs, a.args...]
+    rev_op = rev_ops[a.op]  # find reverse operation
+
+    rev_code = :($(rev_op)($(return_args...)))
+
+    # delete non-symbols in return args:
+    for (i, arg) in enumerate(return_args)
+        if !(isa(arg, Symbol))
+            return_args[i] = :_
+        end
+    end
+
+    return_tuple = Expr(:tuple, return_args...)  # make tuple out of array
+# or: :($(return_args...),)
+
+    return :($(return_tuple) = $(rev_code))
+
+end
+
+function emit_backward_code(code::Vector{Assignment})
+    new_code = quote end
+    new_code.args = vcat([emit_backward_code(line) for line in reverse(code)])
+    return new_code
+end
+
+
 function emit_forward_code(code::Vector{Assignment})
     new_code = quote end
     new_code.args = vcat([emit_forward_code(line) for line in code])
@@ -179,4 +206,13 @@ end
 function forward_pass(flatAST::FlattenedAST)
     generated_code = emit_forward_code(flatAST.code)
     make_function(flatAST.input_variables, flatAST.intermediate, generated_code)
+end
+
+function backward_pass(flatAST::FlattenedAST)
+    generated_code = emit_backward_code(flatAST.code)
+    make_function([flatAST.input_variables; flatAST.intermediate],
+                    flatAST.input_variables,
+                    generated_code)
+    # reverse input_variables and intermediate?
+
 end
