@@ -6,7 +6,8 @@ end
 
 # Close to single assignment form
 type FlattenedAST
-    input_variables::Vector{Symbol}  #
+    input_variables::Set{Symbol}
+    variables::Vector{Symbol}  # cleaned version
     intermediate::Vector{Symbol}  # generated vars
     code::Vector{Assignment}
 end
@@ -19,7 +20,7 @@ function show(io::IO, flatAST::FlattenedAST)
     println(io, flatAST.code)
 end
 
-FlattenedAST() = FlattenedAST([], [], [])
+FlattenedAST() = FlattenedAST(Set{Symbol}(), [], [], [])
 
 export FlattenedAST
 
@@ -225,14 +226,20 @@ end
 
 
 function forward_pass(flatAST::FlattenedAST)
+
+    input_variables = sort(collect(flatAST.input_variables))
+    input_variables = setdiff(input_variables, flatAST.intermediate)  # remove local variables
+    flatAST.variables = input_variables
+
     generated_code = emit_forward_code(flatAST.code)
-    make_function(flatAST.input_variables, flatAST.intermediate, generated_code)
+    make_function(input_variables, flatAST.intermediate, generated_code)
 end
 
 function backward_pass(flatAST::FlattenedAST)
+
     generated_code = emit_backward_code(flatAST.code)
-    make_function([flatAST.input_variables; flatAST.intermediate],
-                    flatAST.input_variables,
+    make_function([flatAST.variables; flatAST.intermediate],
+                    flatAST.variables,
                     generated_code)
     # reverse input_variables and intermediate?
 

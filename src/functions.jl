@@ -81,7 +81,7 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     return quote
         #$(esc(Meta.quot(f))) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
-        $(esc(f)) = ConstraintFunction($(flatAST.input_variables), $(flatAST.intermediate), $(forward_code), $(backward_code))
+        $(esc(f)) = ConstraintFunction($(flatAST.variables), $(flatAST.intermediate), $(forward_code), $(backward_code))
         #registered_functions[$(Meta.quot(f))] =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
         #$(Meta.quot(f)) =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
     end
