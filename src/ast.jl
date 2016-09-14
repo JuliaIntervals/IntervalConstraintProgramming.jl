@@ -25,24 +25,24 @@ FlattenedAST() = FlattenedAST(Set{Symbol}(), [], [], [])
 export FlattenedAST
 
 
-export insert_variables!
+export flatten!
 
 
-doc"""`insert_variables!` adds information about any variables
+doc"""`flatten!` adds information about any variables
 generated to the `FlattenedAST` object. It returns the object
 at the top of the current piece of tree."""
 # process numbers
-function insert_variables!(flatAST::FlattenedAST, ex)
+function flatten!(flatAST::FlattenedAST, ex)
     return ex  # nothing to do to the AST; return the number
 end
 
-function insert_variables!(flatAST::FlattenedAST, ex::Symbol)  # symbols are leaves
+function flatten!(flatAST::FlattenedAST, ex::Symbol)  # symbols are leaves
     push!(flatAST.input_variables, ex)  # add the discovered symbol as an input variable
     return ex
 end
 
 
-function insert_variables!(flatAST::FlattenedAST, ex::Expr)
+function flatten!(flatAST::FlattenedAST, ex::Expr)
 
     if ex.head == :$   # process constants of form $a
         process_constant!(flatAST, ex)
@@ -76,7 +76,7 @@ function process_block!(flatAST::FlattenedAST, ex)
 
         isa(arg, LineNumberNode) && continue
 
-        top = insert_variables!(flatAST, arg)
+        top = flatten!(flatAST, arg)
 #        push!(top_args, top)
     end
 
@@ -91,7 +91,7 @@ function process_tuple!(flatAST::FlattenedAST, ex)
 
         isa(arg, LineNumberNode) && continue
 
-        top = insert_variables!(flatAST, arg)
+        top = flatten!(flatAST, arg)
         push!(top_args, top)
     end
 
@@ -151,7 +151,7 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
         isa(arg, LineNumberNode) && continue
 
-        top = insert_variables!(flatAST, arg)
+        top = flatten!(flatAST, arg)
         push!(top_args, top)
     end
 
@@ -179,9 +179,9 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
 end
 
-function insert_variables!(ex)
+function flatten!(ex)
     flatAST = FlattenedAST()
-    top_var = insert_variables!(flatAST, ex)
+    top_var = flatten!(flatAST, ex)
 
     return top_var, flatAST
 end
