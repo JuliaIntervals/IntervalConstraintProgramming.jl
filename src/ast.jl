@@ -4,12 +4,17 @@ immutable Assignment
     args
 end
 
+immutable FunctionAssignment
+    lhs
+    func
+    args
+end
 # Close to single assignment form
 type FlattenedAST
     input_variables::Set{Symbol}
     variables::Vector{Symbol}  # cleaned version
     intermediate::Vector{Symbol}  # generated vars
-    code::Vector{Assignment}
+    code # ::Vector{Assignment}
 end
 
 import Base.show
@@ -77,52 +82,28 @@ function process_block!(flatAST::FlattenedAST, ex)
         isa(arg, LineNumberNode) && continue
 
         top = flatten!(flatAST, arg)
-#        push!(top_args, top)
+
     end
 
-    return top
+    return top  # last variable assigned
 end
+
 
 function process_tuple!(flatAST::FlattenedAST, ex)
-    @show ex.args
 
-    top_args = []
-    for arg in ex.args
+    top_args = [flatten!(flatAST, arg) for arg in ex.args]
 
-        isa(arg, LineNumberNode) && continue
+    @show "Tuple arguments", top_args
 
-        top = flatten!(flatAST, arg)
-        push!(top_args, top)
-    end
-
-    @show top_args
-
-    top_level_code = quote end
-
-    # #@show op
-    #
-    # if op ∈ keys(rev_ops)  # standard operator
-    #     #if new_var == nothing
-    #         new_var = make_symbol()
-    #     #end
-    #
-    #     push!(flatAST.intermediate, new_var)
-    #
-    #     top_level_code = Assignment(new_var, op, top_args)
-    # end
-
-
-    # push!(flatAST.code, top_level_code)
-
-    # return new_var
-
-    return Expr(:tuple, top_args...)
+    return top_args
 
 end
+
 
 function process_assignment!(flatAST::FlattenedAST, ex)
     process_call!(flatAST, ex.args[2], ex.args[1])
 end
+
 
 function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
     # new_var is an optional variable name to assign the result of the call to
@@ -169,7 +150,28 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
         top_level_code = Assignment(new_var, op, top_args)
 
     else
-        throw(ArgumentError("Function $op not supported"))
+        if haskey(registered_functions, op)
+            println("Processing function $op")
+
+
+            # make enough new variables for all the returned arguments:
+            new_vars = Symbol[]
+
+            for var in registered_functions[op].generated
+                push!(new_vars, make_symbol())
+            end
+
+            append!(flatAST.intermediate, new_vars)
+
+            top_level_code = FunctionAssignment(new_vars, op, top_args)
+
+            new_var = new_vars[1:length(registered_functions[op].return_arguments)]
+
+
+        else
+
+            throw(ArgumentError("Function $op not supported"))
+        end
     end
 
 
@@ -191,6 +193,23 @@ function emit_forward_code(a::Assignment)
     :($(a.lhs) = $(a.op)($(a.args...) ) )
 end
 
+make_tuple(args) = Expr(:tuple, args...)
+
+function emit_forward_code(a::FunctionAssignment)
+    f = a.func
+    args = make_tuple(a.lhs)
+    :($args = $(f).forward($(a.args...) ) )
+end
+
+
+function emit_forward_code(code) #code::Vector{Assignment})
+    new_code = quote end
+    new_code.args = vcat([emit_forward_code(line) for line in code])
+    return new_code
+end
+
+
+
 function emit_backward_code(a::Assignment)
     return_args = [a.lhs, a.args...]
     rev_op = rev_ops[a.op]  # find reverse operation
@@ -211,21 +230,25 @@ function emit_backward_code(a::Assignment)
 
 end
 
-function emit_backward_code(code::Vector{Assignment})
+function emit_backward_code(a::FunctionAssignment)
+    f = a.func
+    args = make_tuple(a.lhs)
+    :($args = $(f).backward($(a.args...) ) )
+end
+
+
+function emit_backward_code(code) #::Vector{Assignment})
     new_code = quote end
     new_code.args = vcat([emit_backward_code(line) for line in reverse(code)])
     return new_code
 end
 
 
-function emit_forward_code(code::Vector{Assignment})
-    new_code = quote end
-    new_code.args = vcat([emit_forward_code(line) for line in code])
-    return new_code
-end
-
 
 function forward_pass(flatAST::FlattenedAST)
+
+    @show flatAST.input_variables
+    @show flatAST.intermediate
 
     input_variables = sort(collect(flatAST.input_variables))
     input_variables = setdiff(input_variables, flatAST.intermediate)  # remove local variables

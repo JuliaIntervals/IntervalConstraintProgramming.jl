@@ -43,11 +43,12 @@ type FunctionArguments
 
     input
     generated
+    return_arguments
 end
 
-#const registered_functions = Dict{Symbol, ConstraintFunction}()
 
-const function_arguments = Dict{Symbol, FunctionArguments}()
+
+const registered_functions = Dict{Symbol, FunctionArguments}()
 
 
 @doc """
@@ -66,17 +67,36 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     @show f, args, code
 
-    #root, all_vars, generated, code2 = IntervalConstraintProgramming.insert_variables!(code)
-    root, flatAST = IntervalConstraintProgramming.insert_variables!(code)
+    #root, all_vars, generated, code2 = IntervalConstraintProgramming.flatten!(code)
+    return_arguments, flatAST = IntervalConstraintProgramming.flatten!(code)
+
+    @show return_arguments
 
     #@show root, all_vars, generated, code2
+
+    # rearrange so actual return arguments come first:
+
+    @show flatAST
+    @show return_arguments
+
+    # make into an array:
+    if !(isa(return_arguments, Array))
+        return_arguments = [return_arguments]
+    end
+
+    flatAST.intermediate = setdiff(flatAST.intermediate, return_arguments)
+
+    println("HERE")
+    flatAST.intermediate = [return_arguments; flatAST.intermediate]
+
 
     forward_code = forward_pass(flatAST) #root, all_vars, generated, code2)
     backward_code = backward_pass(flatAST) #root, all_vars, generated, code2)
 
     @show forward_code, backward_code
 
-    function_arguments[f] = FunctionArguments(flatAST.input_variables, flatAST.intermediate)
+
+    registered_functions[f] = FunctionArguments(flatAST.variables, flatAST.intermediate, return_arguments)
 
 
     return quote

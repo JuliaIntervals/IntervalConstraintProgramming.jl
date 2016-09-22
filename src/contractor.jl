@@ -181,7 +181,7 @@ function process_call(ex, new_var=nothing)
 
         function_name = :($(op).forward)  # need esc?
 
-        func_args = function_arguments[op]
+        func_args = registered_functions[op]
         @show func_args
 
         new_generated_vars = Symbol[]
