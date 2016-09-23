@@ -141,3 +141,5 @@ function make_function(input_args, output_args, code)
 
     return GeneratedFunction(input_args, output_args, complete_code)
 end
+
+make_function(f::GeneratedFunction) = make_function(f.input_args)

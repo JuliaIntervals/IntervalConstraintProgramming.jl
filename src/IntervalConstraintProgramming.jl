@@ -21,13 +21,13 @@ export
 
 
 include("reverse_mode.jl")
+include("ast.jl")
 include("contractor.jl")
 include("separator.jl")
 include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
-include("ast.jl")
 
 
 end # module

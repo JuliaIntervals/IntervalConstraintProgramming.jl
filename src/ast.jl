@@ -1,3 +1,17 @@
+
+make_symbol() = make_symbol(:z)
+
+function make_symbol(s::Symbol)
+
+    i = get(symbol_numbers, s, 1)
+    symbol_numbers[s] = i + 1
+
+    Symbol("_", s, "_", i, "_")
+end
+
+
+# Types for representing a flattened AST:
+
 immutable Assignment
     lhs
     op
@@ -36,9 +50,9 @@ FlattenedAST() = FlattenedAST(Set{Symbol}(), [], [], [])
 
 export FlattenedAST
 
+##
 
 export flatten!
-
 
 doc"""`flatten!` adds information about any variables
 generated to the `FlattenedAST` object. It returns the object
