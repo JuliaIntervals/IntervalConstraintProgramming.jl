@@ -1,4 +1,4 @@
-__precompile__(true)
+#__precompile__(true)
 
 module IntervalConstraintProgramming
 
@@ -27,6 +27,7 @@ include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
+include("ast.jl")
 
 
 end # module

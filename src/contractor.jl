@@ -1,15 +1,34 @@
 # Own version of gensym:
-const symbol_number = [1]
+#const symbol_number = [1]
+const symbol_numbers = Dict{Symbol, Int}()
 
 doc"""Return a new, unique symbol like _z10_"""
-function make_symbol()
-    i = symbol_number[1]
-    symbol_number[1] += 1
 
-    symbol("_z", i, "_")
+make_symbol() = make_symbol(:z)
+
+function make_symbol(s::Symbol)
+
+    i = get(symbol_numbers, s, 1)
+    symbol_numbers[s] = i + 1
+
+    Symbol("_", s, "_", i, "_")
 end
 
+doc"""
+`insert_variables` takes a Julia `Expr`ession (i.e. an abstract syntax tree) and
+recursively replaces operations like `a+b` by assignments
+of the form `_z10_ = a+b`, where `_z10_` is a distinct symbol,
+created using `make_symbol` (which is like `gensym`, but more readable).
 
+Returns:
+
+1. generated variable at head (top) of tree, which will contain the result of the whole tree;
+2. sorted vector of (external) variables contained in the tree;
+3. vector of intermediate variables (both introduced by the user, and generated);
+4. code generated.
+
+Usage: `IntervalConstraintProgramming.insert_variables(:(x^2 + y^2))`
+"""
 function insert_variables(ex)  # numbers are leaves
     ex, Symbol[], Symbol[], quote end
 end
@@ -18,38 +37,108 @@ function insert_variables(ex::Symbol)  # symbols are leaves
     ex, [ex], Symbol[], quote end
 end
 
-doc"""
-`insert_variables` takes a Julia `Expr`ession and
-recursively replaces operations like `a+b` by assignments
-of the form `_z10_ = a+b`, where `_z10_` is a distinct symbol,
-created using `make_symbol` (which is like `gensym`, but more readable).
 
-Returns:
-
-1. generated variable at head of tree;
-2. sorted vector of leaf (user) variables contained in tree;
-3. vector of generated intermediate variables;
-4. generated code.
-
-Usage: `IntervalConstraintProgramming.insert_variables(:(x^2 + y^2))`
-"""
 function insert_variables(ex::Expr)
-
-    @show "insert_vars", ex
 
     if ex.head == :$   # process constants of form $a
         return :(esc($(ex.args[1]))), Symbol[], Symbol[], quote end
+
+    elseif ex.head == :call
+        process_call(ex)
+
+    elseif ex.head == :(=)
+        process_assignment(ex)
+
+    elseif ex.head == :block
+        process_block(ex)
+
+    elseif ex.head == :tuple
+        process_tuple(ex)
+
+    elseif ex.head == :return
+        process_return(ex)
+    end
+end
+
+function process_tuple(ex)
+    @show ex, ex.args
+
+    new_code = quote end
+    current_args = []  # the arguments in the current expression that will be added
+    all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
+    top_vars = Symbol[]
+    generated_variables = Symbol[]
+
+    top_vars = Symbol[]
+
+    for arg in ex.args
+        top, contained_vars, generated, code = insert_variables(arg)
+
+        union!(all_vars, contained_vars)
+        append!(new_code.args, code.args)  # add previously-generated code
+        append!(generated_variables, generated)
+
+        push!(top_vars, top)
     end
 
+    @show top_vars
+    @show new_code
+    #exit(1)
+
+    return top_vars, sort(collect(all_vars)), generated_variables, new_code
+
+end
+
+function process_return(ex)
+    top, contained_vars, generated, code = insert_variables(ex.args[1])
+    append!(code.args, :(return $top))
+
+    top, contained_vars, generated, code
+end
+
+
+function process_block(ex)
+
+    new_code = quote end
+    current_args = []  # the arguments in the current expression that will be added
+    all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
+    generated_variables = Symbol[]
+
+    local top
+
+    for arg in ex.args[1:end]
+
+        isa(arg, LineNumberNode) && continue
+        (isa(arg, Expr) && arg.head == :line) && continue
+
+        top, contained_vars, generated, code = insert_variables(arg)
+
+        push!(current_args, top)
+        union!(all_vars, contained_vars)
+        append!(new_code.args, code.args)  # add previously-generated code
+        append!(generated_variables, generated)
+    end
+
+    return top, sort(collect(all_vars)), generated_variables, new_code
+end
+
+
+function process_assignment(ex)
+    # assumes ex is an assignment
+    process_call(ex.args[2], ex.args[1])
+
+end
+
+
+function process_call(ex, new_var=nothing)
+    # new_var is an optional variable name to assign the result of the call to
+    # if none is given, then a new, unique variable name is created
+
     op = ex.args[1]
-    @show op
-    dump(STDOUT, op)
 
     if isa(op, Expr) && op.head == :line
          return quote end, Symbol[], Symbol[], quote end
      end
-
-
 
     # rewrite +(a,b,c) as +(a,+(b,c)):
     # TODO: Use @match here!
@@ -65,8 +154,6 @@ function insert_variables(ex::Expr)
 
     for arg in ex.args[2:end]
 
-        #@show "arg", arg
-
         isa(arg, LineNumberNode) && continue
 
         top, contained_vars, generated, code = insert_variables(arg)
@@ -77,21 +164,44 @@ function insert_variables(ex::Expr)
         append!(generated_variables, generated)
     end
 
-    new_var = make_symbol()
-    push!(generated_variables, new_var)
+    top_level_code = quote end
 
-    #if op ∈ keys(rev_ops)  # standard operator
+    #@show op
+
+    if op ∈ keys(rev_ops)  # standard operator
+        if new_var == nothing
+            new_var = make_symbol()
+        end
+
+        push!(generated_variables, new_var)
+
         top_level_code = :($(new_var) = ($op)($(current_args...)))  # new top-level code
 
-    #else  # assume user-defined function
+    else  # assume user-defined function
+
+        function_name = :($(op).forward)  # need esc?
+
+        func_args = registered_functions[op]
+        @show func_args
+
+        new_generated_vars = Symbol[]
+        for i in func_args.generated
+            push!(new_generated_vars, make_symbol())
+        end
+
+        append!(generated_variables, new_generated_vars)
+        new_var = new_generated_vars[end]
+
+        new_generated_vars = Expr(:tuple, new_generated_vars...)
 
 
-    #end
+
+        top_level_code = :($(new_generated_vars) = $(function_name)($(current_args...)))  # new top-level code
+
+    end
 
 
     push!(new_code.args, top_level_code)
-
-    @show new_code
 
     return new_var, sort(collect(all_vars)), generated_variables, new_code
 
@@ -146,23 +256,46 @@ function backward_pass(root_var, all_vars, generated, code)
             (var_ = op_(args__))  => (var, op, args)
         end
 
-        return_args = [var, args...]
+        #@show "hello", op
 
-        rev_op = rev_ops[op]  # find reverse operation
-        rev_code = :($(rev_op)($(return_args...)))
 
-        # delete non-symbols in return args:
-        for (i, arg) in enumerate(return_args)
-            if !(isa(arg, Symbol))
-                return_args[i] = :_
+
+
+        if (@capture(op, f_.forward))  # user-defined forward
+            rev_op = :($f.backward)
+            #println("Hello there")
+            @show var, op, args
+
+            return_args = [args...; var.args...]
+            rev_code = :($(rev_op)($(return_args...)))
+
+            #return_args =
+
+        else
+            return_args = [var, args...]
+            rev_op = rev_ops[op]  # find reverse operation
+
+            rev_code = :($(rev_op)($(return_args...)))
+
+
+            # delete non-symbols in return args:
+            for (i, arg) in enumerate(return_args)
+                if !(isa(arg, Symbol))
+                    return_args[i] = :_
+                end
             end
-        end
+
+         end
+
+
 
         return_tuple = Expr(:tuple, return_args...)  # make tuple out of array
         # or: :($(return_args...),)
 
         new_line = :($(return_tuple) = $(rev_code))
         push!(new_code.args, new_line)
+
+
     end
 
     sort!(all_vars)

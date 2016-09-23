@@ -5,6 +5,7 @@ doc"""
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
+# CHANGE TO IMMUTABLE!
 type ConstraintSeparator <: Separator
     variables::Vector{Symbol}
     separator::Function
@@ -104,6 +105,7 @@ end
 show_code(S::ConstraintSeparator) = show_code(S.contractor)
 
 @compat (S::ConstraintSeparator)(X) = S.separator(X)
+@compat (S::CombinationSeparator)(X) = S.separator(X)
 
 # show_code(S::Separator) = show_code(S.contractor)
 

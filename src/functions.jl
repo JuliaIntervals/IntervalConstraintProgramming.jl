@@ -4,14 +4,9 @@ Want to process `@constraint f(f(x)) ∈ [0.3, 0.4]`
 where `f(x) = 4x * (1-x)`
 
 Given code `f(f(x))`, we need `f_forward` and `f_backward`.
-Replace the code with
 
-`_f1_(_f2_(x))`
-
-since when generate the code, functions `f1` and `f2` need different *arguments*,
-and need to remember the arguments between the forward and reverse pass.
-Nonetheless, each "copy" of `f` uses the same actual forward and back functions,
-`_f_forward_` and `_f_reverse_`.
+Each "copy" of `f` uses the same actual forward and back functions,
+`f.forward` and `f.backward`.
 
 ```
 @function f(x) = 4x * (1-x)
@@ -22,79 +17,127 @@ should generate these forward and backward functions, and register the function
 """
 =#
 
+type FunctionObject
+    input_args::Vector{Symbol}
+    output_args::Vector{Symbol}
+    local_vars::Vector{Symbol}
+    code::Expr
+end
+
+
 doc"""
 A `ConstraintFunction` contains the created forward and backward
 code
 """
-type ConstraintFunction
+type ConstraintFunction{F <: Function, G <: Function}
     input::Vector{Symbol}  # input arguments for forward function
     output::Vector{Symbol} # output arguments for forward function
-    # forward_code::Expr
-    # backward_code::Expr
-    forward::Function
-    backward::Function
+    forward::F
+    backward::G
 end
 
-# doc"""
-# A `FunctionWrapper` specifies the actual variables that will be used as
-# input and output for a given invocation of a given function.
-# """
-# type FunctionWrapper
-#     input_args::Vector{Symbol}
-#     output_args::Vector{Symbol}
-#     constraint_function::ConstraintFunction
-# end
+type FunctionArguments
+    # input::Vector{Symbol}  # input arguments for forward function
+    # output::Vector{Symbol}  # output arguments
+    # generated::Vector{Symbol} # local variables generated
 
-const registered_functions = Dict{Symbol, ConstraintFunction}()
-# const function_wrappers = Dict{Symbol, FunctionWrapper}()
-#
-#
-# const function_counters = Dict{Symbol, Int}()
-#
-# function increment_counter!(f::Symbol)
-#     function_counters[f] = get(function_counters, f, 0) + 1
-#     counter = function_counters[f]
-#
-#     return counter, symbol("_", f, counter, "_")
-# end
+    input
+    generated
+    return_arguments
+end
+
+
+
+const registered_functions = Dict{Symbol, FunctionArguments}()
+
+
+@doc """
+`@function` registers a function to be used in forwards and backwards mode.
+
+Example: `@function f(x, y) = x^2 + y^2`
+"""  # this docstring does not work!
 
 @eval macro ($(:function))(ex)   # workaround to define macro @function
-    #@show ex
 
-    (f, args, code) = @match ex begin
-        ( f_(args__) = code_ ) => (f, args, code)
-    end
+    # (f, args, code) = @match ex begin
+    #     ( f_(args__) = code_ ) => (f, args, code)
+    # end
+
+    (f, args, code) = match_function(ex)
+
     @show f, args, code
 
-    root, all_vars, generated, code = IntervalConstraintProgramming.insert_variables(code)
+    #root, all_vars, generated, code2 = IntervalConstraintProgramming.flatten!(code)
+    return_arguments, flatAST = IntervalConstraintProgramming.flatten!(code)
 
-    forward_code = forward_pass(root, all_vars, generated, code)
-    backward_code = backward_pass(root, all_vars, generated, code)
+    @show return_arguments
+
+    #@show root, all_vars, generated, code2
+
+    # rearrange so actual return arguments come first:
+
+    @show flatAST
+    @show return_arguments
+
+    # make into an array:
+    if !(isa(return_arguments, Array))
+        return_arguments = [return_arguments]
+    end
+
+    flatAST.intermediate = setdiff(flatAST.intermediate, return_arguments)
+
+    println("HERE")
+    flatAST.intermediate = [return_arguments; flatAST.intermediate]
+
+
+    forward_code = forward_pass(flatAST) #root, all_vars, generated, code2)
+    backward_code = backward_pass(flatAST) #root, all_vars, generated, code2)
 
     @show forward_code, backward_code
 
+
+    registered_functions[f] = FunctionArguments(flatAST.variables, flatAST.intermediate, return_arguments)
+
+
     return quote
-        #$(esc(f)) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
-        registered_functions[$(Meta.quot(f))] =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
+        #$(esc(Meta.quot(f))) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
+        $(esc(f)) = ConstraintFunction($(flatAST.variables), $(flatAST.intermediate), $(forward_code), $(backward_code))
+        #registered_functions[$(Meta.quot(f))] =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
+        #$(Meta.quot(f)) =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
     end
 end
 
-# usage:  @make_function f(x) = x^2
-
-#function register_function(name::Symbol, )
 
 function match_function(ex)
-    try
 
-        f, args, body =
+    try
+        (f, args, body) =
             @match ex begin
              ( (f_(args__) = body_) |
-              (function f_(args__) body_ end)) => (f, args, body)
+              (function f_(args__) body_ end) ) => (f, args, body)
            end
 
-         return (f, args, body)
+         return (f, args, rmlines(body))  # rmlines is from MacroTools package
 
     catch
         throw(ArgumentError("$ex does not have the form of a function"))
     end
+end
+
+
+doc"""
+Generate code for an anonymous function with given
+input arguments, output arguments, and code block.
+"""
+function make_function(input_args, output_args, code)
+
+    input = Expr(:tuple, input_args...)  # make a tuple of the variables
+    output = Expr(:tuple, output_args...)  # make a tuple of the variables
+
+    new_code = copy(code)
+    push!(new_code.args, :(return $output))
+
+    complete_code = :( $input -> $new_code )
+
+    return GeneratedFunction(input_args, output_args, complete_code)
 end
