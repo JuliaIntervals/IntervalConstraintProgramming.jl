@@ -280,3 +280,7 @@ function backward_pass(flatAST::FlattenedAST)
                             generated_code)
 
 end
+
+function make_function(f::GeneratedFunction)
+    return make_function(f.input_arguments, f.output_arguments, f.code)
+end

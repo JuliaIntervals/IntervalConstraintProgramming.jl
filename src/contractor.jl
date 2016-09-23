@@ -396,20 +396,6 @@ function make_function(all_vars, code)
     function_code
 end
 
-doc"""
-Generate code for an anonymous function with given
-input arguments, output arguments, and code block.
-"""
-function make_function(input_args, output_args, code)
-
-    input = Expr(:tuple, input_args...)  # make a tuple of the variables
-    output = Expr(:tuple, output_args...)  # make a tuple of the variables
-
-    new_code = copy(code)
-    push!(new_code.args, :(return $output))
-
-    return :( $input -> $new_code )
-end
 
 
 
@@ -463,6 +449,37 @@ end
 
 function Contractor(ex::Expr)
     expr, constraint_interval = parse_comparison(ex)
+
+    top, linear_AST = flatten!(expr)
+
+    @show top, linear_AST
+
+    forward = forward_pass(linear_AST)
+    backward = backward_pass(linear_AST)
+
+    input_variables = make_tuple(forward.input_arguments)
+    forward_output = make_tuple(forward.output_arguments)
+
+    backward_output = make_tuple(backward.output_arguments)
+
+    code = quote
+        $(input_variables) -> begin
+            forward = $(make_function(forward))
+            backward = $(make_function(backward))
+
+            $(forward_output) = forward($(forward.input_arguments...))
+
+            $(top) = $(top) ∩ $(constraint_interval)
+
+            $(backward_output) = backward($(backward.input_arguments...))
+
+        end
+    end
+
+    #@show forward
+    #@show backward
+
+    @show code
 
     vars, code = forward_backward(expr, constraint_interval)
 
