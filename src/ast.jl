@@ -9,6 +9,13 @@ immutable FunctionAssignment
     func
     args
 end
+
+immutable GeneratedFunction
+    input_arguments::Vector{Symbol}
+    output_arguments::Vector{Symbol}
+    code::Expr
+end
+
 # Close to single assignment form
 type FlattenedAST
     input_variables::Set{Symbol}
@@ -255,15 +262,21 @@ function forward_pass(flatAST::FlattenedAST)
     flatAST.variables = input_variables
 
     generated_code = emit_forward_code(flatAST.code)
-    make_function(input_variables, flatAST.intermediate, generated_code)
+    #make_function(input_variables, flatAST.intermediate, generated_code)
+    return GeneratedFunction(input_variables, flatAST.intermediate, generated_code)
 end
 
 function backward_pass(flatAST::FlattenedAST)
 
     generated_code = emit_backward_code(flatAST.code)
-    make_function([flatAST.variables; flatAST.intermediate],
-                    flatAST.variables,
-                    generated_code)
-    # reverse input_variables and intermediate?
+    # make_function([flatAST.variables; flatAST.intermediate],
+    #                 flatAST.variables,
+    #                 generated_code)
+    # # reverse input_variables and intermediate?
+
+    all_variables = [flatAST.variables; flatAST.intermediate]
+    return GeneratedFunction(all_variables,
+                            flatAST.variables,
+                            generated_code)
 
 end
