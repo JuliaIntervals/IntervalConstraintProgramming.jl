@@ -292,9 +292,6 @@ function backward_pass(flatAST::FlattenedAST)
     return GeneratedFunction(all_variables,
                             flatAST.variables,
                             generated_code)
-
 end
 
-function make_function(f::GeneratedFunction)
-    return make_function(f.input_arguments, f.output_arguments, f.code)
-end
+make_function(f::GeneratedFunction) = make_function(f.input_arguments, f.output_arguments, f.code)

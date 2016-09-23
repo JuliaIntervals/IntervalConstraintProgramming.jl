@@ -5,6 +5,17 @@ const symbol_numbers = Dict{Symbol, Int}()
 doc"""Return a new, unique symbol like _z10_"""
 
 
+type Contractor{F}
+    variables::Vector{Symbol}
+    constraint_expression::Expr
+    code::Expr
+    contractor::F  # function
+end
+
+Contractor(variables, constraint, code) =
+    Contractor(variables, constraint, code, eval(code))
+
+
 function constraint(root_var, constraint_interval)
     # if constraint == Interval(-∞, ∞)
     #     constraint_code = :($(root_var) = $(root_var) ∩ _A_)
@@ -19,86 +30,6 @@ function constraint(root_var, constraint_interval)
 
     # new_code = quote end
     # push!(new_code.args, constraint_code)
-end
-
-
-function forward_pass(ex::Expr)
-    root, all_vars, generated, code = insert_variables(ex)
-    forward_pass(root, all_vars, generated, code)
-end
-
-function forward_pass(root, all_vars, generated, code)
-    make_function(all_vars, generated, code)
-end
-
-
-function backward_pass(ex::Expr) #, constraint::Interval)
-    root, all_vars, generated, code = insert_variables(ex)
-    backward_pass(root, all_vars, generated, code)
-end
-
-
-doc"""`backward_pass` replaces e.g. `z = a + b` with
-the corresponding reverse-mode function, `(z, a, b) = plusRev(z, a, b)`
-"""
-
-function backward_pass(root_var, all_vars, generated, code)
-
-    new_code = quote end
-
-    for line in reverse(code.args)  # run backwards
-
-        line.head == :line  && continue  # ignore line number nodes
-
-        (var, op, args) = @match line begin
-            (var_ = op_(args__))  => (var, op, args)
-        end
-
-        #@show "hello", op
-
-
-
-
-        if (@capture(op, f_.forward))  # user-defined forward
-            rev_op = :($f.backward)
-            #println("Hello there")
-            @show var, op, args
-
-            return_args = [args...; var.args...]
-            rev_code = :($(rev_op)($(return_args...)))
-
-            #return_args =
-
-        else
-            return_args = [var, args...]
-            rev_op = rev_ops[op]  # find reverse operation
-
-            rev_code = :($(rev_op)($(return_args...)))
-
-
-            # delete non-symbols in return args:
-            for (i, arg) in enumerate(return_args)
-                if !(isa(arg, Symbol))
-                    return_args[i] = :_
-                end
-            end
-
-         end
-
-
-
-        return_tuple = Expr(:tuple, return_args...)  # make tuple out of array
-        # or: :($(return_args...),)
-
-        new_line = :($(return_tuple) = $(rev_code))
-        push!(new_code.args, new_line)
-
-
-    end
-
-    sort!(all_vars)
-
-    make_function(vcat(all_vars, generated), all_vars, new_code)
 end
 
 doc"""
@@ -238,12 +169,37 @@ function parse_comparison(ex)
 end
 
 
-type Contractor
-    variables::Vector{Symbol}
-    constraint_expression::Expr
-    contractor::Function
-    code::Expr
+# new call syntax to define a "functor" (object that behaves like a function)
+@compat (C::Contractor)(x...) = C.contractor(x...)
+
+show_code(c::Contractor) = c.code
+
+
+function Base.show(io::IO, C::Contractor)
+    println(io, "Contractor:")
+    println(io, "  - variables: $(C.variables)")
+    print(io, "  - constraint: $(C.constraint_expression)")
 end
+
+doc"""Usage:
+```
+C = @contractor(x^2 + y^2 <= 1)
+x = y = @interval(0.5, 1.5)
+C(x, y)
+
+`@contractor` makes a function that takes as arguments the variables contained in the expression, in lexicographic order
+```
+
+TODO: Hygiene for global variables, or pass in parameters
+"""
+
+macro contractor(ex)
+    ex = Meta.quot(ex)
+    :(Contractor($ex))
+end
+
+
+
 
 function Contractor(ex::Expr)
     expr, constraint_interval = parse_comparison(ex)
@@ -271,6 +227,8 @@ function Contractor(ex::Expr)
 
             $(backward_output) = backward($(backward.input_arguments...))
 
+            return $(input_variables)
+
         end
     end
 
@@ -279,49 +237,17 @@ function Contractor(ex::Expr)
 
     @show code
 
-    vars, code = forward_backward(expr, constraint_interval)
 
-    fn = eval(make_function(vars, code))
+    #fn = eval(make_function(input_variables, code))
 
-    Contractor(vars, expr, fn, code)
-end
-
-# new call syntax to define a "functor" (object that behaves like a function)
-@compat (C::Contractor)(x...) = C.contractor(x...)
-
-
-function Base.show(io::IO, C::Contractor)
-    println(io, "Contractor:")
-    println(io, "  - variables: $(C.variables)")
-    print(io, "  - constraint: $(C.constraint_expression)")
-end
-
-doc"""Usage:
-```
-C = @contractor(x^2 + y^2 <= 1)
-x = y = @interval(0.5, 1.5)
-C(x, y)
-
-`@contractor` makes a function that takes as arguments the variables contained in the expression, in lexicographic order
-```
-
-TODO: Hygiene for global variables, or pass in parameters
-"""
-
-function contractor(ex)
-    expr, constraint = parse_comparison(ex)
-    @show expr, constraint
-
-    all_vars, code = forward_backward(expr, constraint)
-    @show all_vars, code
-
-    make_function(all_vars, code)
-end
-
-macro contractor(ex)
-    ex = Meta.quot(ex)
-    :(Contractor($ex))
+    Contractor(forward.input_arguments, expr, code)
 end
 
 
-show_code(c::Contractor) = c.code
+
+# type Contractor{F}
+#     variables::Vector{Symbol}
+#     constraint_expression::Expr
+#     code::Expr
+#     contractor::F  # function
+# end

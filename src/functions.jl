@@ -131,15 +131,14 @@ input arguments, output arguments, and code block.
 """
 function make_function(input_args, output_args, code)
 
-    input = Expr(:tuple, input_args...)  # make a tuple of the variables
-    output = Expr(:tuple, output_args...)  # make a tuple of the variables
+    input = make_tuple(input_args)  # make a tuple of the variables
+    output = make_tuple(output_args)  # make a tuple of the variables
 
     new_code = copy(code)
     push!(new_code.args, :(return $output))
 
     complete_code = :( $input -> $new_code )
 
-    return GeneratedFunction(input_args, output_args, complete_code)
+    #return GeneratedFunction(input_args, output_args, complete_code)
+    return complete_code
 end
-
-make_function(f::GeneratedFunction) = make_function(f.input_args)
