@@ -123,22 +123,3 @@ function match_function(ex)
         throw(ArgumentError("$ex does not have the form of a function"))
     end
 end
-
-
-doc"""
-Generate code for an anonymous function with given
-input arguments, output arguments, and code block.
-"""
-function make_function(input_args, output_args, code)
-
-    input = make_tuple(input_args)  # make a tuple of the variables
-    output = make_tuple(output_args)  # make a tuple of the variables
-
-    new_code = copy(code)
-    push!(new_code.args, :(return $output))
-
-    complete_code = :( $input -> $new_code )
-
-    #return GeneratedFunction(input_args, output_args, complete_code)
-    return complete_code
-end

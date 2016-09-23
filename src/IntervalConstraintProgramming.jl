@@ -22,6 +22,7 @@ export
 
 include("reverse_mode.jl")
 include("ast.jl")
+include("code_generation.jl")
 include("contractor.jl")
 include("separator.jl")
 include("paving.jl")
