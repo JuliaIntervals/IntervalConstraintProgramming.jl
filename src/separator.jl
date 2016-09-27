@@ -5,7 +5,7 @@ doc"""
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
-# CHANGE TO IMMUTABLE!
+# CHANGE TO IMMUTABLE AND PARAMETRIZE THE FUNCTION FOR EFFICIENCY
 type ConstraintSeparator <: Separator
     variables::Vector{Symbol}
     separator::Function
