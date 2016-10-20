@@ -12,9 +12,12 @@ type Contractor{F}
     contractor::F  # function
 end
 
-Contractor(variables, constraint, code) =
+function Contractor(variables, constraint, code)
+    code = MacroTools.striplines(code)  # remove line number nodes
     Contractor(variables, constraint, code, eval(code))
+end
 
+(C::Contractor{F}){F}(X::IntervalBox) = IntervalBox(C(X...)...)
 
 
 
@@ -62,7 +65,7 @@ end
 # new call syntax to define a "functor" (object that behaves like a function)
 @compat (C::Contractor)(x...) = C.contractor(x...)
 
-show_code(c::Contractor) = c.code
+#show_code(c::Contractor) = c.code
 
 
 function Base.show(io::IO, C::Contractor)
@@ -96,7 +99,7 @@ function Contractor(ex::Expr)
 
     top, linear_AST = flatten!(expr)
 
-    @show top, linear_AST
+    #@show top, linear_AST
 
     forward = forward_pass(linear_AST)
     backward = backward_pass(linear_AST)
@@ -125,7 +128,7 @@ function Contractor(ex::Expr)
     #@show forward
     #@show backward
 
-    @show code
+    #@show code
 
 
     #fn = eval(make_function(input_variables, code))

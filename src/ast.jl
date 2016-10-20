@@ -114,7 +114,7 @@ function process_tuple!(flatAST::FlattenedAST, ex)
 
     top_args = [flatten!(flatAST, arg) for arg in ex.args]
 
-    @show "Tuple arguments", top_args
+    #@show "Tuple arguments", top_args
 
     return top_args
 
@@ -172,7 +172,7 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
     else
         if haskey(registered_functions, op)
-            println("Processing function $op")
+            #println("Processing function $op")
 
 
             # make enough new variables for all the returned arguments:
