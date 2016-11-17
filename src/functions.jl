@@ -101,7 +101,8 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     return quote
         #$(esc(Meta.quot(f))) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
-        $(esc(f)) = ConstraintFunction($(flatAST.variables), $(flatAST.intermediate), $(forward_code), $(backward_code))
+        $(esc(f)) = ConstraintFunction($(flatAST.variables), $(flatAST.intermediate),
+                    $(make_function(forward_code)), $(make_function(backward_code)))
         #registered_functions[$(Meta.quot(f))] =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
         #$(Meta.quot(f)) =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
     end
@@ -122,22 +123,4 @@ function match_function(ex)
     catch
         throw(ArgumentError("$ex does not have the form of a function"))
     end
-end
-
-
-doc"""
-Generate code for an anonymous function with given
-input arguments, output arguments, and code block.
-"""
-function make_function(input_args, output_args, code)
-
-    input = Expr(:tuple, input_args...)  # make a tuple of the variables
-    output = Expr(:tuple, output_args...)  # make a tuple of the variables
-
-    new_code = copy(code)
-    push!(new_code.args, :(return $output))
-
-    complete_code = :( $input -> $new_code )
-
-    return GeneratedFunction(input_args, output_args, complete_code)
 end

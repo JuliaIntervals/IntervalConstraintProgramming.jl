@@ -1,3 +1,17 @@
+
+make_symbol() = make_symbol(:z)
+
+function make_symbol(s::Symbol)
+
+    i = get(symbol_numbers, s, 1)
+    symbol_numbers[s] = i + 1
+
+    Symbol("_", s, "_", i, "_")
+end
+
+
+# Types for representing a flattened AST:
+
 immutable Assignment
     lhs
     op
@@ -36,9 +50,9 @@ FlattenedAST() = FlattenedAST(Set{Symbol}(), [], [], [])
 
 export FlattenedAST
 
+##
 
 export flatten!
-
 
 doc"""`flatten!` adds information about any variables
 generated to the `FlattenedAST` object. It returns the object
@@ -100,7 +114,7 @@ function process_tuple!(flatAST::FlattenedAST, ex)
 
     top_args = [flatten!(flatAST, arg) for arg in ex.args]
 
-    @show "Tuple arguments", top_args
+    #@show "Tuple arguments", top_args
 
     return top_args
 
@@ -158,7 +172,7 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
     else
         if haskey(registered_functions, op)
-            println("Processing function $op")
+            #println("Processing function $op")
 
 
             # make enough new variables for all the returned arguments:
@@ -193,90 +207,4 @@ function flatten!(ex)
     top_var = flatten!(flatAST, ex)
 
     return top_var, flatAST
-end
-
-
-function emit_forward_code(a::Assignment)
-    :($(a.lhs) = $(a.op)($(a.args...) ) )
-end
-
-make_tuple(args) = Expr(:tuple, args...)
-
-function emit_forward_code(a::FunctionAssignment)
-    f = a.func
-    args = make_tuple(a.lhs)
-    :($args = $(f).forward($(a.args...) ) )
-end
-
-
-function emit_forward_code(code) #code::Vector{Assignment})
-    new_code = quote end
-    new_code.args = vcat([emit_forward_code(line) for line in code])
-    return new_code
-end
-
-
-
-function emit_backward_code(a::Assignment)
-    return_args = [a.lhs, a.args...]
-    rev_op = rev_ops[a.op]  # find reverse operation
-
-    rev_code = :($(rev_op)($(return_args...)))
-
-    # delete non-symbols in return args:
-    for (i, arg) in enumerate(return_args)
-        if !(isa(arg, Symbol))
-            return_args[i] = :_
-        end
-    end
-
-    return_tuple = Expr(:tuple, return_args...)  # make tuple out of array
-# or: :($(return_args...),)
-
-    return :($(return_tuple) = $(rev_code))
-
-end
-
-function emit_backward_code(a::FunctionAssignment)
-    f = a.func
-    args = make_tuple(a.lhs)
-    :($args = $(f).backward($(a.args...) ) )
-end
-
-
-function emit_backward_code(code) #::Vector{Assignment})
-    new_code = quote end
-    new_code.args = vcat([emit_backward_code(line) for line in reverse(code)])
-    return new_code
-end
-
-
-
-function forward_pass(flatAST::FlattenedAST)
-
-    @show flatAST.input_variables
-    @show flatAST.intermediate
-
-    input_variables = sort(collect(flatAST.input_variables))
-    input_variables = setdiff(input_variables, flatAST.intermediate)  # remove local variables
-    flatAST.variables = input_variables
-
-    generated_code = emit_forward_code(flatAST.code)
-    #make_function(input_variables, flatAST.intermediate, generated_code)
-    return GeneratedFunction(input_variables, flatAST.intermediate, generated_code)
-end
-
-function backward_pass(flatAST::FlattenedAST)
-
-    generated_code = emit_backward_code(flatAST.code)
-    # make_function([flatAST.variables; flatAST.intermediate],
-    #                 flatAST.variables,
-    #                 generated_code)
-    # # reverse input_variables and intermediate?
-
-    all_variables = [flatAST.variables; flatAST.intermediate]
-    return GeneratedFunction(all_variables,
-                            flatAST.variables,
-                            generated_code)
-
 end
