@@ -1,8 +1,3 @@
-# Own version of gensym:
-#const symbol_number = [1]
-const symbol_numbers = Dict{Symbol, Int}()
-
-doc"""Return a new, unique symbol like _z10_"""
 
 
 type Contractor{F<:Function}

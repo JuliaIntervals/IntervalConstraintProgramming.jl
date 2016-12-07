@@ -1,13 +1,13 @@
 
 const symbol_numbers = Dict{Symbol, Int}()
 
-doc"""Return a new, unique symbol like _z10_"""
-function make_symbol(s::Symbol=:z)  # default is :z
+doc"""Return a new, unique symbol like _z3_"""
+function make_symbol(s::Symbol = :z)  # default is :z
 
     i = get(symbol_numbers, s, 1)
     symbol_numbers[s] = i + 1
 
-    Symbol("_", s, "_", i, "_")
+    Symbol("_$(s)_$(i)_")
 end
 
 
@@ -58,7 +58,16 @@ export FlattenedAST
 
 ##
 
-export flatten!
+export flatten
+
+
+function flatten(ex)
+    flatAST = FlattenedAST()
+    top_var = flatten!(flatAST, ex)
+
+    return top_var, flatAST
+end
+
 
 doc"""`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
 structure, stored in a FlattenedAST object. This is close to SSA (single-assignment form,
@@ -147,7 +156,13 @@ A new variable is introduced for the result; its name can be specified
 """
 function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
+    println("Entering process_call!")
+    @show ex
+    @show flatAST
+    @show new_var
+
     op = ex.args[1]
+    @show op
 
     if isa(op, Expr) && op.head == :line
         return
@@ -176,7 +191,7 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
     top_level_code = quote end
 
-    #@show op
+    @show op
 
     if op ∈ keys(rev_ops)  # standard operator
         if new_var == nothing
@@ -211,11 +226,4 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
     return new_var
 
-end
-
-function flatten!(ex)
-    flatAST = FlattenedAST()
-    top_var = flatten!(flatAST, ex)
-
-    return top_var, flatAST
 end

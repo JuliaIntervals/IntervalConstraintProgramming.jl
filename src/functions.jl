@@ -59,8 +59,7 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     @show f, args, code
 
-    #root, all_vars, generated, code2 = IntervalConstraintProgramming.flatten!(code)
-    return_arguments, flatAST = IntervalConstraintProgramming.flatten!(code)
+    return_arguments, flatAST = flatten(code)
 
     @show return_arguments
 
