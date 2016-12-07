@@ -93,7 +93,7 @@ TODO: Hygiene for global variables, or pass in parameters
 
 macro contractor(ex)
     ex = Meta.quot(ex)
-    :(Contractor($ex))
+    :(make_contractor($ex))
 end
 
 
@@ -104,7 +104,7 @@ function make_contractor(ex::Expr)
     println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
 
-    top, linear_AST = flatten!(expr)
+    top, linear_AST = flatten(expr)
 
     @show top, linear_AST
 
@@ -123,7 +123,9 @@ function make_contractor(ex::Expr)
     @show forward_output
     @show backward_output
 
-    if length(top) == 1  # single variable
+    if isa(top, Symbol)
+        # nothing
+    elseif length(top) == 1  # single variable
         top = top[]
 
     else
