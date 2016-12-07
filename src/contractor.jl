@@ -5,7 +5,7 @@ const symbol_numbers = Dict{Symbol, Int}()
 doc"""Return a new, unique symbol like _z10_"""
 
 
-type Contractor{F}
+type Contractor{F<:Function}
     variables::Vector{Symbol}
     constraint_expression::Expr
     code::Expr
@@ -13,6 +13,16 @@ type Contractor{F}
 end
 
 function Contractor(variables, constraint, code)
+
+    println("Entering Contractor with")
+    display(Base.Markdown.parse("""
+    - variables: $variables
+    - constraint: $constraint
+    - code: $code
+    """)
+    )
+    #println("- code: $code")
+
     code = MacroTools.striplines(code)  # remove line number nodes
     Contractor(variables, constraint, code, eval(code))
 end
@@ -31,8 +41,8 @@ TODO: Allow something like [3,4]' for the complement of [3,4]'"""
 function parse_comparison(ex)
     expr, limits =
     @match ex begin
-       ((a_ <= b_) | (a_ < b_))   => (a, (-∞, b))
-       ((a_ >= b_) | (a_ > b_))   => (a, (b, ∞))
+       ((a_ <= b_) | (a_ < b_) | (a_ ≤ b_))   => (a, (-∞, b))
+       ((a_ >= b_) | (a_ > b_) | (a_ ≥ b_))   => (a, (b, ∞))
 
        ((a_ == b_) | (a_ = b_))   => (a, (b, b))
 
@@ -94,12 +104,14 @@ end
 
 
 
-function Contractor(ex::Expr)
+#function Contractor(ex::Expr)
+function make_contractor(ex::Expr)
+    println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
 
     top, linear_AST = flatten!(expr)
 
-    #@show top, linear_AST
+    @show top, linear_AST
 
     forward = forward_pass(linear_AST)
     backward = backward_pass(linear_AST)
@@ -108,6 +120,21 @@ function Contractor(ex::Expr)
     forward_output = make_tuple(forward.output_arguments)
 
     backward_output = make_tuple(backward.output_arguments)
+
+    @show forward
+    @show backward
+
+    @show input_variables
+    @show forward_output
+    @show backward_output
+
+    if length(top) == 1  # single variable
+        top = top[]
+
+    else
+        # TODO: implement what happens for multiple variables in the constraint
+        # using an IntervalBox and intersection of IntervalBoxes
+    end
 
     code = quote
         $(input_variables) -> begin
@@ -131,9 +158,11 @@ function Contractor(ex::Expr)
     #@show code
 
 
-    #fn = eval(make_function(input_variables, code))
+    #fn = eval(make_function(input_variables, code)
 
-    Contractor(forward.input_arguments, expr, code)
+    #Contractor(forward.input_arguments, expr, code)
+
+    return forward.input_arguments, expr, code
 end
 
 

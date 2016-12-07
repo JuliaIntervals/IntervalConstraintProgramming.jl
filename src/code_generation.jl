@@ -1,5 +1,11 @@
 
-make_tuple(args) = Expr(:tuple, args...)
+function make_tuple(args)
+    if length(args) == 1
+        return args[1]
+    end
+
+    return Expr(:tuple, args...)
+end
 
 
 function emit_forward_code(a::Assignment)

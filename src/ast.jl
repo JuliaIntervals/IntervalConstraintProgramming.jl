@@ -1,12 +1,18 @@
 
-make_symbol() = make_symbol(:z)
+const symbol_numbers = Dict{Symbol, Int}()
 
-function make_symbol(s::Symbol)
+doc"""Return a new, unique symbol like _z10_"""
+function make_symbol(s::Symbol=:z)  # default is :z
 
     i = get(symbol_numbers, s, 1)
     symbol_numbers[s] = i + 1
 
     Symbol("_", s, "_", i, "_")
+end
+
+
+function make_symbols(n::Integer)
+    [make_symbol() for i in 1:n]
 end
 
 
@@ -54,9 +60,15 @@ export FlattenedAST
 
 export flatten!
 
-doc"""`flatten!` adds information about any variables
-generated to the `FlattenedAST` object. It returns the object
-at the top of the current piece of tree."""
+doc"""`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
+structure, stored in a FlattenedAST object. This is close to SSA (single-assignment form,
+ https://en.wikipedia.org/wiki/Static_single_assignment_form).
+
+ Variables that are found are considered `input_variables`.
+ Generated variables introduced at intermediate nodes are stored in
+ `intermediate`.
+ The function returns the variable that is
+at the top of the current piece of the tree."""
 # process numbers
 function flatten!(flatAST::FlattenedAST, ex)
     return ex  # nothing to do to the AST; return the number
@@ -70,13 +82,13 @@ end
 
 function flatten!(flatAST::FlattenedAST, ex::Expr)
 
-    if ex.head == :$   # process constants of form $a
+    if ex.head == :$    # constants written as $a
         process_constant!(flatAST, ex)
 
-    elseif ex.head == :call
+    elseif ex.head == :call  # function calls
         process_call!(flatAST, ex)
 
-    elseif ex.head == :(=)
+    elseif ex.head == :(=)  # assignments
         process_assignment!(flatAST, ex)
 
     elseif ex.head == :block
@@ -91,19 +103,20 @@ function flatten!(flatAST::FlattenedAST, ex::Expr)
 end
 
 function process_constant!(flatAST::FlattenedAST, ex)
-    return :(esc($(ex.args[1])))  # return the value of the constant
+    return :(esc($(ex.args[1])))  # interpolate the value of the external constant
 end
 
-function process_block!(flatAST::FlattenedAST, ex)
 
+"""A block represents a linear sequence of Julia statements.
+They are processed in order.
+"""
+
+function process_block!(flatAST::FlattenedAST, ex)
     local top
 
     for arg in ex.args
-
         isa(arg, LineNumberNode) && continue
-
         top = flatten!(flatAST, arg)
-
     end
 
     return top  # last variable assigned
@@ -114,21 +127,25 @@ function process_tuple!(flatAST::FlattenedAST, ex)
 
     top_args = [flatten!(flatAST, arg) for arg in ex.args]
 
-    #@show "Tuple arguments", top_args
-
     return top_args
 
 end
 
-
+"""An assigment is of the form a = f(...).
+The name a is currently retained.
+TODO: It should later be made unique.
+"""
 function process_assignment!(flatAST::FlattenedAST, ex)
     process_call!(flatAST, ex.args[2], ex.args[1])
 end
 
 
+"""A call is something like +(x, y).
+A new variable is introduced for the result; its name can be specified
+    using the new_var optional argument. If none is given, then a new, generated
+    name is used.
+"""
 function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
-    # new_var is an optional variable name to assign the result of the call to
-    # if none is given, then a new, unique variable name is created
 
     op = ex.args[1]
 
@@ -172,15 +189,9 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
     else
         if haskey(registered_functions, op)
-            #println("Processing function $op")
-
 
             # make enough new variables for all the returned arguments:
-            new_vars = Symbol[]
-
-            for var in registered_functions[op].generated
-                push!(new_vars, make_symbol())
-            end
+            new_vars = make_symbols(length(registered_functions[op].generated))
 
             append!(flatAST.intermediate, new_vars)
 

@@ -17,14 +17,6 @@ should generate these forward and backward functions, and register the function
 """
 =#
 
-type FunctionObject
-    input_args::Vector{Symbol}
-    output_args::Vector{Symbol}
-    local_vars::Vector{Symbol}
-    code::Expr
-end
-
-
 doc"""
 A `ConstraintFunction` contains the created forward and backward
 code
@@ -74,7 +66,6 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     #@show root, all_vars, generated, code2
 
-    # rearrange so actual return arguments come first:
 
     @show flatAST
     @show return_arguments
@@ -83,6 +74,8 @@ Example: `@function f(x, y) = x^2 + y^2`
     if !(isa(return_arguments, Array))
         return_arguments = [return_arguments]
     end
+
+    # rearrange so actual return arguments come first:
 
     flatAST.intermediate = setdiff(flatAST.intermediate, return_arguments)
 
