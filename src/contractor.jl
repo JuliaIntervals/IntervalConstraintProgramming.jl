@@ -70,6 +70,7 @@ end
 # new call syntax to define a "functor" (object that behaves like a function)
 @compat (C::Contractor)(x...) = C.contractor(x...)
 
+@compat (C::Contractor)(X::IntervalBox) = C.contractor(X...)
 #show_code(c::Contractor) = c.code
 
 
@@ -159,7 +160,7 @@ function make_contractor(ex::Expr)
 
     #Contractor(forward.input_arguments, expr, code)
 
-    return forward.input_arguments, expr, code
+    return Contractor(forward.input_arguments, expr, code)
 end
 
 
