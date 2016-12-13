@@ -93,6 +93,7 @@ TODO: Hygiene for global variables, or pass in parameters
 """
 
 macro contractor(ex)
+    println("@contractor; ex=$ex")
     ex = Meta.quot(ex)
     :(make_contractor($ex))
 end

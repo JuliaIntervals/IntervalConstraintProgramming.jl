@@ -34,7 +34,7 @@ function ConstraintSeparator(ex::Expr)
         expr = :(1 * $expr)  # convert symbol into expression
     end
 
-    C = Contractor(expr)
+    C = @contractor($expr)
     variables = C.variables[2:end]
 
     a = constraint.lo
