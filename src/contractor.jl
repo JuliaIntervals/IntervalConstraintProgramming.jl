@@ -7,21 +7,7 @@ type Contractor{F<:Function}
     contractor::F  # function
 end
 
-function Contractor(variables, constraint, code)
-
-    println("Entering Contractor with")
-    display(Base.Markdown.parse("""
-    - variables: $variables
-    - constraint: $constraint
-    - code: $code
-    """)
-    )
-    #println("- code: $code")
-
-    code = MacroTools.striplines(code)  # remove line number nodes
-    Contractor(variables, constraint, code, eval(code))
-end
-
+functio
 (C::Contractor{F}){F}(X::IntervalBox) = IntervalBox(C(X...)...)
 
 
