@@ -7,6 +7,21 @@ type Contractor{F<:Function}
     contractor::F  # function
 end
 
+function Contractor(variables, constraint, code)
+
+    println("Entering Contractor with")
+    display(Base.Markdown.parse("""
+    - variables: $variables
+    - constraint: $constraint
+    - code: $code
+    """)
+    )
+    #println("- code: $code")
+
+    code = MacroTools.striplines(code)  # remove line number nodes
+    Contractor(variables, constraint, code, eval(code))
+end
+
 (C::Contractor{F}){F}(X::IntervalBox) = IntervalBox(C(X...)...)
 
 
@@ -79,10 +94,14 @@ TODO: Hygiene for global variables, or pass in parameters
 
 macro contractor(ex)
     println("@contractor; ex=$ex")
-    ex = Meta.quot(ex)
-    :(make_contractor($ex))
+
+    make_contractor(ex)
 end
 
+
+
+
+#function Contractor(ex::Expr)
 function make_contractor(ex::Expr)
     println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
@@ -99,12 +118,12 @@ function make_contractor(ex::Expr)
 
     backward_output = make_tuple(backward.output_arguments)
 
-    @show forward
-    @show backward
-
-    @show input_variables
-    @show forward_output
-    @show backward_output
+    # @show forward
+    # @show backward
+    #
+    # @show input_variables
+    # @show forward_output
+    # @show backward_output
 
     if isa(top, Symbol)
         # nothing
@@ -132,5 +151,14 @@ function make_contractor(ex::Expr)
         end
     end
 
-    return Contractor(forward.input_arguments, expr, code)
+    # @show forward
+    # @show backward
+    #
+    # @show code
+
+    return :(Contractor($(forward.input_arguments),
+                        $(Meta.quot(expr)),
+                        $(Meta.quot(code)),
+                        $(code)
+                        ))
 end

@@ -157,12 +157,12 @@ A new variable is introduced for the result; its name can be specified
 function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
     println("Entering process_call!")
-    @show ex
-    @show flatAST
-    @show new_var
+    #@show ex
+    #@show flatAST
+    #@show new_var
 
     op = ex.args[1]
-    @show op
+    #@show op
 
     if isa(op, Expr) && op.head == :line
         return
@@ -191,7 +191,7 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
     top_level_code = quote end
 
-    @show op
+    #@show op
 
     if op ∈ keys(rev_ops)  # standard operator
         if new_var == nothing
