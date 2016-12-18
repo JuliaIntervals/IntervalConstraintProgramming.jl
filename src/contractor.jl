@@ -7,7 +7,6 @@ type Contractor{F<:Function}
     contractor::F  # function
 end
 
-functio
 (C::Contractor{F}){F}(X::IntervalBox) = IntervalBox(C(X...)...)
 
 

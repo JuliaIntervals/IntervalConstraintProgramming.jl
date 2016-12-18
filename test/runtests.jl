@@ -10,10 +10,21 @@ facts("Utilities") do
         ([:a,:b,:c], [1,3], [3,2], [1,0,2], [0,2,1])
 end
 
+facts("Contractor") do
+    x = y = -∞..∞
+    X = IntervalBox(x, y)
+
+    C = @contractor x^2 + y^2 <= 1
+
+    @fact C(X) --> (-1..1, -1..1)
+end
+
 facts("Separators") do
     II = -100..100
     X = IntervalBox(II, II)
     S = @constraint x^2 + y^2 <= 1
+
+    @fact typeof(S) --> IntervalConstraintProgramming.ConstraintSeparator
 
     inner, outer = S(X)
     @fact inner --> (-1..1, -1..1)
