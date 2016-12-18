@@ -7,21 +7,6 @@ type Contractor{F<:Function}
     contractor::F  # function
 end
 
-function Contractor(variables, constraint, code)
-
-    println("Entering Contractor with")
-    display(Base.Markdown.parse("""
-    - variables: $variables
-    - constraint: $constraint
-    - code: $code
-    """)
-    )
-    #println("- code: $code")
-
-    code = MacroTools.striplines(code)  # remove line number nodes
-    Contractor(variables, constraint, code, eval(code))
-end
-
 (C::Contractor{F}){F}(X::IntervalBox) = IntervalBox(C(X...)...)
 
 
@@ -98,10 +83,6 @@ macro contractor(ex)
     :(make_contractor($ex))
 end
 
-
-
-
-#function Contractor(ex::Expr)
 function make_contractor(ex::Expr)
     println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
@@ -151,24 +132,5 @@ function make_contractor(ex::Expr)
         end
     end
 
-    #@show forward
-    #@show backward
-
-    #@show code
-
-
-    #fn = eval(make_function(input_variables, code)
-
-    #Contractor(forward.input_arguments, expr, code)
-
     return Contractor(forward.input_arguments, expr, code)
 end
-
-
-
-# type Contractor{F}
-#     variables::Vector{Symbol}
-#     constraint_expression::Expr
-#     code::Expr
-#     contractor::F  # function
-# end
