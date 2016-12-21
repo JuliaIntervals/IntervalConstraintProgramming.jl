@@ -55,17 +55,18 @@ end
 macro constraint(ex::Expr)  # alternative name for constraint -- remove?
     @show ex
     expr, constraint = parse_comparison(ex)
-    #expr = Meta.quot(expr)
 
-    @show expr
+    if isa(expr, Symbol)
+        expr = :(1 * $expr)  # make into an expression!
+    end
 
     contractor_name = make_symbol(:C)
 
-    quoted_expr = Meta.quot(expr)
+    full_expr = Meta.quot(:($expr ∈ $constraint))
 
     code = quote end
     push!(code.args, :($contractor_name = @contractor($(esc(expr)))))
-    push!(code.args, :(ConstraintSeparator($(contractor_name).variables, $constraint, $contractor_name, $quoted_expr)))
+    push!(code.args, :(ConstraintSeparator($(contractor_name).variables[2:end], $constraint, $contractor_name, $full_expr)))
 
     @show code
 
@@ -103,9 +104,9 @@ end
 # show_code(S::ConstraintSeparator) = show_code(S.contractor)
 
 #@compat (S::ConstraintSeparator)(X) = S.separator(X)
-#@compat (S::CombinationSeparator)(X) = S.separator(X)
+@compat (S::CombinationSeparator)(X) = S.separator(X)
 
-(S::ConstraintSeparator)(X) = S.separator(X)
+#@compat (S::ConstraintSeparator)(X) = S.separator(X)
 
 # show_code(S::Separator) = show_code(S.contractor)
 
@@ -152,8 +153,8 @@ function ∩(S1::Separator, S2::Separator)
 
     f = X -> begin
 
-        inner1, outer1 = S1([X[i] for i in indices1])
-        inner2, outer2 = S2([X[i] for i in indices2])
+        inner1, outer1 = S1(IntervalBox([X[i] for i in indices1]...))
+        inner2, outer2 = S2(IntervalBox([X[i] for i in indices2]...))
 
         if any(isempty, inner1)
             inner1 = emptyinterval(IntervalBox(X))
@@ -201,8 +202,8 @@ function ∪(S1::Separator, S2::Separator)
     numvars = length(variables)
 
     f = X -> begin
-        inner1, outer1 = S1(tuple([X[i] for i in indices1]...))
-        inner2, outer2 = S2(tuple([X[i] for i in indices2]...))
+        inner1, outer1 = S1(IntervalBox([X[i] for i in indices1]...))
+        inner2, outer2 = S2(IntervalBox([X[i] for i in indices2]...))
 
         if any(isempty, inner1)
             inner1 = emptyinterval(IntervalBox(X))

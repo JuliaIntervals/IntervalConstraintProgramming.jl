@@ -14,9 +14,9 @@ facts("Contractor") do
     x = y = -∞..∞
     X = IntervalBox(x, y)
 
-    C = @contractor x^2 + y^2 <= 1
+    C = @contractor x^2 + y^2
 
-    @fact C(X) --> (-1..1, -1..1)
+    @fact C(-∞..1, x, y) --> (-1..1, -1..1)
 end
 
 facts("Separators") do
@@ -52,7 +52,7 @@ facts("pave") do
 
 
     S3 = @constraint x^2 + y^2 <= 1
-    X = IntervalBox(-Inf..Inf, -Inf..Inf)
+    X = IntervalBox(-∞..∞, -∞..∞)
     paving = pave(S3, X, 1)
 
     @fact paving.inner --> [IntervalBox(Interval(0.0, 0.5), Interval(0.0, 0.8660254037844386)),
@@ -70,17 +70,17 @@ facts("pave") do
                         IntervalBox(Interval(-1.0, -0.5), Interval(-0.8660254037844387, 0.0))]
 end
 
-facts("Constants") do
-    a = 3
-    x = y = -∞..∞
-    X = IntervalBox(x, y)
-    S4 = @constraint x^2 + y^2 <= $a
-    paving = pave(S4, X)
-
-    @fact paving.ϵ --> 0.01
-    @fact length(paving.inner) --> 1532
-    @fact length(paving.boundary) --> 1536
-end
+# facts("Constants") do
+#     a = 3
+#     x = y = -∞..∞
+#     X = IntervalBox(x, y)
+#     S4 = @constraint x^2 + y^2 <= $a
+#     paving = pave(S4, X)
+#
+#     @fact paving.ϵ --> 0.01
+#     @fact length(paving.inner) --> 1532
+#     @fact length(paving.boundary) --> 1536
+# end
 
 
 facts("Volume") do
