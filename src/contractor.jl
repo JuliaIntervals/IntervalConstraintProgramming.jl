@@ -7,16 +7,14 @@ type Contractor{F<:Function}
     contractor::F  # function
 end
 
-(C::Contractor{F}){F}(X::IntervalBox) = IntervalBox(C(X...)...)
-
-
 
 doc"""`parse_comparison` parses comparisons like `x >= 10`
 into the corresponding interval, expressed as `x ∈ [10,∞]`
 
 Returns the expression and the constraint interval
 
-TODO: Allow something like [3,4]' for the complement of [3,4]'"""
+TODO: Allow something like [3,4]' for the complement of [3,4]
+"""
 
 function parse_comparison(ex)
     expr, limits =
@@ -67,9 +65,10 @@ end
 
 doc"""Usage:
 ```
-C = @contractor(x^2 + y^2 <= 1)
+C = @contractor(x^2 + y^2)
+A = -∞..1  # the constraint interval
 x = y = @interval(0.5, 1.5)
-C(x, y)
+C(A, x, y)
 
 `@contractor` makes a function that takes as arguments the variables contained in the expression, in lexicographic order
 ```
@@ -91,6 +90,10 @@ function make_contractor(ex::Expr)
     println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
 
+    if constraint_interval != entireinterval()
+        warn("Ignoring constraint; include as first argument")
+    end
+
     top, linear_AST = flatten(expr)
 
     @show top, linear_AST
@@ -98,7 +101,20 @@ function make_contractor(ex::Expr)
     forward = forward_pass(linear_AST)
     backward = backward_pass(linear_AST)
 
-    input_variables = make_tuple(forward.input_arguments)
+
+
+    # TODO: What about interval box constraints?
+    input_arguments = forward.input_arguments
+    augmented_input_arguments = [:_A_; forward.input_arguments]
+
+    @show input_arguments
+    @show augmented_input_arguments
+
+    # add constraint interval as first argument
+
+    input_variables = make_tuple(input_arguments)
+    augmented_input_variables = make_tuple(augmented_input_arguments)
+
     forward_output = make_tuple(forward.output_arguments)
 
     backward_output = make_tuple(backward.output_arguments)
@@ -120,14 +136,16 @@ function make_contractor(ex::Expr)
         # using an IntervalBox and intersection of IntervalBoxes
     end
 
+
+
     code = quote
-        $(input_variables) -> begin
+        $(augmented_input_variables) -> begin
             forward = $(make_function(forward))
             backward = $(make_function(backward))
 
             $(forward_output) = forward($(forward.input_arguments...))
 
-            $(top) = $(top) ∩ $(constraint_interval)
+            $(top) = $(top) ∩ _A_
 
             $(backward_output) = backward($(backward.input_arguments...))
 
@@ -141,7 +159,7 @@ function make_contractor(ex::Expr)
     #
     # @show code
 
-    return :(Contractor($(forward.input_arguments),
+    return :(Contractor($(augmented_input_arguments),
                         $(Meta.quot(expr)),
                         $(Meta.quot(code)),
                         $(code)

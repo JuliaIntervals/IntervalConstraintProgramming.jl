@@ -34,8 +34,8 @@ function ConstraintSeparator(ex::Expr)
         expr = :(1 * $expr)  # convert symbol into expression
     end
 
-    #C = @contractor($expr)
-    variables = C.variables[2:end]
+    @eval C = @contractor($expr)
+    variables = C.variables[2:end]  # without the constraint
 
     a = constraint.lo
     b = constraint.hi
@@ -70,9 +70,59 @@ function ConstraintSeparator(ex::Expr)
 
 end
 
+function make_separator(C::Contractor, ex::Expr, constraint::Interval)
+
+    if constraint == entireinterval()
+        throw(ArgumentError("Must give explicit constraint"))
+    end
+
+    variables = C.variables[2:end]  # without the constraint
+
+    a = constraint.lo
+    b = constraint.hi
+
+    f = X -> begin
+
+        local outer
+
+        inner = C(a..b, X...)  # closure over the function C
+
+        if a == -∞
+            outer = C(b..∞, X...)
+
+        elseif b == ∞
+            outer = C(-∞..a, X...)
+
+        else
+
+            outer1 = C(-∞..a, X...)
+            outer2 = C(b..∞, X...)
+
+            outer = [ hull(x1, x2) for (x1,x2) in zip(outer1, outer2) ]
+        end
+
+        return (inner, (outer...))
+
+    end
+
+    expression = :($expr ∈ $constraint)
+
+    return ConstraintSeparator(variables, f, C, expression)
+
+end
+
+
 macro separator(ex::Expr)  # alternative name for constraint -- remove?
-    ex = Meta.quot(ex)
-    :(ConstraintSeparator($ex))
+
+    expr, constraint = parse_comparison(ex)
+    expr = Meta.quot(expr)
+
+    contractor_name = make_symbol(:C)
+
+    quote
+        $contractor_name = @contractor($expr)
+        make_separator($contractor_name, $expr, $constraint)
+    end
 end
 
 doc"""Create a separator from a given constraint expression, written as
@@ -102,10 +152,12 @@ function show(io::IO, S::Separator)
     println(io, S.expression)
 end
 
-show_code(S::ConstraintSeparator) = show_code(S.contractor)
+# show_code(S::ConstraintSeparator) = show_code(S.contractor)
 
-@compat (S::ConstraintSeparator)(X) = S.separator(X)
-@compat (S::CombinationSeparator)(X) = S.separator(X)
+#@compat (S::ConstraintSeparator)(X) = S.separator(X)
+#@compat (S::CombinationSeparator)(X) = S.separator(X)
+
+(S::ConstraintSeparator)(X) = S.separator(X)
 
 # show_code(S::Separator) = show_code(S.contractor)
 
