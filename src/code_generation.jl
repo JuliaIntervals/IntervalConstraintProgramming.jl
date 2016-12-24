@@ -1,8 +1,6 @@
 
 function make_tuple(args)
-    if length(args) == 1
-        return args[1]
-    end
+    length(args) == 1 && return args[1]
 
     return Expr(:tuple, args...)
 end
@@ -16,7 +14,7 @@ end
 function emit_forward_code(a::FunctionAssignment)
     f = a.func
     args = make_tuple(a.lhs)
-    :($args = $(f).forward($(a.args...) ) )
+    :($args = $f.forward($(a.args...) ) )
 end
 
 
@@ -50,8 +48,12 @@ end
 
 function emit_backward_code(a::FunctionAssignment)
     f = a.func
-    args = make_tuple(a.lhs)
-    :($args = $(f).backward($(a.args...) ) )
+
+    input_args = [a.args; a.lhs]
+
+    output_args = make_tuple(a.args)
+
+    :($output_args = $f.backward($(input_args...) ) )
 end
 
 
@@ -70,7 +72,7 @@ function forward_pass(flatAST::FlattenedAST)
 
     input_variables = sort(collect(flatAST.input_variables))
     input_variables = setdiff(input_variables, flatAST.intermediate)  # remove local variables
-    flatAST.variables = input_variables
+    flatAST.variables = input_variables  # why??
 
     generated_code = emit_forward_code(flatAST.code)
     #make_function(input_variables, flatAST.intermediate, generated_code)
@@ -101,35 +103,12 @@ function make_function(input_args, output_args, code)
     input = make_tuple(input_args)  # make a tuple of the variables
     output = make_tuple(output_args)  # make a tuple of the variables
 
-    new_code = copy(code)
-    push!(new_code.args, :(return $output))
-
-    complete_code = :( $input -> $new_code )
-
-    #return GeneratedFunction(input_args, output_args, complete_code)
-    return complete_code
+    return :( $input -> begin
+                            $code
+                            return $output
+                        end
+            )
 end
 
-#
-# function make_function(all_vars, code)
-#
-#     vars = Expr(:tuple, all_vars...)  # make a tuple of the variables
-#
-#     if all_vars[1] == :_A_
-#         vars2 = Expr(:tuple, (all_vars[2:end])...)  # miss out _A_
-#         push!(code.args, :(return $(vars2)))
-#     else
-#         push!(code.args, :(return $(vars)))
-#     end
-#
-#     # @show code
-#
-#     function_code = :( $(vars) -> $(code) )
-#
-#     function_code
-# end
-#
-
-
-
-make_function(f::GeneratedFunction) = make_function(f.input_arguments, f.output_arguments, f.code)
+make_function(f::GeneratedFunction) =
+        make_function(f.input_arguments, f.output_arguments, f.code)

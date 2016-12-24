@@ -217,7 +217,7 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
         else
 
-            throw(ArgumentError("Function $op not supported"))
+            throw(ArgumentError("Function $op not available. Use @function to define it."))
         end
     end
 

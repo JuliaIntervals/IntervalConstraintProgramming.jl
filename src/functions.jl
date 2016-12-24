@@ -87,17 +87,26 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     @show forward_code, backward_code
 
+    @show make_function(forward_code)
+    @show make_function(backward_code)
 
     registered_functions[f] = FunctionArguments(flatAST.variables, flatAST.intermediate, return_arguments)
 
 
     return quote
         #$(esc(Meta.quot(f))) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
-        $(esc(f)) = ConstraintFunction($(flatAST.variables), $(flatAST.intermediate),
-                    $(make_function(forward_code)), $(make_function(backward_code)))
+        #$(esc(f)) =
+        $(esc(f)) =
+            ConstraintFunction($(flatAST.variables),
+                                $(flatAST.intermediate),
+                                $(make_function(forward_code)), $(make_function(backward_code))
+                                )
+
+
         #registered_functions[$(Meta.quot(f))] =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
         #$(Meta.quot(f)) =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
     end
+
 end
 
 

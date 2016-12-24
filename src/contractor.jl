@@ -138,21 +138,24 @@ function make_contractor(ex::Expr)
 
 
 
-    code = quote
-        $(augmented_input_variables) -> begin
-            forward = $(make_function(forward))
-            backward = $(make_function(backward))
+    code =
+        esc(quote
+            $(augmented_input_variables) -> begin
+                forward = $(make_function(forward))
+                backward = $(make_function(backward))
 
-            $(forward_output) = forward($(forward.input_arguments...))
+                $(forward_output) = forward($(forward.input_arguments...))
 
-            $(top) = $(top) ∩ _A_
+                $(top) = $(top) ∩ _A_
 
-            $(backward_output) = backward($(backward.input_arguments...))
+                $(backward_output) = backward($(backward.input_arguments...))
 
-            return $(input_variables)
+                return $(input_variables)
 
-        end
-    end
+            end
+
+
+        end)
 
     # @show forward
     # @show backward

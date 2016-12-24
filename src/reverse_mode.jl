@@ -1,3 +1,6 @@
+export plus_rev, minus_rev, mul_rev,
+    power_rev, sqrt_rev, sqr_rev # export due to quoting issue
+
 const rev_ops = Dict(
                     :+     => :plus_rev,
                     :*     => :mul_rev,

@@ -17,7 +17,8 @@ export
     SubPaving, Paving,
     pave, refine!,
     Vol,
-    show_code
+    show_code,
+    plus_rev, mul_rev 
 
 
 include("reverse_mode.jl")
