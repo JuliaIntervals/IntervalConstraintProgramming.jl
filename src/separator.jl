@@ -8,7 +8,8 @@ using `@constraint`.
 # CHANGE TO IMMUTABLE AND PARAMETRIZE THE FUNCTION FOR EFFICIENCY
 type ConstraintSeparator <: Separator
     variables::Vector{Symbol}
-    separator::Function
+    #separator::Function
+    constraint::Interval
     contractor::Contractor
     expression::Expr
 end
@@ -22,76 +23,74 @@ type CombinationSeparator <: Separator
     expression::Expr
 end
 
-doc"""Create a ConstraintSeparator from a given constraint expression."""
-function ConstraintSeparator(ex::Expr)
-    expr, constraint = parse_comparison(ex)
+@compat function (S::ConstraintSeparator)(X::IntervalBox)
+    C = S.contractor
+    a, b = S.constraint.lo, S.constraint.hi
 
-    if constraint == entireinterval()
-        throw(ArgumentError("Must give explicit constraint"))
-    end
-
-    if isa(expr, Symbol)
-        expr = :(1 * $expr)  # convert symbol into expression
-    end
-
-    C = Contractor(expr)
-    variables = C.variables[2:end]
-
-    a = constraint.lo
-    b = constraint.hi
+    inner = C(a..b, X...)  # closure over the function C
 
     local outer
 
-    f = X -> begin
+    if a == -∞
+        outer = C(b..∞, X...)
 
-        inner = C(a..b, X...)  # closure over the function C
+    elseif b == ∞
+        outer = C(-∞..a, X...)
 
-        if a == -∞
-            outer = C(b..∞, X...)
+    else
 
-        elseif b == ∞
-            outer = C(-∞..a, X...)
+        outer1 = C(-∞..a, X...)
+        outer2 = C(b..∞, X...)
 
-        else
-
-            outer1 = C(-∞..a, X...)
-            outer2 = C(b..∞, X...)
-
-            outer = [ hull(x1, x2) for (x1,x2) in zip(outer1, outer2) ]
-        end
-
-        return (inner, (outer...))
-
+        outer = [ hull(x1, x2) for (x1,x2) in zip(outer1, outer2) ]
     end
 
-    expression = :($expr ∈ $constraint)
+    return (inner, (outer...))
+end
 
-    return ConstraintSeparator(variables, f, C, expression)
+
+
+
+
+macro constraint(ex::Expr)  # alternative name for constraint -- remove?
+    @show ex
+    expr, constraint = parse_comparison(ex)
+
+    if isa(expr, Symbol)
+        expr = :(1 * $expr)  # make into an expression!
+    end
+
+    contractor_name = make_symbol(:C)
+
+    full_expr = Meta.quot(:($expr ∈ $constraint))
+
+    code = quote end
+    push!(code.args, :($contractor_name = @contractor($(esc(expr)))))
+    push!(code.args, :(ConstraintSeparator($(contractor_name).variables[2:end], $constraint, $contractor_name, $full_expr)))
+
+    @show code
+
+    code
 
 end
 
-macro separator(ex::Expr)  # alternative name for constraint -- remove?
-    ex = Meta.quot(ex)
-    :(ConstraintSeparator($ex))
-end
-
-doc"""Create a separator from a given constraint expression, written as
-standard Julia code.
-
-e.g. `C = @constraint x^2 + y^2 <= 1`
-
-The variables (`x` and `y`, in this case) are automatically inferred.
-External constants can be used as e.g. `$a`:
-
-```
-a = 3
-C = @constraint x^2 + y^2 <= $a
-```
-"""
-macro constraint(ex::Expr)
-    ex = Meta.quot(ex)
-    :(ConstraintSeparator($ex))
-end
+# doc"""Create a separator from a given constraint expression, written as
+# standard Julia code.
+#
+# e.g. `C = @constraint x^2 + y^2 <= 1`
+#
+# The variables (`x` and `y`, in this case) are automatically inferred.
+# External constants can be used as e.g. `$a`:
+#
+# ```
+# a = 3
+# C = @constraint x^2 + y^2 <= $a
+# ```
+# """
+# macro constraint(ex::Expr)
+#     ex = Meta.quot(ex)
+#     :(ConstraintSeparator($ex))
+# end
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")
@@ -102,10 +101,12 @@ function show(io::IO, S::Separator)
     println(io, S.expression)
 end
 
-show_code(S::ConstraintSeparator) = show_code(S.contractor)
+# show_code(S::ConstraintSeparator) = show_code(S.contractor)
 
-@compat (S::ConstraintSeparator)(X) = S.separator(X)
+#@compat (S::ConstraintSeparator)(X) = S.separator(X)
 @compat (S::CombinationSeparator)(X) = S.separator(X)
+
+#@compat (S::ConstraintSeparator)(X) = S.separator(X)
 
 # show_code(S::Separator) = show_code(S.contractor)
 
@@ -152,8 +153,8 @@ function ∩(S1::Separator, S2::Separator)
 
     f = X -> begin
 
-        inner1, outer1 = S1([X[i] for i in indices1])
-        inner2, outer2 = S2([X[i] for i in indices2])
+        inner1, outer1 = S1(IntervalBox([X[i] for i in indices1]...))
+        inner2, outer2 = S2(IntervalBox([X[i] for i in indices2]...))
 
         if any(isempty, inner1)
             inner1 = emptyinterval(IntervalBox(X))
@@ -201,8 +202,8 @@ function ∪(S1::Separator, S2::Separator)
     numvars = length(variables)
 
     f = X -> begin
-        inner1, outer1 = S1(tuple([X[i] for i in indices1]...))
-        inner2, outer2 = S2(tuple([X[i] for i in indices2]...))
+        inner1, outer1 = S1(IntervalBox([X[i] for i in indices1]...))
+        inner2, outer2 = S2(IntervalBox([X[i] for i in indices2]...))
 
         if any(isempty, inner1)
             inner1 = emptyinterval(IntervalBox(X))

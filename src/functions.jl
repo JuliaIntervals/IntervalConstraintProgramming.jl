@@ -17,14 +17,6 @@ should generate these forward and backward functions, and register the function
 """
 =#
 
-type FunctionObject
-    input_args::Vector{Symbol}
-    output_args::Vector{Symbol}
-    local_vars::Vector{Symbol}
-    code::Expr
-end
-
-
 doc"""
 A `ConstraintFunction` contains the created forward and backward
 code
@@ -67,14 +59,12 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     @show f, args, code
 
-    #root, all_vars, generated, code2 = IntervalConstraintProgramming.flatten!(code)
-    return_arguments, flatAST = IntervalConstraintProgramming.flatten!(code)
+    return_arguments, flatAST = flatten(code)
 
     @show return_arguments
 
     #@show root, all_vars, generated, code2
 
-    # rearrange so actual return arguments come first:
 
     @show flatAST
     @show return_arguments
@@ -83,6 +73,8 @@ Example: `@function f(x, y) = x^2 + y^2`
     if !(isa(return_arguments, Array))
         return_arguments = [return_arguments]
     end
+
+    # rearrange so actual return arguments come first:
 
     flatAST.intermediate = setdiff(flatAST.intermediate, return_arguments)
 
@@ -95,17 +87,26 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     @show forward_code, backward_code
 
+    @show make_function(forward_code)
+    @show make_function(backward_code)
 
     registered_functions[f] = FunctionArguments(flatAST.variables, flatAST.intermediate, return_arguments)
 
 
     return quote
         #$(esc(Meta.quot(f))) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
-        $(esc(f)) = ConstraintFunction($(flatAST.variables), $(flatAST.intermediate),
-                    $(make_function(forward_code)), $(make_function(backward_code)))
+        #$(esc(f)) =
+        $(esc(f)) =
+            ConstraintFunction($(flatAST.variables),
+                                $(flatAST.intermediate),
+                                $(make_function(forward_code)), $(make_function(backward_code))
+                                )
+
+
         #registered_functions[$(Meta.quot(f))] =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
         #$(Meta.quot(f)) =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
     end
+
 end
 
 
