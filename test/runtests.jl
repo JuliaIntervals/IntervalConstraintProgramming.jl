@@ -93,3 +93,12 @@ end
     @test V.bounds == 3.75
 
 end
+
+@testset "Functions" begin
+    @function f(x)=4x
+    C = @contractor f(x)
+    A = 0.5..1
+    x = 0..1
+
+    @test C(A, x) == 0.125..0.25   # x such that 4x ∈ A=[0.5, 1]
+end
