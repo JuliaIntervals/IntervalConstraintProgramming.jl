@@ -186,7 +186,13 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
         isa(arg, LineNumberNode) && continue
 
         top = flatten!(flatAST, arg)
-        push!(top_args, top)
+
+        if isa(top, Vector)  # TODO: make top always a Vector?
+            append!(top_args, top)
+
+        else
+            push!(top_args, top)
+        end
     end
 
     top_level_code = quote end

@@ -95,10 +95,24 @@ end
 end
 
 @testset "Functions" begin
-    @function f(x)=4x
-    C = @contractor f(x)
+    @function f(x) = 4x
+    C1 = @contractor f(x)
     A = 0.5..1
     x = 0..1
 
-    @test C(A, x) == 0.125..0.25   # x such that 4x ∈ A=[0.5, 1]
+    @test C1(A, x) == 0.125..0.25   # x such that 4x ∈ A=[0.5, 1]
+
+
+    C2 = @constraint f(x) ∈ [0.5, 0.6]
+    X = IntervalBox(0..1)
+
+    paving = pave(C2, X)
+    @test length(paving.inner) == 2
+    @test length(paving.boundary) == 2
+
+
+    C3 = @constraint f(f(x)) ∈ [0.4, 0.8]
+    @test length(paving.inner) == 2
+    @test length(paving.boundary) == 2
+
 end
