@@ -23,7 +23,7 @@ type CombinationSeparator <: Separator
     expression::Expr
 end
 
-function (S::ConstraintSeparator)(X::IntervalBox)
+@compat function (S::ConstraintSeparator)(X::IntervalBox)
     C = S.contractor
     a, b = S.constraint.lo, S.constraint.hi
 

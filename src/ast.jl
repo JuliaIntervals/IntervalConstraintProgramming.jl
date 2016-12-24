@@ -15,6 +15,11 @@ function make_symbols(n::Integer)
     [make_symbol() for i in 1:n]
 end
 
+doc"""Check if a symbol like `:a` has been uniqued to `:_a_1_`"""
+function isuniqued(s::Symbol)
+    ss = string(s)
+    contains(ss, "_") && isdigit(ss[end-1])
+end
 
 # Types for representing a flattened AST:
 
@@ -131,10 +136,19 @@ function process_block!(flatAST::FlattenedAST, ex)
     return top  # last variable assigned
 end
 
-
 function process_tuple!(flatAST::FlattenedAST, ex)
+    println("Entering process_tuple")
+    @show flatAST
+    @show ex
+    # top_args = [flatten!(flatAST, arg) for arg in ex.args]
 
-    top_args = [flatten!(flatAST, arg) for arg in ex.args]
+    top_args = []  # the arguments returned for each element of the tuple
+    for arg in ex.args
+        top = flatten!(flatAST, arg)
+        @show flatAST
+
+        push!(top_args, top)
+    end
 
     return top_args
 
