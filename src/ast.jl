@@ -117,7 +117,7 @@ function flatten!(flatAST::FlattenedAST, ex::Expr)
 end
 
 function process_constant!(flatAST::FlattenedAST, ex)
-    return :(esc($(ex.args[1])))  # interpolate the value of the external constant
+    return esc(ex.args[1])  # interpolate the value of the external constant
 end
 
 
@@ -135,6 +135,8 @@ function process_block!(flatAST::FlattenedAST, ex)
 
     return top  # last variable assigned
 end
+
+# function process_iterated_function!(flatAST::FlattenedAST, ex)
 
 function process_tuple!(flatAST::FlattenedAST, ex)
     println("Entering process_tuple")

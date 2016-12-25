@@ -137,4 +137,10 @@ end
     x = 0..1
 
     @test C(A, x) == sqrt(A / 4)
+
+    @function g2(x) = ( a = f(f(x)); a^2 )
+    C2 = @contractor g2(x)
+
+    @test C2(A, x) == sqrt(A / 16)
+
 end
