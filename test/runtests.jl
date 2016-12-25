@@ -80,7 +80,6 @@ end
 
 
 @testset "Constants" begin
-
     x = y = -∞..∞
     X = IntervalBox(x, y)
 
@@ -145,4 +144,17 @@ end
 
     @test C2(A, x) == sqrt(A / 16)
 
+end
+
+@testset "Iterated functions" begin
+
+    @function f(x) = 2x
+
+    A = 0.5..1
+    x = 0..1
+
+    @function g3(x) = ( a = (f↑2)(x); a^2 )
+    C3 = @contractor g3(x)
+
+    @test C3(A, x) == sqrt(A / 16)
 end
