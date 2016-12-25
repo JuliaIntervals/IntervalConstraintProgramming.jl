@@ -179,6 +179,23 @@ function process_assignment!(flatAST::FlattenedAST, ex)
 
 end
 
+"""Processes something of the form `(f↑4)(x)` (write as `\\uparrow<TAB>`)
+by rewriting it to the equivalent set of iterated functions"""
+function process_iterated_function!(flatAST::FlattenedAST, ex)
+    total_function_call = ex.args[1]
+    argument = ex.args[2]
+
+    function_name = total_function_call.args[2]
+    power = total_function_call.args[3]  # assumed integer
+
+    new_expr = :($function_name($argument))
+
+    for i in 2:power
+        new_expr = :($function_name($new_expr))
+    end
+
+    flatten!(flatAST, new_expr)
+end
 
 """A call is something like +(x, y).
 A new variable is introduced for the result; its name can be specified
@@ -195,8 +212,14 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
     op = ex.args[1]
     #@show op
 
-    if isa(op, Expr) && op.head == :line
-        return
+    if isa(op, Expr)
+        if op.head == :line
+            return
+
+        elseif op.head == :call && op.args[1]==:↑   # iterated function like f ↑ 4
+            return process_iterated_function!(flatAST, ex)
+        end
+
     end
 
     # rewrite +(a,b,c) as +(a,+(b,c)):
