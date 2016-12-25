@@ -159,7 +159,22 @@ The name a is currently retained.
 TODO: It should later be made unique.
 """
 function process_assignment!(flatAST::FlattenedAST, ex)
-    process_call!(flatAST, ex.args[2], ex.args[1])
+    println("process_assignment!:")
+    @show ex
+    @show ex.args[1], ex.args[2]
+
+    top = flatten!(flatAST, ex.args[2])
+
+    var = ex.args[1]
+    push!(flatAST.intermediate, var)
+
+    top_level_code = Assignment(var, :(), top)  # empty operation
+    push!(flatAST.code, top_level_code)
+
+    @show flatAST
+
+    return var
+
 end
 
 

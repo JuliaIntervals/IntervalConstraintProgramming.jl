@@ -77,18 +77,20 @@ end
                         IntervalBox(Interval(-1.0, -0.5), Interval(-0.8660254037844387, 0.0))]
 end
 
-# @testset "Constants" begin
-#     let a = 3
-#         x = y = -∞..∞
-#         X = IntervalBox(x, y)
-#         S4 = @constraint x^2 + y^2 - $a <= 0
-#         paving = pave(S4, X)
-#
-#         @test paving.ϵ == 0.01
-#         @test length(paving.inner) == 1532
-#         @test length(paving.boundary) == 1536
-#     end
-# end
+
+x = y = -∞..∞
+X = IntervalBox(x, y)
+
+a = 3
+S4 = @constraint x^2 + y^2 - $a <= 0
+paving = pave(S4, X)
+
+@testset "Constants" begin
+    @test paving.ϵ == 0.01
+    @test length(paving.inner) == 1532
+    length(paving.boundary) == 1536
+
+end
 
 
 @testset "Volume" begin

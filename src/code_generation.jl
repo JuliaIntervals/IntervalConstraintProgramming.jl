@@ -7,14 +7,22 @@ end
 
 
 function emit_forward_code(a::Assignment)
-    :($(a.lhs) = $(a.op)($(a.args...) ) )
+
+    args = isa(a.args, Vector) ? a.args : [a.args]
+
+    if a.op == :()  # empty
+        :($(a.lhs) = $(args...) )
+
+    else
+        :($(a.lhs) = $(a.op)($(args...) ) )
+    end
 end
 
 
 function emit_forward_code(a::FunctionAssignment)
     f = a.func
     args = make_tuple(a.lhs)
-    :($args = $f.forward($(a.args...) ) )
+    :($args = $(esc(f)).forward($(a.args...) ) )
 end
 
 
@@ -27,10 +35,18 @@ end
 
 
 function emit_backward_code(a::Assignment)
-    return_args = [a.lhs, a.args...]
+
+    args = isa(a.args, Vector) ? a.args : [a.args]
+
+
+    return_args = [a.lhs, args...]
     rev_op = rev_ops[a.op]  # find reverse operation
 
-    rev_code = :($(rev_op)($(return_args...)))
+    if rev_op == :()   # empty
+        return :($(args...) = $(a.lhs))
+    else
+        rev_code = :($(rev_op)($(return_args...)))
+    end
 
     # delete non-symbols in return args:
     for (i, arg) in enumerate(return_args)
@@ -53,7 +69,7 @@ function emit_backward_code(a::FunctionAssignment)
 
     output_args = make_tuple(a.args)
 
-    :($output_args = $f.backward($(input_args...) ) )
+    :($output_args = $(esc(f)).backward($(input_args...) ) )
 end
 
 
@@ -103,11 +119,15 @@ function make_function(input_args, output_args, code)
     input = make_tuple(input_args)  # make a tuple of the variables
     output = make_tuple(output_args)  # make a tuple of the variables
 
-    return :( $input -> begin
+    return quote
+                $input -> begin
                             $code
                             return $output
                         end
-            )
+                end
+
+
+
 end
 
 make_function(f::GeneratedFunction) =

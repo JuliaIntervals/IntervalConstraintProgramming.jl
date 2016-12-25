@@ -6,7 +6,8 @@ const rev_ops = Dict(
                     :*     => :mul_rev,
                     :^     => :power_rev,
                     :-     => :minus_rev,
-                    :sqrt  => :sqrt_rev
+                    :sqrt  => :sqrt_rev,
+                    :()    => :()
                     )
 
 

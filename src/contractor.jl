@@ -139,7 +139,8 @@ function make_contractor(ex::Expr)
 
 
     code =
-        esc(quote
+        #esc(quote
+        quote
             $(augmented_input_variables) -> begin
                 forward = $(make_function(forward))
                 backward = $(make_function(backward))
@@ -154,8 +155,7 @@ function make_contractor(ex::Expr)
 
             end
 
-
-        end)
+        end
 
     # @show forward
     # @show backward
