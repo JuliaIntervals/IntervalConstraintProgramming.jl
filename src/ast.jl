@@ -140,14 +140,14 @@ end
 
 function process_tuple!(flatAST::FlattenedAST, ex)
     println("Entering process_tuple")
-    @show flatAST
-    @show ex
+    # @show flatAST
+    # @show ex
     # top_args = [flatten!(flatAST, arg) for arg in ex.args]
 
     top_args = []  # the arguments returned for each element of the tuple
     for arg in ex.args
         top = flatten!(flatAST, arg)
-        @show flatAST
+        # @show flatAST
 
         push!(top_args, top)
     end
@@ -162,8 +162,8 @@ TODO: It should later be made unique.
 """
 function process_assignment!(flatAST::FlattenedAST, ex)
     println("process_assignment!:")
-    @show ex
-    @show ex.args[1], ex.args[2]
+    # @show ex
+    # @show ex.args[1], ex.args[2]
 
     top = flatten!(flatAST, ex.args[2])
 
@@ -173,7 +173,7 @@ function process_assignment!(flatAST::FlattenedAST, ex)
     top_level_code = Assignment(var, :(), top)  # empty operation
     push!(flatAST.code, top_level_code)
 
-    @show flatAST
+    # @show flatAST
 
     return var
 

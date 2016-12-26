@@ -77,7 +77,7 @@ TODO: Hygiene for global variables, or pass in parameters
 """
 
 macro contractor(ex)
-    println("@contractor; ex=$ex")
+    # println("@contractor; ex=$ex")
 
     make_contractor(ex)
 end
@@ -87,7 +87,7 @@ end
 
 #function Contractor(ex::Expr)
 function make_contractor(ex::Expr)
-    println("Entering Contractor(ex) with ex=$ex")
+    # println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
 
     if constraint_interval != entireinterval()
@@ -96,7 +96,7 @@ function make_contractor(ex::Expr)
 
     top, linear_AST = flatten(expr)
 
-    @show top, linear_AST
+    # @show top, linear_AST
 
     forward = forward_pass(linear_AST)
     backward = backward_pass(linear_AST)
@@ -107,8 +107,8 @@ function make_contractor(ex::Expr)
     input_arguments = forward.input_arguments
     augmented_input_arguments = [:_A_; forward.input_arguments]
 
-    @show input_arguments
-    @show augmented_input_arguments
+    # @show input_arguments
+    # @show augmented_input_arguments
 
     # add constraint interval as first argument
 

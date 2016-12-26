@@ -57,17 +57,17 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     (f, args, code) = match_function(ex)
 
-    @show f, args, code
+    # @show f, args, code
 
     return_arguments, flatAST = flatten(code)
 
-    @show return_arguments
+    # @show return_arguments
 
-    #@show root, all_vars, generated, code2
+    # @show root, all_vars, generated, code2
 
 
-    @show flatAST
-    @show return_arguments
+    # @show flatAST
+    # @show return_arguments
 
     # make into an array:
     if !(isa(return_arguments, Array))
@@ -78,17 +78,17 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     flatAST.intermediate = setdiff(flatAST.intermediate, return_arguments)
 
-    println("HERE")
+    # println("HERE")
     flatAST.intermediate = [return_arguments; flatAST.intermediate]
 
 
     forward_code = forward_pass(flatAST) #root, all_vars, generated, code2)
     backward_code = backward_pass(flatAST) #root, all_vars, generated, code2)
 
-    @show forward_code, backward_code
+    # @show forward_code, backward_code
 
-    @show make_function(forward_code)
-    @show make_function(backward_code)
+    # @show make_function(forward_code)
+    # @show make_function(backward_code)
 
     registered_functions[f] = FunctionArguments(flatAST.variables, flatAST.intermediate, return_arguments)
 

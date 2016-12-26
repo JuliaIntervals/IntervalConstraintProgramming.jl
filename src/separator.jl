@@ -53,7 +53,7 @@ end
 
 
 macro constraint(ex::Expr)  # alternative name for constraint -- remove?
-    @show ex
+    # @show ex
     expr, constraint = parse_comparison(ex)
 
     if isa(expr, Symbol)
@@ -68,7 +68,7 @@ macro constraint(ex::Expr)  # alternative name for constraint -- remove?
     push!(code.args, :($contractor_name = @contractor($(esc(expr)))))
     push!(code.args, :(ConstraintSeparator($(contractor_name).variables[2:end], $constraint, $contractor_name, $full_expr)))
 
-    @show code
+    # @show code
 
     code
 
