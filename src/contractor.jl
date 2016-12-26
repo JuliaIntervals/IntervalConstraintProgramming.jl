@@ -77,7 +77,7 @@ TODO: Hygiene for global variables, or pass in parameters
 """
 
 macro contractor(ex)
-    println("@contractor; ex=$ex")
+    # println("@contractor; ex=$ex")
 
     make_contractor(ex)
 end
@@ -87,7 +87,7 @@ end
 
 #function Contractor(ex::Expr)
 function make_contractor(ex::Expr)
-    println("Entering Contractor(ex) with ex=$ex")
+    # println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
 
     if constraint_interval != entireinterval()

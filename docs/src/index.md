@@ -12,10 +12,17 @@ To do this, *interval constraint programming* is used, in particular the
 so-called "forward--backward contractor". This is implemented in terms of *separators*; see
 [Jaulin & Desrochers].
 
+```@meta
+DocTestSetup = quote
+    using IntervalConstraintProgramming, ValidatedNumerics
+end
+```
+
 ## Usage
 Let's define a constraint, using the `@constraint` macro:
 ```jldoctest
 julia> using IntervalConstraintProgramming, ValidatedNumerics
+
 julia> S = @constraint x^2 + y^2 <= 1
 Separator:
 - variables: x, y
@@ -25,7 +32,7 @@ It works out automatically that `x` and `y` are variables.
 The macro creates a `Separator` object, in this case a `ConstraintSeparator`.
 
 We now create an initial interval box in the $x$--$y$ plane:
-```jldoctest
+```julia
 julia> x = y = -100..100   # notation for creating an interval with `ValidatedNumerics.jl`
 
 julia> X = IntervalBox(x, y)
@@ -60,7 +67,12 @@ on the boundary ("both inside and outside"). This is done by the `pave` function
 that takes a separator, a domain to search inside, and an optional tolerance:
 
 ```julia
+julia> using Plots
+
+julia> x = y = -100..100
+
 julia> S = @constraint 1 <= x^2 + y^2 <= 3
+
 julia> paving = pave(S, X, 0.125);
 ```
 
@@ -69,25 +81,17 @@ an `inner` approximation, of type `SubPaving`, which is an alias for a `Vector` 
 a `SubPaving` representing the boxes on the boundary that could not be assigned either to the inside or outside of the set;
 and the tolerance.
 
-We may draw the result using the code in the `draw_boxes` file in the examples directory,
-which uses `PyPlot.jl`:
+We may draw the result using a plot recipe from `ValidatedNumerics`. Either a
+single `IntervalBox`, or a `Vector` of `IntervalBox`es (which a `SubPaving` is)
+maybe be drawn using `plot` from `Plots.jl`:
 ```julia
-julia> filename = joinpath(Pkg.dir("IntervalConstraintProgramming"), "examples", "draw_boxes.jl");
-julia> include(filename);
-julia> draw(paving)
+julia> plot(paving.inner, c="green")
+julia> plot!(paving.boundary, c="gray")
 ```
 
-We can get more control with
-```
-julia> draw(paving.inner, "green", 0.5, 1)
-julia> draw(paving.boundary, "grey", 0.2)
-```
-The second argument is the color; the third (optional) is the alpha value (transparency);
-and the fourth is the linewidth (default is 0).
+The output should look something like this:
 
-The output should look like this:
-
-![Ring](examples/ring.png)
+![Ring](ring.png)
 
 
 The green boxes have been **rigorously** proved to be contained within the feasible set,
@@ -97,7 +101,7 @@ and the white boxes to be outside the set. The grey boxes show those that lie on
 
 The package works in any number of dimensions, although it suffers from the usual exponential slowdown ("combinatorial explosion") in higher dimensions. In 3D, it is still relatively fast. There are sample 3D calculations in the `examples` directory, in particular in the [solid torus notebook](examples/Solid torus.ipynb), which uses [`GLVisualize.gl`](https://github.com/JuliaGL/GLVisualize.jl) to provide a 3D visualization which may be rotated and zoomed. The output for the solid torus looks like this:
 
-![Coloured solid torus](examples/coloured_solid_torus.png)
+![Coloured solid torus](solid_torus.png)
 
 
 ## Set operations
