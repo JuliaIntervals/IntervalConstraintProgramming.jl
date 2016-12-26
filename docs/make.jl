@@ -18,9 +18,9 @@ makedocs(
 
 deploydocs(
     repo = "github.com/dpsanders/IntervalConstraintProgramming.jl.git",
-    target = "build",
+    #target = "build",
     deps = nothing,
     make = nothing,
-    julia = "0.5",
+    julia = "release",
     osname = "linux"
 )
