@@ -2,11 +2,16 @@ using Documenter
 using IntervalConstraintProgramming, ValidatedNumerics
 
 makedocs(
-    modules = Module[IntervalConstraintProgramming],
+    modules = [IntervalConstraintProgramming],
     doctest = true,
     format = :html,
     authors = "David P. Sanders",
-    sitename = "IntervalConstraintProgramming.jl"
+    sitename = "IntervalConstraintProgramming.jl",
+
+    pages = Any[
+        "Home" => "index.md",
+        "API" => "api.md"
+    ]
     )
 
 # deploydocs(
@@ -18,7 +23,7 @@ makedocs(
 
 deploydocs(
     repo = "github.com/dpsanders/IntervalConstraintProgramming.jl.git",
-    #target = "build",
+    target = "build",
     deps = nothing,
     make = nothing,
     julia = "release",
