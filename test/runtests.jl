@@ -78,14 +78,15 @@ end
 end
 
 
-x = y = -∞..∞
-X = IntervalBox(x, y)
-
-a = 3
-S4 = @constraint x^2 + y^2 - $a <= 0
-paving = pave(S4, X)
 
 @testset "Constants" begin
+    x = y = -∞..∞
+    X = IntervalBox(x, y)
+
+    a = 3
+    S4 = @constraint x^2 + y^2 - $a <= 0
+    paving = pave(S4, X)
+
     @test paving.ϵ == 0.01
     @test length(paving.inner) == 1532
     length(paving.boundary) == 1536
@@ -124,4 +125,36 @@ end
     @test length(paving.inner) == 2
     @test length(paving.boundary) == 2
 
+end
+
+
+@testset "Nested functions" begin
+    @function f(x) = 2x
+    @function g(x) = ( a = f(x); a^2 )
+
+    C = @contractor g(x)
+
+    A = 0.5..1
+    x = 0..1
+
+    @test C(A, x) == sqrt(A / 4)
+
+    @function g2(x) = ( a = f(f(x)); a^2 )
+    C2 = @contractor g2(x)
+
+    @test C2(A, x) == sqrt(A / 16)
+
+end
+
+@testset "Iterated functions" begin
+
+    @function f(x) = 2x
+
+    A = 0.5..1
+    x = 0..1
+
+    @function g3(x) = ( a = (f↑2)(x); a^2 )
+    C3 = @contractor g3(x)
+
+    @test C3(A, x) == sqrt(A / 16)
 end
