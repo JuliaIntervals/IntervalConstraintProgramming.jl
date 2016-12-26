@@ -99,7 +99,9 @@ and the white boxes to be outside the set. The grey boxes show those that lie on
 
 ### 3D
 
-The package works in any number of dimensions, although it suffers from the usual exponential slowdown ("combinatorial explosion") in higher dimensions. In 3D, it is still relatively fast. There are sample 3D calculations in the `examples` directory, in particular in the [solid torus notebook](examples/Solid torus.ipynb), which uses [`GLVisualize.gl`](https://github.com/JuliaGL/GLVisualize.jl) to provide a 3D visualization which may be rotated and zoomed. The output for the solid torus looks like this:
+The package works in any number of dimensions, although it suffers from the usual exponential slowdown in higher dimensions ("combinatorial explosion"); in 3D, it is still relatively fast.
+
+There are sample 3D calculations in the `examples` directory, in particular in the [solid torus notebook](examples/Solid torus.ipynb), which uses [`GLVisualize.gl`](https://github.com/JuliaGL/GLVisualize.jl) to provide an interactive visualization that may be rotated and zoomed. The output for the solid torus looks like this:
 
 ![Coloured solid torus](solid_torus.png)
 
@@ -110,18 +112,14 @@ more complicated sets; see the [notebook](examples/Set inversion.ipynb) for seve
 
 ## Author
 
-- [David P. Sanders](http://sistemas.fciencias.unam.mx/~dsanders),
-Departamento de Física, Facultad de Ciencias, Universidad Nacional Autónoma de México (UNAM)
+- [David P. Sanders](http://sistemas.fciencias.unam.mx/~dsanders)
+    - [Julia lab, MIT](http://julia.mit.edu/)
+    - Departamento de Física, Facultad de Ciencias, Universidad Nacional Autónoma de México (UNAM)
 
 
 ## References:
 - *Applied Interval Analysis*, Luc Jaulin, Michel Kieffer, Olivier Didrit, Eric Walter (2001)
-- Introduction to the Algebra of Separators with Application to Path Planning, Luc Jaulin and Benoît Desrochers,
-*Engineering Applications of Artificial Intelligence* **33**, 141–147 (2014)
+- Introduction to the Algebra of Separators with Application to Path Planning, Luc Jaulin and Benoît Desrochers, *Engineering Applications of Artificial Intelligence* **33**, 141–147 (2014)
 
 ## Acknowledements
 Financial support is acknowledged from DGAPA-UNAM PAPIME grants PE-105911 and PE-107114, and DGAPA-UNAM PAPIIT grant IN-117214, and from a CONACYT-Mexico sabbatical fellowship. The author thanks Alan Edelman and the Julia group for hospitality during his sabbatical visit. He also thanks Luc Jaulin and Jordan Ninin for the [IAMOOC](http://iamooc.ensta-bretagne.fr/) online course, which introduced him to this subject.
-
-```@docs
-IntervalConstraintProgramming.ConstraintSeparator
-```
