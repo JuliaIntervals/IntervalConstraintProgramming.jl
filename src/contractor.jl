@@ -96,7 +96,7 @@ function make_contractor(ex::Expr)
 
     top, linear_AST = flatten(expr)
 
-    @show top, linear_AST
+    # @show top, linear_AST
 
     forward = forward_pass(linear_AST)
     backward = backward_pass(linear_AST)
@@ -107,8 +107,8 @@ function make_contractor(ex::Expr)
     input_arguments = forward.input_arguments
     augmented_input_arguments = [:_A_; forward.input_arguments]
 
-    @show input_arguments
-    @show augmented_input_arguments
+    # @show input_arguments
+    # @show augmented_input_arguments
 
     # add constraint interval as first argument
 

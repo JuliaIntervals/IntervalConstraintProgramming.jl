@@ -83,8 +83,8 @@ end
 
 function forward_pass(flatAST::FlattenedAST)
 
-    #@show flatAST.input_variables
-    #@show flatAST.intermediate
+    # @show flatAST.input_variables
+    # @show flatAST.intermediate
 
     input_variables = sort(collect(flatAST.input_variables))
     input_variables = setdiff(input_variables, flatAST.intermediate)  # remove local variables
