@@ -1,5 +1,15 @@
 # IntervalConstraintProgramming.jl
 
+# v0.4
+- `@function f(x) = 4x` defines a function
+- Functions may be used inside constraints (only functions of a single variable,
+    returning a single variable, for now).
+- Functions may be iterated.
+- Local variables may be introduced.
+- Simple plotting solution for the results of `pave`.
+- Major internals rewrite.
+
+
 # v0.3
 - Renamed `setinverse` to `pave`
 
