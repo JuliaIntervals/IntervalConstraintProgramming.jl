@@ -5,7 +5,7 @@ makedocs(
     modules = Module[IntervalConstraintProgramming],
     doctest = true,
     format = :html,
-    authors = "David P. Sanders"
+    authors = "David P. Sanders",
     sitename = "IntervalConstraintProgramming.jl"
     )
 
