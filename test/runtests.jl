@@ -30,7 +30,7 @@ end
     X = IntervalBox(II, II)
     S = @constraint x^2 + y^2 <= 1
 
-    @test typeof(S) == IntervalConstraintProgramming.ConstraintSeparator
+    @test typeof(S) <: IntervalConstraintProgramming.ConstraintSeparator
 
     inner, outer = S(X)
     @test inner == (-1..1, -1..1)
