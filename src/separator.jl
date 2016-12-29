@@ -6,20 +6,20 @@ ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
 # CHANGE TO IMMUTABLE AND PARAMETRIZE THE FUNCTION FOR EFFICIENCY
-type ConstraintSeparator <: Separator
+type ConstraintSeparator{C} <: Separator
     variables::Vector{Symbol}
     #separator::Function
     constraint::Interval
-    contractor::Contractor
+    contractor::C
     expression::Expr
 end
 
 doc"""CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
-type CombinationSeparator <: Separator
+type CombinationSeparator{F} <: Separator
     variables::Vector{Symbol}
-    separator::Function
+    separator::F
     expression::Expr
 end
 

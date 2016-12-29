@@ -139,7 +139,7 @@ end
 # function process_iterated_function!(flatAST::FlattenedAST, ex)
 
 function process_tuple!(flatAST::FlattenedAST, ex)
-    println("Entering process_tuple")
+    # println("Entering process_tuple")
     # @show flatAST
     # @show ex
     # top_args = [flatten!(flatAST, arg) for arg in ex.args]
