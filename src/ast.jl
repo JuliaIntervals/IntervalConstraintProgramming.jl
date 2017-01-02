@@ -190,7 +190,7 @@ function process_assignment!(flatAST::FlattenedAST, ex)
     top_level_code = Assignment(vars, :(), top)  # empty operation
     push!(flatAST.code, top_level_code)
 
-    # @show flatAST
+    # j@show flatAST
 
     return var
 
@@ -200,16 +200,22 @@ end
 by rewriting it to the equivalent set of iterated functions"""
 function process_iterated_function!(flatAST::FlattenedAST, ex)
     total_function_call = ex.args[1]
-    argument = ex.args[2]
+    args = ex.args[2:end]
+
+    @show args
 
     function_name = total_function_call.args[2]
     power = total_function_call.args[3]  # assumed integer
 
-    new_expr = :($function_name($argument))
+    new_expr = :($function_name($(args...)))
+
+    @show new_expr
 
     for i in 2:power
         new_expr = :($function_name($new_expr))
     end
+
+    @show new_expr
 
     flatten!(flatAST, new_expr)
 end
