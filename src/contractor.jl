@@ -136,6 +136,15 @@ function make_contractor(ex::Expr)
         # using an IntervalBox and intersection of IntervalBoxes
     end
 
+    top_args = make_tuple(top)
+
+    local intersect_code
+
+    if isa(top_args, Symbol)
+        intersect_code = :($top_args = $top_args ∩ _A_)  # check type stability
+    else
+        intersect_code = :($top_args = IntervalBox($top_args) ∩ _A_)  # check type stability
+    end
 
 
     code =
@@ -147,7 +156,7 @@ function make_contractor(ex::Expr)
 
                 $(forward_output) = forward($(forward.input_arguments...))
 
-                $(top) = $(top) ∩ _A_
+                $intersect_code
 
                 $(backward_output) = backward($(backward.input_arguments...))
 
@@ -157,10 +166,10 @@ function make_contractor(ex::Expr)
 
         end
 
-    # @show forward
-    # @show backward
-    #
-    # @show code
+    #  @show forward
+    #  @show backward
+    # #
+    #  @show code
 
     return :(Contractor($(augmented_input_arguments),
                         $(Meta.quot(expr)),

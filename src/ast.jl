@@ -161,17 +161,15 @@ The name a is currently retained.
 TODO: It should later be made unique.
 """
 function process_assignment!(flatAST::FlattenedAST, ex)
-    println("process_assignment!:")
-     @show ex
-     @show ex.args[1], ex.args[2]
+    # println("process_assignment!:")
+    #  @show ex
+    #  @show ex.args[1], ex.args[2]
 
     top = flatten!(flatAST, ex.args[2])
-    @show top
+    # @show top
 
     var = ex.args[1]
-    @show var
-
-
+    # @show var
 
     # TODO: Replace the following by multiple dispatch
     if isa(var, Expr) && var.head == :tuple
@@ -192,7 +190,7 @@ function process_assignment!(flatAST::FlattenedAST, ex)
     top_level_code = Assignment(vars, :(), top)  # empty operation
     push!(flatAST.code, top_level_code)
 
-    @show flatAST
+    # @show flatAST
 
     return var
 

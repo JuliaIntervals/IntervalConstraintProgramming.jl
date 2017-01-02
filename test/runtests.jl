@@ -158,3 +158,15 @@ end
 
     @test C3(A, x) == sqrt(A / 16)
 end
+
+@testset "Multidimensional functions" begin
+
+    @function g4(x, y) = (2x, 2y)
+
+    A = IntervalBox(0.5..1, 0.5..1)
+    x = y = 0..1
+
+    C4 = @contractor g4(x, y)
+
+    @test IntervalBox(C4(A, x, y)) == A / 2
+end
