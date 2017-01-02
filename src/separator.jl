@@ -114,9 +114,7 @@ function new_parse_comparison(ex)
     end
 end
 
-macro constraint(ex::Expr)  # alternative name for constraint -- remove?
-    # @show ex
-    expr, constraint = parse_comparison(ex)
+function make_constraint(expr, constraint)
 
     if isa(expr, Symbol)
         expr = :(1 * $expr)  # make into an expression!
@@ -135,8 +133,15 @@ macro constraint(ex::Expr)  # alternative name for constraint -- remove?
     # @show code
 
     code
-
 end
+
+macro constraint(ex::Expr)  # alternative name for constraint -- remove?
+    # @show ex
+    expr, constraint = parse_comparison(ex)
+
+    make_constraint(expr, constraint)
+end
+
 
 # doc"""Create a separator from a given constraint expression, written as
 # standard Julia code.
