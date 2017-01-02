@@ -6,10 +6,10 @@ ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
 # CHANGE TO IMMUTABLE AND PARAMETRIZE THE FUNCTION FOR EFFICIENCY
-type ConstraintSeparator{C} <: Separator
+type ConstraintSeparator{C, II} <: Separator
     variables::Vector{Symbol}
     #separator::Function
-    constraint::Interval
+    constraint::II  # Interval or IntervalBox
     contractor::C
     expression::Expr
 end
