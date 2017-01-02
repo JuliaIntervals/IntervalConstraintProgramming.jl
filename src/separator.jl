@@ -92,6 +92,25 @@ function parse_comparison(ex)
 end
 
 
+function new_parse_comparison(ex)
+    @show ex
+    if @capture ex begin
+            (op_(a_, b_))
+        end
+
+        #return (op, a, b)
+        @show op, a, b
+
+    elseif ex.head == :comparison
+        println("Comparison")
+        symbols = ex.args[1:2:5]
+        operators = ex.args[2:2:4]
+
+        @show symbols
+        @show operators
+
+    end
+end
 
 macro constraint(ex::Expr)  # alternative name for constraint -- remove?
     # @show ex
@@ -106,8 +125,8 @@ macro constraint(ex::Expr)  # alternative name for constraint -- remove?
     full_expr = Meta.quot(:($expr ∈ $constraint))
 
     code = quote end
-    push!(code.args, :($contractor_name = @contractor($(esc(expr)))))
-    push!(code.args, :(ConstraintSeparator($(contractor_name).variables[2:end], $constraint, $contractor_name, $full_expr)))
+    push!(code.args, :($(esc(contractor_name)) = @contractor($(esc(expr)))))
+    push!(code.args, :(ConstraintSeparator($(esc(contractor_name)).variables[2:end], $constraint, $(esc(contractor_name)), $full_expr)))
 
     # @show code
 
