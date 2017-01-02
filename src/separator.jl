@@ -50,6 +50,47 @@ end
 
 
 
+doc"""`parse_comparison` parses comparisons like `x >= 10`
+into the corresponding interval, expressed as `x ∈ [10,∞]`
+
+Returns the expression and the constraint interval
+
+TODO: Allow something like [3,4]' for the complement of [3,4]
+"""
+
+function parse_comparison(ex)
+    expr, limits =
+    @match ex begin
+       ((a_ <= b_) | (a_ < b_) | (a_ ≤ b_))   => (a, (-∞, b))
+       ((a_ >= b_) | (a_ > b_) | (a_ ≥ b_))   => (a, (b, ∞))
+
+       ((a_ == b_) | (a_ = b_))   => (a, (b, b))
+
+       ((a_ <= b_ <= c_)
+        | (a_ < b_ < c_)
+        | (a_ <= b_ < c)
+        | (a_ < b_ <= c))         => (b, (a, c))
+
+       ((a_ >= b_ >= c_)
+       | (a_ > b_ > c_)
+       | (a_ >= b_ > c_)
+       | (a_ > b_ >= c))          => (b, (c, a))
+
+       ((a_ ∈ [b_, c_])
+       | (a_ in [b_, c_])
+       | (a_ ∈ b_ .. c_)
+       | (a_ in b_ .. c_))        => (a, (b, c))
+
+       _                          => (ex, (-∞, ∞))
+
+   end
+
+   a, b = limits
+
+   return (expr, a..b)   # expr ∈ [a,b]
+
+end
+
 
 
 macro constraint(ex::Expr)  # alternative name for constraint -- remove?
