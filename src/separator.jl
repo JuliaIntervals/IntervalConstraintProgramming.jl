@@ -14,6 +14,8 @@ type ConstraintSeparator{C} <: Separator
     expression::Expr
 end
 
+ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables[2:end], constraint, contractor, expression)
+
 doc"""CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
@@ -126,7 +128,9 @@ macro constraint(ex::Expr)  # alternative name for constraint -- remove?
 
     code = quote end
     push!(code.args, :($(esc(contractor_name)) = @contractor($(esc(expr)))))
-    push!(code.args, :(ConstraintSeparator($(esc(contractor_name)).variables[2:end], $constraint, $(esc(contractor_name)), $full_expr)))
+    # push!(code.args, :(ConstraintSeparator($(esc(contractor_name)).variables[2:end], $constraint, $(esc(contractor_name)), $full_expr)))
+
+    push!(code.args, :(ConstraintSeparator($constraint, $(esc(contractor_name)), $full_expr)))
 
     # @show code
 
