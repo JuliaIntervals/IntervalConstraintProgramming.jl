@@ -169,4 +169,10 @@ end
     C4 = @contractor g4(x, y)
 
     @test IntervalBox(C4(A, x, y)) == A / 2
+
+
+    C5 = @contractor (g4↑2)(x, y)
+
+    @test IntervalBox(C5(A, x, y)) == A / 4
+
 end
