@@ -162,18 +162,37 @@ TODO: It should later be made unique.
 """
 function process_assignment!(flatAST::FlattenedAST, ex)
     println("process_assignment!:")
-    # @show ex
-    # @show ex.args[1], ex.args[2]
+     @show ex
+     @show ex.args[1], ex.args[2]
 
     top = flatten!(flatAST, ex.args[2])
+    @show top
 
     var = ex.args[1]
-    push!(flatAST.intermediate, var)
+    @show var
 
-    top_level_code = Assignment(var, :(), top)  # empty operation
+
+
+    # TODO: Replace the following by multiple dispatch
+    if isa(var, Expr) && var.head == :tuple
+        vars = [var.args...]
+
+    elseif isa(var, Tuple)
+        vars = [var...]
+
+    elseif isa(var, Vector)
+        vars = var
+
+    else
+        vars = [var]
+    end
+
+    append!(flatAST.intermediate, vars)
+
+    top_level_code = Assignment(vars, :(), top)  # empty operation
     push!(flatAST.code, top_level_code)
 
-    # @show flatAST
+    @show flatAST
 
     return var
 
