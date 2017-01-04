@@ -164,3 +164,21 @@ end
     a = -8..27
     power_rev(a, x, 3)[2] == Interval(-2.0000000000000004, 3.0000000000000004)
 end
+
+@testset "Multidimensional functions" begin
+
+    @function g4(x, y) = (2x, 2y)
+
+    A = IntervalBox(0.5..1, 0.5..1)
+    x = y = 0..1
+
+    C4 = @contractor g4(x, y)
+
+    @test IntervalBox(C4(A, x, y)) == A / 2
+
+
+    C5 = @contractor (g4↑2)(x, y)
+
+    @test IntervalBox(C5(A, x, y)) == A / 4
+
+end
