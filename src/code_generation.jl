@@ -1,5 +1,11 @@
 
 function make_tuple(args)
+
+    if isa(args, Symbol)
+        # args = [args]
+        return args
+    end
+
     length(args) == 1 && return args[1]
 
     return Expr(:tuple, args...)
@@ -10,19 +16,24 @@ function emit_forward_code(a::Assignment)
 
     args = isa(a.args, Vector) ? a.args : [a.args]
 
+    lhs = make_tuple(a.lhs)
+
     if a.op == :()  # empty
-        :($(a.lhs) = $(args...) )
+        args = make_tuple(args)
+        :($lhs = $args)
 
     else
-        :($(a.lhs) = $(a.op)($(args...) ) )
+        :($lhs = $(a.op)($(args...) ) )
     end
 end
 
 
 function emit_forward_code(a::FunctionAssignment)
     f = a.func
-    args = make_tuple(a.lhs)
-    :($args = $(esc(f)).forward($(a.args...) ) )
+    args = isa(a.args, Vector) ? a.args : [a.args]
+    lhs = make_tuple(a.lhs)
+
+    :($lhs = $(esc(f)).forward($(a.args...) ) )
 end
 
 
@@ -43,7 +54,10 @@ function emit_backward_code(a::Assignment)
     rev_op = rev_ops[a.op]  # find reverse operation
 
     if rev_op == :()   # empty
-        return :($(args...) = $(a.lhs))
+        args = make_tuple(args)
+        lhs = make_tuple(a.lhs)
+        return :($args = $lhs)
+        #return :($(args...) = $(a.lhs))
     else
         rev_code = :($(rev_op)($(return_args...)))
     end

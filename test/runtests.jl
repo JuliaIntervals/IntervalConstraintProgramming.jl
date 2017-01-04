@@ -30,7 +30,7 @@ end
     X = IntervalBox(II, II)
     S = @constraint x^2 + y^2 <= 1
 
-    @test typeof(S) == IntervalConstraintProgramming.ConstraintSeparator
+    @test typeof(S) <: IntervalConstraintProgramming.ConstraintSeparator
 
     inner, outer = S(X)
     @test inner == (-1..1, -1..1)
@@ -157,4 +157,22 @@ end
     C3 = @contractor g3(x)
 
     @test C3(A, x) == sqrt(A / 16)
+end
+
+@testset "Multidimensional functions" begin
+
+    @function g4(x, y) = (2x, 2y)
+
+    A = IntervalBox(0.5..1, 0.5..1)
+    x = y = 0..1
+
+    C4 = @contractor g4(x, y)
+
+    @test IntervalBox(C4(A, x, y)) == A / 2
+
+
+    C5 = @contractor (g4↑2)(x, y)
+
+    @test IntervalBox(C5(A, x, y)) == A / 4
+
 end

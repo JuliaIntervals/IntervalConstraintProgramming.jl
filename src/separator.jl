@@ -6,20 +6,22 @@ ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
 # CHANGE TO IMMUTABLE AND PARAMETRIZE THE FUNCTION FOR EFFICIENCY
-type ConstraintSeparator <: Separator
+type ConstraintSeparator{C, II} <: Separator
     variables::Vector{Symbol}
     #separator::Function
-    constraint::Interval
-    contractor::Contractor
+    constraint::II  # Interval or IntervalBox
+    contractor::C
     expression::Expr
 end
+
+ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables[2:end], constraint, contractor, expression)
 
 doc"""CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
-type CombinationSeparator <: Separator
+type CombinationSeparator{F} <: Separator
     variables::Vector{Symbol}
-    separator::Function
+    separator::F
     expression::Expr
 end
 
@@ -50,11 +52,69 @@ end
 
 
 
+doc"""`parse_comparison` parses comparisons like `x >= 10`
+into the corresponding interval, expressed as `x ∈ [10,∞]`
+
+Returns the expression and the constraint interval
+
+TODO: Allow something like [3,4]' for the complement of [3,4]
+"""
+
+function parse_comparison(ex)
+    expr, limits =
+    @match ex begin
+       ((a_ <= b_) | (a_ < b_) | (a_ ≤ b_))   => (a, (-∞, b))
+       ((a_ >= b_) | (a_ > b_) | (a_ ≥ b_))   => (a, (b, ∞))
+
+       ((a_ == b_) | (a_ = b_))   => (a, (b, b))
+
+       ((a_ <= b_ <= c_)
+        | (a_ < b_ < c_)
+        | (a_ <= b_ < c)
+        | (a_ < b_ <= c))         => (b, (a, c))
+
+       ((a_ >= b_ >= c_)
+       | (a_ > b_ > c_)
+       | (a_ >= b_ > c_)
+       | (a_ > b_ >= c))          => (b, (c, a))
+
+       ((a_ ∈ [b_, c_])
+       | (a_ in [b_, c_])
+       | (a_ ∈ b_ .. c_)
+       | (a_ in b_ .. c_))        => (a, (b, c))
+
+       _                          => (ex, (-∞, ∞))
+
+   end
+
+   a, b = limits
+
+   return (expr, a..b)   # expr ∈ [a,b]
+
+end
 
 
-macro constraint(ex::Expr)  # alternative name for constraint -- remove?
-    # @show ex
-    expr, constraint = parse_comparison(ex)
+function new_parse_comparison(ex)
+    @show ex
+    if @capture ex begin
+            (op_(a_, b_))
+        end
+
+        #return (op, a, b)
+        @show op, a, b
+
+    elseif ex.head == :comparison
+        println("Comparison")
+        symbols = ex.args[1:2:5]
+        operators = ex.args[2:2:4]
+
+        @show symbols
+        @show operators
+
+    end
+end
+
+function make_constraint(expr, constraint)
 
     if isa(expr, Symbol)
         expr = :(1 * $expr)  # make into an expression!
@@ -65,14 +125,23 @@ macro constraint(ex::Expr)  # alternative name for constraint -- remove?
     full_expr = Meta.quot(:($expr ∈ $constraint))
 
     code = quote end
-    push!(code.args, :($contractor_name = @contractor($(esc(expr)))))
-    push!(code.args, :(ConstraintSeparator($(contractor_name).variables[2:end], $constraint, $contractor_name, $full_expr)))
+    push!(code.args, :($(esc(contractor_name)) = @contractor($(esc(expr)))))
+    # push!(code.args, :(ConstraintSeparator($(esc(contractor_name)).variables[2:end], $constraint, $(esc(contractor_name)), $full_expr)))
+
+    push!(code.args, :(ConstraintSeparator($constraint, $(esc(contractor_name)), $full_expr)))
 
     # @show code
 
     code
-
 end
+
+macro constraint(ex::Expr)  # alternative name for constraint -- remove?
+    # @show ex
+    expr, constraint = parse_comparison(ex)
+
+    make_constraint(expr, constraint)
+end
+
 
 # doc"""Create a separator from a given constraint expression, written as
 # standard Julia code.
