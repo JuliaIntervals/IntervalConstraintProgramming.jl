@@ -139,7 +139,7 @@ end
 # function process_iterated_function!(flatAST::FlattenedAST, ex)
 
 function process_tuple!(flatAST::FlattenedAST, ex)
-    println("Entering process_tuple")
+    # println("Entering process_tuple")
     # @show flatAST
     # @show ex
     # top_args = [flatten!(flatAST, arg) for arg in ex.args]
@@ -161,19 +161,36 @@ The name a is currently retained.
 TODO: It should later be made unique.
 """
 function process_assignment!(flatAST::FlattenedAST, ex)
-    println("process_assignment!:")
-    # @show ex
-    # @show ex.args[1], ex.args[2]
+    # println("process_assignment!:")
+    #  @show ex
+    #  @show ex.args[1], ex.args[2]
 
     top = flatten!(flatAST, ex.args[2])
+    # @show top
 
     var = ex.args[1]
-    push!(flatAST.intermediate, var)
+    # @show var
 
-    top_level_code = Assignment(var, :(), top)  # empty operation
+    # TODO: Replace the following by multiple dispatch
+    if isa(var, Expr) && var.head == :tuple
+        vars = [var.args...]
+
+    elseif isa(var, Tuple)
+        vars = [var...]
+
+    elseif isa(var, Vector)
+        vars = var
+
+    else
+        vars = [var]
+    end
+
+    append!(flatAST.intermediate, vars)
+
+    top_level_code = Assignment(vars, :(), top)  # empty operation
     push!(flatAST.code, top_level_code)
 
-    # @show flatAST
+    # j@show flatAST
 
     return var
 
@@ -183,16 +200,22 @@ end
 by rewriting it to the equivalent set of iterated functions"""
 function process_iterated_function!(flatAST::FlattenedAST, ex)
     total_function_call = ex.args[1]
-    argument = ex.args[2]
+    args = ex.args[2:end]
+
+    # @show args
 
     function_name = total_function_call.args[2]
     power = total_function_call.args[3]  # assumed integer
 
-    new_expr = :($function_name($argument))
+    new_expr = :($function_name($(args...)))
+
+    # @show new_expr
 
     for i in 2:power
         new_expr = :($function_name($new_expr))
     end
+
+    # @show new_expr
 
     flatten!(flatAST, new_expr)
 end

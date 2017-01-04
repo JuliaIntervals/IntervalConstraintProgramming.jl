@@ -26,6 +26,8 @@ type ConstraintFunction{F <: Function, G <: Function}
     output::Vector{Symbol} # output arguments for forward function
     forward::F
     backward::G
+    forward_code::Expr
+    backward_code::Expr
 end
 
 type FunctionArguments
@@ -92,6 +94,8 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     registered_functions[f] = FunctionArguments(flatAST.variables, flatAST.intermediate, return_arguments)
 
+    forward_function = make_function(forward_code)
+    backward_function = make_function(backward_code)
 
     return quote
         #$(esc(Meta.quot(f))) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
@@ -99,7 +103,10 @@ Example: `@function f(x, y) = x^2 + y^2`
         $(esc(f)) =
             ConstraintFunction($(flatAST.variables),
                                 $(flatAST.intermediate),
-                                $(make_function(forward_code)), $(make_function(backward_code))
+                                $(forward_function),
+                                $(backward_function),
+                                $(Meta.quot(forward_function)),
+                                $(Meta.quot(backward_function))
                                 )
 
 
