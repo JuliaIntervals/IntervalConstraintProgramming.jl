@@ -48,22 +48,22 @@ macro contractor(ex)
     make_contractor(ex)
 end
 
-function make_new_contractor(expr::Expr)
-    top, linear_AST = flatten(expr)
-
-    # @show top, linear_AST
-
-    forward = forward_pass(linear_AST)
-    backward = backward_pass(linear_AST)
-
-    forward_code = make_function(forward)
-    backward_code = make_function(backward)
-
-    :(NewContractor($forward_code, $backward_code,
-                    $(Meta.quot(forward_code)),
-                    $(Meta.quot(backward_code))
-                    ))
-end
+# function make_new_contractor(expr::Expr)
+#     top, linear_AST = flatten(expr)
+#
+#     # @show top, linear_AST
+#
+#     forward = forward_pass(linear_AST)
+#     backward = backward_pass(linear_AST)
+#
+#     forward_code = make_function(forward)
+#     backward_code = make_function(backward)
+#
+#     :(NewContractor($forward_code, $backward_code,
+#                     $(Meta.quot(forward_code)),
+#                     $(Meta.quot(backward_code))
+#                     ))
+# end
 
 
 
@@ -80,14 +80,14 @@ function make_contractor(ex::Expr)
 
     # @show top, linear_AST
 
-    forward = forward_pass(linear_AST)
-    backward = backward_pass(linear_AST)
+    forward, backward  = forward_backward(linear_AST)
+    #backward = backward_pass(linear_AST)
 
 
 
     # TODO: What about interval box constraints?
-    input_arguments = forward.input_arguments
-    augmented_input_arguments = [:_A_; forward.input_arguments]
+    input_arguments = linear_AST.variables # forward.input_arguments
+    augmented_input_arguments = [:_A_; input_arguments]
 
     # @show input_arguments
     # @show augmented_input_arguments

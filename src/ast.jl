@@ -1,3 +1,11 @@
+# Distinguish between:
+# Input variables, e.g. x, y
+# Output variables, e.g. z_12
+# Intermediate variables, e.g. z_10, z_11
+
+# Input variables arrive in an IntervalBox
+# Each of the other sets is treated as a tuple?
+
 
 const symbol_numbers = Dict{Symbol, Int}()
 
@@ -11,10 +19,11 @@ function make_symbol(s::Symbol = :z)  # default is :z
 end
 
 
-function make_symbols(n::Integer)
-    [make_symbol() for i in 1:n]
+function make_symbols(n::Integer, s::Symbol = :z)
+    [make_symbol(s) for i in 1:n]
 end
 
+# The following function is not used
 doc"""Check if a symbol like `:a` has been uniqued to `:_a_1_`"""
 function isuniqued(s::Symbol)
     ss = string(s)
@@ -22,6 +31,8 @@ function isuniqued(s::Symbol)
 end
 
 # Types for representing a flattened AST:
+
+# Combine Assignment and FunctionAssignment ?
 
 immutable Assignment
     lhs
@@ -35,17 +46,11 @@ immutable FunctionAssignment
     args
 end
 
-immutable GeneratedFunction
-    input_arguments::Vector{Symbol}
-    output_arguments::Vector{Symbol}
-    code::Expr
-end
-
 # Close to single assignment form
 type FlatAST
     top  # topmost variable(s)
     input_variables::Set{Symbol}
-    variables::Vector{Symbol}  # cleaned version
+    # variables::Vector{Symbol}  # cleaned version
     intermediate::Vector{Symbol}  # generated vars
     code # ::Vector{Assignment}
 end
@@ -64,7 +69,7 @@ export FlatAST
 
 ##
 
-set_top!(flatAST::FlatAST, vars) = flatAST.top = vars
+set_top!(flatAST::FlatAST, vars) = flatAST.top = vars  # also returns vars
 
 add_variable!(flatAST::FlatAST, var) = push!(flatAST.input_variables, var)
 
@@ -78,26 +83,29 @@ export flatten
 
 function flatten(ex)
     flatAST = FlatAST()
-    top_var = flatten!(flatAST, ex)
+    top = flatten!(flatAST, ex)
 
-    return top_var, flatAST
+    return top, flatAST
 end
 
 
 doc"""`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
 structure, stored in a FlatAST object. This is close to SSA (single-assignment form,
- https://en.wikipedia.org/wiki/Static_single_assignment_form).
+https://en.wikipedia.org/wiki/Static_single_assignment_form).
 
- Variables that are found are considered `input_variables`.
- Generated variables introduced at intermediate nodes are stored in
- `intermediate`.
- The function returns the variable that is
-at the top of the current piece of the tree."""
-# process numbers
+Variables that are found are considered `input_variables`.
+Generated variables introduced at intermediate nodes are stored in
+`intermediate`.
+Returns the variable at the top of the current piece of the tree."""
+
+# TODO: Parameters
+
+# numbers:
 function flatten!(flatAST::FlatAST, ex)
-    set_top!(flatAST, ex)  # nothing to do to the AST; return the number
+    return ex  # nothing to do to the AST; return the number
 end
 
+# symbols:
 function flatten!(flatAST::FlatAST, ex::Symbol)  # symbols are leaves
     add_variable!(flatAST, ex)  # add the discovered symbol as an input variable
     return ex
@@ -256,7 +264,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
 
     end
 
-    # rewrite +(a,b,c) as +(a,+(b,c)):
+    # rewrite +(a,b,c) as +(a,+(b,c)) by recursive splitting
     # TODO: Use @match here!
 
     if op in (:+, :*) && length(ex.args) > 3
@@ -264,11 +272,6 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
             :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) )
             )
     end
-
-    # new_code = quote end
-    # current_args = []  # the arguments in the current expression that will be added
-    # all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
-    # generated_variables = Symbol[]
 
     top_args = []
     for arg in ex.args[2:end]

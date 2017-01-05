@@ -3,16 +3,16 @@ export plus_rev, minus_rev, mul_rev,
 
 const rev_ops = Dict(
                     :+     => :plus_rev,
+                    :-     => :minus_rev,
                     :*     => :mul_rev,
                     :^     => :power_rev,
-                    :-     => :minus_rev,
                     :sqrt  => :sqrt_rev,
                     :()    => :()
                     )
 
 
 function plus_rev(a::Interval, b::Interval, c::Interval)  # a = b + c
-    # a = a ∩ (b + c)
+    # a = a ∩ (b + c)  # add this line for plus contractor (as opposed to reverse function)
     b = b ∩ (a - c)
     c = c ∩ (a - b)
 
