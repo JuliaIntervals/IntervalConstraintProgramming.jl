@@ -8,6 +8,7 @@ type Contractor{F<:Function}
 end
 
 type NewContractor{F1<:Function, F2<:Function}
+    num_outputs::Int
     forward::F1
     backward::F2
     forward_code::Expr
@@ -65,7 +66,18 @@ end
 #                     ))
 # end
 
+function (C::NewContractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
+    z = C.forward(IntervalBox(X...)...)
+    #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
+    @show z
+    constrained = IntervalBox(z[1:C.num_outputs]...) ∩ IntervalBox(A...)
+    @show constrained
+    @show z[(C.num_outputs)+1:end]
+    return C.backward(X..., constrained...,
+                    z[(C.num_outputs)+1:end]...
+                    )
+end
 
 #function Contractor(ex::Expr)
 function make_contractor(ex::Expr)
@@ -83,79 +95,84 @@ function make_contractor(ex::Expr)
     forward, backward  = forward_backward(linear_AST)
     #backward = backward_pass(linear_AST)
 
+    num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
+    :(NewContractor($num_outputs, $forward, $backward,
+                                $(Meta.quot(forward)),
+                                $(Meta.quot(backward))))
 
-    # TODO: What about interval box constraints?
-    input_arguments = linear_AST.variables # forward.input_arguments
-    augmented_input_arguments = [:_A_; input_arguments]
-
-    # @show input_arguments
-    # @show augmented_input_arguments
-
-    # add constraint interval as first argument
-
-    input_variables = make_tuple(input_arguments)
-    augmented_input_variables = make_tuple(augmented_input_arguments)
-
-    forward_output = make_tuple(forward.output_arguments)
-
-    backward_output = make_tuple(backward.output_arguments)
-
-    # @show forward
-    # @show backward
     #
-    # @show input_variables
-    # @show forward_output
-    # @show backward_output
-
-    if isa(top, Symbol)
-        # nothing
-    elseif length(top) == 1  # single variable
-        top = top[]
-
-    else
-        # TODO: implement what happens for multiple variables in the constraint
-        # using an IntervalBox and intersection of IntervalBoxes
-    end
-
-    top_args = make_tuple(top)
-
-    local intersect_code
-
-    if isa(top_args, Symbol)
-        intersect_code = :($top_args = $top_args ∩ _A_)  # check type stability
-    else
-        intersect_code = :($top_args = IntervalBox($top_args) ∩ _A_)  # check type stability
-    end
-
-
-    code =
-        #esc(quote
-        quote
-            $(augmented_input_variables) -> begin
-                forward = $(make_function(forward))
-                backward = $(make_function(backward))
-
-                $(forward_output) = forward($(forward.input_arguments...))
-
-                $intersect_code
-
-                $(backward_output) = backward($(backward.input_arguments...))
-
-                return $(input_variables)
-
-            end
-
-        end
-
-    #  @show forward
-    #  @show backward
+    # # TODO: What about interval box constraints?
+    # input_arguments = linear_AST.variables # forward.input_arguments
+    # augmented_input_arguments = [:_A_; input_arguments]
+    #
+    # # @show input_arguments
+    # # @show augmented_input_arguments
+    #
+    # # add constraint interval as first argument
+    #
+    # input_variables = make_tuple(input_arguments)
+    # augmented_input_variables = make_tuple(augmented_input_arguments)
+    #
+    # forward_output = make_tuple(forward.output_arguments)
+    #
+    # backward_output = make_tuple(backward.output_arguments)
+    #
+    # # @show forward
+    # # @show backward
     # #
-    #  @show code
-
-    return :(Contractor($(augmented_input_arguments),
-                        $(Meta.quot(expr)),
-                        $(Meta.quot(code)),
-                        $(code)
-                        ))
+    # # @show input_variables
+    # # @show forward_output
+    # # @show backward_output
+    #
+    # if isa(top, Symbol)
+    #     # nothing
+    # elseif length(top) == 1  # single variable
+    #     top = top[]
+    #
+    # else
+    #     # TODO: implement what happens for multiple variables in the constraint
+    #     # using an IntervalBox and intersection of IntervalBoxes
+    # end
+    #
+    # top_args = make_tuple(top)
+    #
+    # local intersect_code
+    #
+    # if isa(top_args, Symbol)
+    #     intersect_code = :($top_args = $top_args ∩ _A_)  # check type stability
+    # else
+    #     intersect_code = :($top_args = IntervalBox($top_args) ∩ _A_)  # check type stability
+    # end
+    #
+    #
+    # code =
+    #     #esc(quote
+    #     quote
+    #         $(augmented_input_variables) -> begin
+    #             forward = $(make_function(forward))
+    #             backward = $(make_function(backward))
+    #
+    #             $(forward_output) = forward($(forward.input_arguments...))
+    #
+    #             $intersect_code
+    #
+    #             $(backward_output) = backward($(backward.input_arguments...))
+    #
+    #             return $(input_variables)
+    #
+    #         end
+    #
+    #     end
+    #
+    # #  @show forward
+    # #  @show backward
+    # # #
+    # #  @show code
+    #
+    # return :(Contractor($(augmented_input_arguments),
+    #                     $(Meta.quot(expr)),
+    #                     $(Meta.quot(code)),
+    #                     $(code)
+    #                     ))
 end

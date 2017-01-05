@@ -50,7 +50,7 @@ end
 type FlatAST
     top  # topmost variable(s)
     input_variables::Set{Symbol}
-    # variables::Vector{Symbol}  # cleaned version
+    variables::Vector{Symbol}  # cleaned version
     intermediate::Vector{Symbol}  # generated vars
     code # ::Vector{Assignment}
 end

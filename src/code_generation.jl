@@ -121,6 +121,10 @@ function forward_backward(flatAST::FlatAST)
     backward = make_function([input; output; intermediate],
                                 input, code)
 
+@show input
+@show output
+@show intermediate
+
     # return GeneratedFunction(input, output, intermediate, code)
 
     return (forward, backward)
