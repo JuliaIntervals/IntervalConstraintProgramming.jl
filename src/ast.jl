@@ -42,7 +42,7 @@ immutable GeneratedFunction
 end
 
 # Close to single assignment form
-type FlattenedAST
+type FlatAST
     top  # topmost variable(s)
     input_variables::Set{Symbol}
     variables::Vector{Symbol}  # cleaned version
@@ -50,34 +50,34 @@ type FlattenedAST
     code # ::Vector{Assignment}
 end
 
-import Base.show
-function show(io::IO, flatAST::FlattenedAST)
+
+function Base.show(io::IO, flatAST::FlatAST)
+    println(io, "top: ", flatAST.top)
     println(io, "input vars: ", flatAST.input_variables)
     println(io, "intermediate vars: ", flatAST.intermediate)
-    println(io, "code: ")
-    println(io, flatAST.code)
+    println(io, "code: ", flatAST.code)
 end
 
-FlattenedAST() = FlattenedAST([], Set{Symbol}(), [], [], [])
+FlatAST() = FlatAST([], Set{Symbol}(), [], [], [])
 
-export FlattenedAST
+export FlatAST
 
 ##
 
-set_top!(flatAST::FlattenedAST, vars) = flatAST.top = vars
+set_top!(flatAST::FlatAST, vars) = flatAST.top = vars
 
-add_variable!(flatAST::FlattenedAST, var) = push!(flatAST.input_variables, var)
+add_variable!(flatAST::FlatAST, var) = push!(flatAST.input_variables, var)
 
-add_intermediate!(flatAST::FlattenedAST, var::Symbol) = push!(flatAST.intermediate, var)
-add_intermediate!(flatAST::FlattenedAST, vars::Vector{Symbol}) = append!(flatAST.intermediate, vars)
+add_intermediate!(flatAST::FlatAST, var::Symbol) = push!(flatAST.intermediate, var)
+add_intermediate!(flatAST::FlatAST, vars::Vector{Symbol}) = append!(flatAST.intermediate, vars)
 
-add_code!(flatAST::FlattenedAST, code) = push!(flatAST.code, code)
+add_code!(flatAST::FlatAST, code) = push!(flatAST.code, code)
 
 export flatten
 
 
 function flatten(ex)
-    flatAST = FlattenedAST()
+    flatAST = FlatAST()
     top_var = flatten!(flatAST, ex)
 
     return top_var, flatAST
@@ -85,7 +85,7 @@ end
 
 
 doc"""`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
-structure, stored in a FlattenedAST object. This is close to SSA (single-assignment form,
+structure, stored in a FlatAST object. This is close to SSA (single-assignment form,
  https://en.wikipedia.org/wiki/Static_single_assignment_form).
 
  Variables that are found are considered `input_variables`.
@@ -94,17 +94,17 @@ structure, stored in a FlattenedAST object. This is close to SSA (single-assignm
  The function returns the variable that is
 at the top of the current piece of the tree."""
 # process numbers
-function flatten!(flatAST::FlattenedAST, ex)
+function flatten!(flatAST::FlatAST, ex)
     set_top!(flatAST, ex)  # nothing to do to the AST; return the number
 end
 
-function flatten!(flatAST::FlattenedAST, ex::Symbol)  # symbols are leaves
+function flatten!(flatAST::FlatAST, ex::Symbol)  # symbols are leaves
     add_variable!(flatAST, ex)  # add the discovered symbol as an input variable
     return ex
 end
 
 
-function flatten!(flatAST::FlattenedAST, ex::Expr)
+function flatten!(flatAST::FlatAST, ex::Expr)
     local top
 
     if ex.head == :$    # constants written as $a
@@ -129,7 +129,7 @@ function flatten!(flatAST::FlattenedAST, ex::Expr)
     set_top!(flatAST, top)
 end
 
-function process_constant!(flatAST::FlattenedAST, ex)
+function process_constant!(flatAST::FlatAST, ex)
     return esc(ex.args[1])  # interpolate the value of the external constant
 end
 
@@ -138,7 +138,7 @@ end
 They are processed in order.
 """
 
-function process_block!(flatAST::FlattenedAST, ex)
+function process_block!(flatAST::FlatAST, ex)
     local top
 
     for arg in ex.args
@@ -149,9 +149,9 @@ function process_block!(flatAST::FlattenedAST, ex)
     return top  # last variable assigned
 end
 
-# function process_iterated_function!(flatAST::FlattenedAST, ex)
+# function process_iterated_function!(flatAST::FlatAST, ex)
 
-function process_tuple!(flatAST::FlattenedAST, ex)
+function process_tuple!(flatAST::FlatAST, ex)
     # println("Entering process_tuple")
     # @show flatAST
     # @show ex
@@ -171,7 +171,7 @@ end
 The name a is currently retained.
 TODO: It should later be made unique.
 """
-function process_assignment!(flatAST::FlattenedAST, ex)
+function process_assignment!(flatAST::FlatAST, ex)
     # println("process_assignment!:")
     #  @show ex
     #  @show ex.args[1], ex.args[2]
@@ -209,7 +209,7 @@ end
 
 """Processes something of the form `(f↑4)(x)` (write as `\\uparrow<TAB>`)
 by rewriting it to the equivalent set of iterated functions"""
-function process_iterated_function!(flatAST::FlattenedAST, ex)
+function process_iterated_function!(flatAST::FlatAST, ex)
     total_function_call = ex.args[1]
     args = ex.args[2:end]
 
@@ -236,7 +236,7 @@ A new variable is introduced for the result; its name can be specified
     using the new_var optional argument. If none is given, then a new, generated
     name is used.
 """
-function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
+function process_call!(flatAST::FlatAST, ex, new_var=nothing)
 
     #println("Entering process_call!")
     #@show ex

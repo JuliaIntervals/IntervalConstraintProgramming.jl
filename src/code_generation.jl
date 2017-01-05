@@ -95,7 +95,7 @@ end
 
 
 
-function forward_pass(flatAST::FlattenedAST)
+function forward_pass(flatAST::FlatAST)
 
     # @show flatAST.input_variables
     # @show flatAST.intermediate
@@ -109,7 +109,7 @@ function forward_pass(flatAST::FlattenedAST)
     return GeneratedFunction(input_variables, flatAST.intermediate, generated_code)
 end
 
-function backward_pass(flatAST::FlattenedAST)
+function backward_pass(flatAST::FlatAST)
 
     generated_code = emit_backward_code(flatAST.code)
     # make_function([flatAST.variables; flatAST.intermediate],
