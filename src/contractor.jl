@@ -1,13 +1,6 @@
 
 
-type Contractor{F<:Function}
-    variables::Vector{Symbol}
-    constraint_expression::Expr
-    code::Expr
-    contractor::F  # function
-end
-
-type NewContractor{F1<:Function, F2<:Function}
+type Contractor{F1<:Function, F2<:Function}
     variables::Vector{Symbol}  # input variables
     num_outputs::Int
     forward::F1
@@ -15,14 +8,6 @@ type NewContractor{F1<:Function, F2<:Function}
     forward_code::Expr
     backward_code::Expr
 end
-
-
-
-# new call syntax to define a "functor" (object that behaves like a function)
-@compat (C::Contractor)(x...) = C.contractor(x...)
-
-@compat (C::Contractor)(X::IntervalBox) = C.contractor(X...)
-#show_code(c::Contractor) = c.code
 
 
 function Base.show(io::IO, C::Contractor)
@@ -45,29 +30,11 @@ TODO: Hygiene for global variables, or pass in parameters
 """
 
 macro contractor(ex)
-    # println("@contractor; ex=$ex")
-
     make_contractor(ex)
 end
 
-# function make_new_contractor(expr::Expr)
-#     top, linear_AST = flatten(expr)
-#
-#     # @show top, linear_AST
-#
-#     forward = forward_pass(linear_AST)
-#     backward = backward_pass(linear_AST)
-#
-#     forward_code = make_function(forward)
-#     backward_code = make_function(backward)
-#
-#     :(NewContractor($forward_code, $backward_code,
-#                     $(Meta.quot(forward_code)),
-#                     $(Meta.quot(backward_code))
-#                     ))
-# end
 
-function (C::NewContractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
+function (C::Contractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
     z = IntervalBox( C.forward(IntervalBox(X...)...)... )
     #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
@@ -98,85 +65,11 @@ function make_contractor(ex::Expr)
 
     num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
-    :(NewContractor($linear_AST.variables,
+    :(Contractor($linear_AST.variables,
                     $num_outputs,
                     $forward,
                     $backward,
                     $(Meta.quot(forward)),
                     $(Meta.quot(backward))))
 
-    #
-    # # TODO: What about interval box constraints?
-    # input_arguments = linear_AST.variables # forward.input_arguments
-    # augmented_input_arguments = [:_A_; input_arguments]
-    #
-    # # @show input_arguments
-    # # @show augmented_input_arguments
-    #
-    # # add constraint interval as first argument
-    #
-    # input_variables = make_tuple(input_arguments)
-    # augmented_input_variables = make_tuple(augmented_input_arguments)
-    #
-    # forward_output = make_tuple(forward.output_arguments)
-    #
-    # backward_output = make_tuple(backward.output_arguments)
-    #
-    # # @show forward
-    # # @show backward
-    # #
-    # # @show input_variables
-    # # @show forward_output
-    # # @show backward_output
-    #
-    # if isa(top, Symbol)
-    #     # nothing
-    # elseif length(top) == 1  # single variable
-    #     top = top[]
-    #
-    # else
-    #     # TODO: implement what happens for multiple variables in the constraint
-    #     # using an IntervalBox and intersection of IntervalBoxes
-    # end
-    #
-    # top_args = make_tuple(top)
-    #
-    # local intersect_code
-    #
-    # if isa(top_args, Symbol)
-    #     intersect_code = :($top_args = $top_args ∩ _A_)  # check type stability
-    # else
-    #     intersect_code = :($top_args = IntervalBox($top_args) ∩ _A_)  # check type stability
-    # end
-    #
-    #
-    # code =
-    #     #esc(quote
-    #     quote
-    #         $(augmented_input_variables) -> begin
-    #             forward = $(make_function(forward))
-    #             backward = $(make_function(backward))
-    #
-    #             $(forward_output) = forward($(forward.input_arguments...))
-    #
-    #             $intersect_code
-    #
-    #             $(backward_output) = backward($(backward.input_arguments...))
-    #
-    #             return $(input_variables)
-    #
-    #         end
-    #
-    #     end
-    #
-    # #  @show forward
-    # #  @show backward
-    # # #
-    # #  @show code
-    #
-    # return :(Contractor($(augmented_input_arguments),
-    #                     $(Meta.quot(expr)),
-    #                     $(Meta.quot(code)),
-    #                     $(code)
-    #                     ))
 end
