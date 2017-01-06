@@ -5,7 +5,7 @@ doc"""
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
-type ConstraintSeparator{C, II} <: Separator
+immutable ConstraintSeparator{C, II} <: Separator
     variables::Vector{Symbol}
     constraint::II  # Interval or IntervalBox
     contractor::C
@@ -17,7 +17,7 @@ ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(co
 doc"""CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
-type CombinationSeparator{F} <: Separator
+immutable CombinationSeparator{F} <: Separator
     variables::Vector{Symbol}
     separator::F
     expression::Expr
@@ -42,10 +42,10 @@ end
         outer1 = C(-∞..a, X)
         outer2 = C(b..∞, X)
 
-        outer = [ hull(x1, x2) for (x1,x2) in zip(outer1, outer2) ]
+        outer = outer1 ∪ outer2
     end
 
-    return (inner, (outer...))
+    return (inner, outer)
 end
 
 
@@ -237,8 +237,8 @@ function ∩(S1::Separator, S2::Separator)
 
         # Treat as if had X[i] in the other directions, except if empty
 
-        inner = tuple( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
-        outer = tuple( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
+        inner = IntervalBox( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
+        outer = IntervalBox( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
 
         return (inner, outer)
 
@@ -284,8 +284,8 @@ function ∪(S1::Separator, S2::Separator)
         end
 
 
-        inner = tuple( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
-        outer = tuple( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
+        inner = IntervalBox( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
+        outer = IntervalBox( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
 
         return (inner, outer)
     end

@@ -1,6 +1,6 @@
 
 
-type Contractor{F1<:Function, F2<:Function}
+immutable Contractor{F1<:Function, F2<:Function}
     variables::Vector{Symbol}  # input variables
     num_outputs::Int
     forward::F1
@@ -10,11 +10,11 @@ type Contractor{F1<:Function, F2<:Function}
 end
 
 
-function Base.show(io::IO, C::Contractor)
-    println(io, "Contractor:")
-    println(io, "  - variables: $(C.variables)")
-    print(io, "  - constraint: $(C.constraint_expression)")
-end
+# function Base.show(io::IO, C::Contractor)
+#     println(io, "Contractor:")
+#     println(io, "  - variables: $(C.variables)")
+#     print(io, "  - constraint: $(C.constraint_expression)")
+# end
 
 doc"""Usage:
 ```
@@ -42,9 +42,11 @@ end
     constrained = IntervalBox(z[1:C.num_outputs]...) ∩ IntervalBox(A...)
     #@show constrained
     #@show z[(C.num_outputs)+1:end]
-    return C.backward(X..., constrained...,
-                    z[(C.num_outputs)+1:end]...
-                    )
+    return IntervalBox( C.backward( X...,
+                                    constrained...,
+                                    z[(C.num_outputs)+1:end]...
+                                  )...
+                       )
 end
 
 function make_contractor(ex::Expr)
