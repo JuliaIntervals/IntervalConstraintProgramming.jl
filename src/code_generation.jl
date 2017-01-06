@@ -106,8 +106,8 @@ function forward_backward(flatAST::FlatAST)
         output = flatAST.top
     end
 
-    @show input
-    @show flatAST.intermediate
+    #@show input
+    #@show flatAST.intermediate
 
     input = setdiff(input, flatAST.intermediate)  # remove local variables
     intermediate = setdiff(flatAST.intermediate, output)
@@ -121,9 +121,9 @@ function forward_backward(flatAST::FlatAST)
     backward = make_function([input; output; intermediate],
                                 input, code)
 
-@show input
-@show output
-@show intermediate
+# @show input
+# @show output
+# @show intermediate
 
     # return GeneratedFunction(input, output, intermediate, code)
 

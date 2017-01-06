@@ -8,6 +8,7 @@ type Contractor{F<:Function}
 end
 
 type NewContractor{F1<:Function, F2<:Function}
+    variables::Vector{Symbol}  # input variables
     num_outputs::Int
     forward::F1
     backward::F2
@@ -70,10 +71,10 @@ function (C::NewContractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
     z = C.forward(IntervalBox(X...)...)
     #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
-    @show z
+    #@show z
     constrained = IntervalBox(z[1:C.num_outputs]...) ∩ IntervalBox(A...)
-    @show constrained
-    @show z[(C.num_outputs)+1:end]
+    #@show constrained
+    #@show z[(C.num_outputs)+1:end]
     return C.backward(X..., constrained...,
                     z[(C.num_outputs)+1:end]...
                     )
@@ -97,9 +98,12 @@ function make_contractor(ex::Expr)
 
     num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
-    :(NewContractor($num_outputs, $forward, $backward,
-                                $(Meta.quot(forward)),
-                                $(Meta.quot(backward))))
+    :(NewContractor($linear_AST.variables,
+                    $num_outputs,
+                    $forward,
+                    $backward,
+                    $(Meta.quot(forward)),
+                    $(Meta.quot(backward))))
 
     #
     # # TODO: What about interval box constraints?
