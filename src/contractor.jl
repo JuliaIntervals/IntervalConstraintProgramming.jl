@@ -68,10 +68,10 @@ end
 # end
 
 function (C::NewContractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
-    z = C.forward(IntervalBox(X...)...)
+    z = IntervalBox( C.forward(IntervalBox(X...)...)... )
     #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
-    #@show z
+    # @show z
     constrained = IntervalBox(z[1:C.num_outputs]...) ∩ IntervalBox(A...)
     #@show constrained
     #@show z[(C.num_outputs)+1:end]

@@ -14,7 +14,7 @@ type ConstraintSeparator{C, II} <: Separator
     expression::Expr
 end
 
-ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables[2:end], constraint, contractor, expression)
+ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables, constraint, contractor, expression)
 
 doc"""CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
