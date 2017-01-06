@@ -34,7 +34,7 @@ macro contractor(ex)
 end
 
 
-function (C::Contractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
+@compat function (C::Contractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
     z = IntervalBox( C.forward(IntervalBox(X...)...)... )
     #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
@@ -47,7 +47,6 @@ function (C::Contractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
                     )
 end
 
-#function Contractor(ex::Expr)
 function make_contractor(ex::Expr)
     # println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
@@ -61,7 +60,6 @@ function make_contractor(ex::Expr)
     # @show top, linear_AST
 
     forward, backward  = forward_backward(linear_AST)
-    #backward = backward_pass(linear_AST)
 
     num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
