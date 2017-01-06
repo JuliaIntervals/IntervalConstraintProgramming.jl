@@ -1,12 +1,3 @@
-# Distinguish between:
-# Input variables, e.g. x, y
-# Output variables, e.g. z_12
-# Intermediate variables, e.g. z_10, z_11
-
-# Input variables arrive in an IntervalBox
-# Each of the other sets is treated as a tuple?
-
-
 const symbol_numbers = Dict{Symbol, Int}()
 
 doc"""Return a new, unique symbol like _z3_"""

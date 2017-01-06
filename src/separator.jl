@@ -5,10 +5,8 @@ doc"""
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
-# CHANGE TO IMMUTABLE AND PARAMETRIZE THE FUNCTION FOR EFFICIENCY
 type ConstraintSeparator{C, II} <: Separator
     variables::Vector{Symbol}
-    #separator::Function
     constraint::II  # Interval or IntervalBox
     contractor::C
     expression::Expr
@@ -135,31 +133,24 @@ function make_constraint(expr, constraint)
     code
 end
 
-macro constraint(ex::Expr)  # alternative name for constraint -- remove?
-    # @show ex
-    expr, constraint = parse_comparison(ex)
+doc"""Create a separator from a given constraint expression, written as
+standard Julia code.
 
+e.g. `C = @constraint x^2 + y^2 <= 1`
+
+The variables (`x` and `y`, in this case) are automatically inferred.
+External constants can be used as e.g. `$a`:
+
+```
+a = 3
+C = @constraint x^2 + y^2 <= $a
+```
+"""
+macro constraint(ex::Expr)
+    expr, constraint = parse_comparison(ex)
     make_constraint(expr, constraint)
 end
 
-
-# doc"""Create a separator from a given constraint expression, written as
-# standard Julia code.
-#
-# e.g. `C = @constraint x^2 + y^2 <= 1`
-#
-# The variables (`x` and `y`, in this case) are automatically inferred.
-# External constants can be used as e.g. `$a`:
-#
-# ```
-# a = 3
-# C = @constraint x^2 + y^2 <= $a
-# ```
-# """
-# macro constraint(ex::Expr)
-#     ex = Meta.quot(ex)
-#     :(ConstraintSeparator($ex))
-# end
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")
@@ -170,14 +161,8 @@ function show(io::IO, S::Separator)
     println(io, S.expression)
 end
 
-# show_code(S::ConstraintSeparator) = show_code(S.contractor)
 
-#@compat (S::ConstraintSeparator)(X) = S.separator(X)
 @compat (S::CombinationSeparator)(X) = S.separator(X)
-
-#@compat (S::ConstraintSeparator)(X) = S.separator(X)
-
-# show_code(S::Separator) = show_code(S.contractor)
 
 
 doc"Unify the variables of two separators"
