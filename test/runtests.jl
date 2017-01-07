@@ -159,8 +159,15 @@ end
     @test C3(A, x) == IntervalBox(sqrt(A / 16))
 end
 
+<<<<<<< d1f6b67bc960c64242602d10c230bd0690401137
 @testset "Unary minus" begin
     x = IntervalBox(-∞..∞)
     C6 = @constraint 1 <= -x <= 3
     @test C6(x)[1] == Interval(-3, -1)
+=======
+@testset "power_rev for odd power" begin
+    x = -∞..∞
+    a = -8..27
+    power_rev(a, x, 3)[2] == Interval(-2.0000000000000004, 3.0000000000000004)
+>>>>>>> Add test for power_rev with odd power
 end
