@@ -1,67 +1,20 @@
 
 
-type Contractor{F<:Function}
-    variables::Vector{Symbol}
-    constraint_expression::Expr
-    code::Expr
-    contractor::F  # function
+immutable Contractor{F1<:Function, F2<:Function}
+    variables::Vector{Symbol}  # input variables
+    num_outputs::Int
+    forward::F1
+    backward::F2
+    forward_code::Expr
+    backward_code::Expr
 end
 
 
-doc"""`parse_comparison` parses comparisons like `x >= 10`
-into the corresponding interval, expressed as `x ∈ [10,∞]`
-
-Returns the expression and the constraint interval
-
-TODO: Allow something like [3,4]' for the complement of [3,4]
-"""
-
-function parse_comparison(ex)
-    expr, limits =
-    @match ex begin
-       ((a_ <= b_) | (a_ < b_) | (a_ ≤ b_))   => (a, (-∞, b))
-       ((a_ >= b_) | (a_ > b_) | (a_ ≥ b_))   => (a, (b, ∞))
-
-       ((a_ == b_) | (a_ = b_))   => (a, (b, b))
-
-       ((a_ <= b_ <= c_)
-        | (a_ < b_ < c_)
-        | (a_ <= b_ < c)
-        | (a_ < b_ <= c))         => (b, (a, c))
-
-       ((a_ >= b_ >= c_)
-       | (a_ > b_ > c_)
-       | (a_ >= b_ > c_)
-       | (a_ > b_ >= c))          => (b, (c, a))
-
-       ((a_ ∈ [b_, c_])
-       | (a_ in [b_, c_])
-       | (a_ ∈ b_ .. c_)
-       | (a_ in b_ .. c_))        => (a, (b, c))
-
-       _                          => (ex, (-∞, ∞))
-
-   end
-
-   a, b = limits
-
-   return (expr, a..b)   # expr ∈ [a,b]
-
-end
-
-
-# new call syntax to define a "functor" (object that behaves like a function)
-@compat (C::Contractor)(x...) = C.contractor(x...)
-
-@compat (C::Contractor)(X::IntervalBox) = C.contractor(X...)
-#show_code(c::Contractor) = c.code
-
-
-function Base.show(io::IO, C::Contractor)
-    println(io, "Contractor:")
-    println(io, "  - variables: $(C.variables)")
-    print(io, "  - constraint: $(C.constraint_expression)")
-end
+# function Base.show(io::IO, C::Contractor)
+#     println(io, "Contractor:")
+#     println(io, "  - variables: $(C.variables)")
+#     print(io, "  - constraint: $(C.constraint_expression)")
+# end
 
 doc"""Usage:
 ```
@@ -77,15 +30,25 @@ TODO: Hygiene for global variables, or pass in parameters
 """
 
 macro contractor(ex)
-    # println("@contractor; ex=$ex")
-
     make_contractor(ex)
 end
 
 
+@compat function (C::Contractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
+    z = IntervalBox( C.forward(IntervalBox(X...)...)... )
+    #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
+    # @show z
+    constrained = IntervalBox(z[1:C.num_outputs]...) ∩ IntervalBox(A...)
+    #@show constrained
+    #@show z[(C.num_outputs)+1:end]
+    return IntervalBox( C.backward( X...,
+                                    constrained...,
+                                    z[(C.num_outputs)+1:end]...
+                                  )...
+                       )
+end
 
-#function Contractor(ex::Expr)
 function make_contractor(ex::Expr)
     # println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
@@ -98,82 +61,15 @@ function make_contractor(ex::Expr)
 
     # @show top, linear_AST
 
-    forward = forward_pass(linear_AST)
-    backward = backward_pass(linear_AST)
+    forward, backward  = forward_backward(linear_AST)
 
+    num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
+    :(Contractor($linear_AST.variables,
+                    $num_outputs,
+                    $forward,
+                    $backward,
+                    $(Meta.quot(forward)),
+                    $(Meta.quot(backward))))
 
-    # TODO: What about interval box constraints?
-    input_arguments = forward.input_arguments
-    augmented_input_arguments = [:_A_; forward.input_arguments]
-
-    # @show input_arguments
-    # @show augmented_input_arguments
-
-    # add constraint interval as first argument
-
-    input_variables = make_tuple(input_arguments)
-    augmented_input_variables = make_tuple(augmented_input_arguments)
-
-    forward_output = make_tuple(forward.output_arguments)
-
-    backward_output = make_tuple(backward.output_arguments)
-
-    # @show forward
-    # @show backward
-    #
-    # @show input_variables
-    # @show forward_output
-    # @show backward_output
-
-    if isa(top, Symbol)
-        # nothing
-    elseif length(top) == 1  # single variable
-        top = top[]
-
-    else
-        # TODO: implement what happens for multiple variables in the constraint
-        # using an IntervalBox and intersection of IntervalBoxes
-    end
-
-    top_args = make_tuple(top)
-
-    local intersect_code
-
-    if isa(top_args, Symbol)
-        intersect_code = :($top_args = $top_args ∩ _A_)  # check type stability
-    else
-        intersect_code = :($top_args = IntervalBox($top_args) ∩ _A_)  # check type stability
-    end
-
-
-    code =
-        #esc(quote
-        quote
-            $(augmented_input_variables) -> begin
-                forward = $(make_function(forward))
-                backward = $(make_function(backward))
-
-                $(forward_output) = forward($(forward.input_arguments...))
-
-                $intersect_code
-
-                $(backward_output) = backward($(backward.input_arguments...))
-
-                return $(input_variables)
-
-            end
-
-        end
-
-    #  @show forward
-    #  @show backward
-    # #
-    #  @show code
-
-    return :(Contractor($(augmented_input_arguments),
-                        $(Meta.quot(expr)),
-                        $(Meta.quot(code)),
-                        $(code)
-                        ))
 end

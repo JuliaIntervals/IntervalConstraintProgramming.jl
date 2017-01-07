@@ -1,21 +1,4 @@
-#=
 
-Want to process `@constraint f(f(x)) ∈ [0.3, 0.4]`
-where `f(x) = 4x * (1-x)`
-
-Given code `f(f(x))`, we need `f_forward` and `f_backward`.
-
-Each "copy" of `f` uses the same actual forward and back functions,
-`f.forward` and `f.backward`.
-
-```
-@function f(x) = 4x * (1-x)
-```
-should generate these forward and backward functions, and register the function
-`f`.
-
-"""
-=#
 
 doc"""
 A `ConstraintFunction` contains the created forward and backward
@@ -53,23 +36,9 @@ Example: `@function f(x, y) = x^2 + y^2`
 
 @eval macro ($(:function))(ex)   # workaround to define macro @function
 
-    # (f, args, code) = @match ex begin
-    #     ( f_(args__) = code_ ) => (f, args, code)
-    # end
-
     (f, args, code) = match_function(ex)
 
-    # @show f, args, code
-
     return_arguments, flatAST = flatten(code)
-
-    # @show return_arguments
-
-    # @show root, all_vars, generated, code2
-
-
-    # @show flatAST
-    # @show return_arguments
 
     # make into an array:
     if !(isa(return_arguments, Array))
@@ -84,34 +53,23 @@ Example: `@function f(x, y) = x^2 + y^2`
     flatAST.intermediate = [return_arguments; flatAST.intermediate]
 
 
-    forward_code = forward_pass(flatAST) #root, all_vars, generated, code2)
-    backward_code = backward_pass(flatAST) #root, all_vars, generated, code2)
-
-    # @show forward_code, backward_code
-
-    # @show make_function(forward_code)
-    # @show make_function(backward_code)
-
     registered_functions[f] = FunctionArguments(flatAST.variables, flatAST.intermediate, return_arguments)
 
-    forward_function = make_function(forward_code)
-    backward_function = make_function(backward_code)
+    forward, backward = forward_backward(flatAST)
+
+
 
     return quote
-        #$(esc(Meta.quot(f))) = ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
-        #$(esc(f)) =
+
         $(esc(f)) =
             ConstraintFunction($(flatAST.variables),
                                 $(flatAST.intermediate),
-                                $(forward_function),
-                                $(backward_function),
-                                $(Meta.quot(forward_function)),
-                                $(Meta.quot(backward_function))
+                                $(forward),
+                                $(backward),
+                                $(Meta.quot(forward)),
+                                $(Meta.quot(backward))
                                 )
 
-
-        #registered_functions[$(Meta.quot(f))] =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
-        #$(Meta.quot(f)) =  ConstraintFunction($(all_vars), $(generated), $(forward_code), $(backward_code))
     end
 
 end
@@ -120,10 +78,9 @@ end
 function match_function(ex)
 
     try
-        (f, args, body) =
-            @match ex begin
-             ( (f_(args__) = body_) |
-              (function f_(args__) body_ end) ) => (f, args, body)
+        @capture ex begin
+            (   (f_(args__) = body_)
+                  | (function f_(args__) body_ end) )
            end
 
          return (f, args, rmlines(body))  # rmlines is from MacroTools package

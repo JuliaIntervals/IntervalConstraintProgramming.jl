@@ -5,21 +5,19 @@ doc"""
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
-# CHANGE TO IMMUTABLE AND PARAMETRIZE THE FUNCTION FOR EFFICIENCY
-type ConstraintSeparator{C, II} <: Separator
+immutable ConstraintSeparator{C, II} <: Separator
     variables::Vector{Symbol}
-    #separator::Function
     constraint::II  # Interval or IntervalBox
     contractor::C
     expression::Expr
 end
 
-ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables[2:end], constraint, contractor, expression)
+ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables, constraint, contractor, expression)
 
 doc"""CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
-type CombinationSeparator{F} <: Separator
+immutable CombinationSeparator{F} <: Separator
     variables::Vector{Symbol}
     separator::F
     expression::Expr
@@ -29,25 +27,25 @@ end
     C = S.contractor
     a, b = S.constraint.lo, S.constraint.hi
 
-    inner = C(a..b, X...)  # closure over the function C
+    inner = C(a..b, X)
 
     local outer
 
     if a == -∞
-        outer = C(b..∞, X...)
+        outer = C(b..∞, X)
 
     elseif b == ∞
-        outer = C(-∞..a, X...)
+        outer = C(-∞..a, X)
 
     else
 
-        outer1 = C(-∞..a, X...)
-        outer2 = C(b..∞, X...)
+        outer1 = C(-∞..a, X)
+        outer2 = C(b..∞, X)
 
-        outer = [ hull(x1, x2) for (x1,x2) in zip(outer1, outer2) ]
+        outer = outer1 ∪ outer2
     end
 
-    return (inner, (outer...))
+    return (inner, outer)
 end
 
 
@@ -135,31 +133,24 @@ function make_constraint(expr, constraint)
     code
 end
 
-macro constraint(ex::Expr)  # alternative name for constraint -- remove?
-    # @show ex
-    expr, constraint = parse_comparison(ex)
+doc"""Create a separator from a given constraint expression, written as
+standard Julia code.
 
+e.g. `C = @constraint x^2 + y^2 <= 1`
+
+The variables (`x` and `y`, in this case) are automatically inferred.
+External constants can be used as e.g. `$a`:
+
+```
+a = 3
+C = @constraint x^2 + y^2 <= $a
+```
+"""
+macro constraint(ex::Expr)
+    expr, constraint = parse_comparison(ex)
     make_constraint(expr, constraint)
 end
 
-
-# doc"""Create a separator from a given constraint expression, written as
-# standard Julia code.
-#
-# e.g. `C = @constraint x^2 + y^2 <= 1`
-#
-# The variables (`x` and `y`, in this case) are automatically inferred.
-# External constants can be used as e.g. `$a`:
-#
-# ```
-# a = 3
-# C = @constraint x^2 + y^2 <= $a
-# ```
-# """
-# macro constraint(ex::Expr)
-#     ex = Meta.quot(ex)
-#     :(ConstraintSeparator($ex))
-# end
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")
@@ -170,14 +161,8 @@ function show(io::IO, S::Separator)
     println(io, S.expression)
 end
 
-# show_code(S::ConstraintSeparator) = show_code(S.contractor)
 
-#@compat (S::ConstraintSeparator)(X) = S.separator(X)
 @compat (S::CombinationSeparator)(X) = S.separator(X)
-
-#@compat (S::ConstraintSeparator)(X) = S.separator(X)
-
-# show_code(S::Separator) = show_code(S.contractor)
 
 
 doc"Unify the variables of two separators"
@@ -252,8 +237,8 @@ function ∩(S1::Separator, S2::Separator)
 
         # Treat as if had X[i] in the other directions, except if empty
 
-        inner = tuple( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
-        outer = tuple( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
+        inner = IntervalBox( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
+        outer = IntervalBox( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
 
         return (inner, outer)
 
@@ -299,8 +284,8 @@ function ∪(S1::Separator, S2::Separator)
         end
 
 
-        inner = tuple( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
-        outer = tuple( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
+        inner = IntervalBox( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
+        outer = IntervalBox( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
 
         return (inner, outer)
     end

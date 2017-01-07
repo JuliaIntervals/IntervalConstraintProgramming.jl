@@ -22,7 +22,7 @@ end
 
     C = @contractor x^2 + y^2
 
-    @test C(-∞..1, x, y) == (-1..1, -1..1)
+    @test C(-∞..1, X) == IntervalBox(-1..1, -1..1)
 end
 
 @testset "Separators" begin
@@ -33,13 +33,13 @@ end
     @test typeof(S) <: IntervalConstraintProgramming.ConstraintSeparator
 
     inner, outer = S(X)
-    @test inner == (-1..1, -1..1)
-    @test outer == (II, II)
+    @test inner == IntervalBox(-1..1, -1..1)
+    @test outer == IntervalBox(II, II)
 
     X = IntervalBox(-∞..∞, -∞..∞)
     inner, outer = S(X)
-    @test inner == (-1..1, -1..1)
-    @test outer == (-∞..∞, -∞..∞)
+    @test inner == IntervalBox(-1..1, -1..1)
+    @test outer == IntervalBox(-∞..∞, -∞..∞)
 end
 
 @testset "pave" begin
@@ -60,7 +60,7 @@ end
 
     S3 = @constraint x^2 + y^2 <= 1
     X = IntervalBox(-∞..∞, -∞..∞)
-    paving = pave(S3, X, 1)
+    paving = pave(S3, X, 1.0)
 
     @test paving.inner == [IntervalBox(Interval(0.0, 0.5), Interval(0.0, 0.8660254037844386)),
                     IntervalBox(Interval(0.0, 0.5), Interval(-0.8660254037844386, 0.0)),
@@ -110,7 +110,7 @@ end
     A = 0.5..1
     x = 0..1
 
-    @test C1(A, x) == 0.125..0.25   # x such that 4x ∈ A=[0.5, 1]
+    @test C1(A, x) == IntervalBox(0.125..0.25)   # x such that 4x ∈ A=[0.5, 1]
 
 
     C2 = @constraint f(x) ∈ [0.5, 0.6]
@@ -137,12 +137,12 @@ end
     A = 0.5..1
     x = 0..1
 
-    @test C(A, x) == sqrt(A / 4)
+    @test C(A, x) == IntervalBox(sqrt(A / 4))
 
     @function g2(x) = ( a = f(f(x)); a^2 )
     C2 = @contractor g2(x)
 
-    @test C2(A, x) == sqrt(A / 16)
+    @test C2(A, x) == IntervalBox(sqrt(A / 16))
 
 end
 
@@ -156,23 +156,5 @@ end
     @function g3(x) = ( a = (f↑2)(x); a^2 )
     C3 = @contractor g3(x)
 
-    @test C3(A, x) == sqrt(A / 16)
-end
-
-@testset "Multidimensional functions" begin
-
-    @function g4(x, y) = (2x, 2y)
-
-    A = IntervalBox(0.5..1, 0.5..1)
-    x = y = 0..1
-
-    C4 = @contractor g4(x, y)
-
-    @test IntervalBox(C4(A, x, y)) == A / 2
-
-
-    C5 = @contractor (g4↑2)(x, y)
-
-    @test IntervalBox(C5(A, x, y)) == A / 4
-
+    @test C3(A, x) == IntervalBox(sqrt(A / 16))
 end

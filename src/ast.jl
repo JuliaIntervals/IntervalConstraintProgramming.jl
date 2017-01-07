@@ -1,4 +1,3 @@
-
 const symbol_numbers = Dict{Symbol, Int}()
 
 doc"""Return a new, unique symbol like _z3_"""
@@ -11,10 +10,11 @@ function make_symbol(s::Symbol = :z)  # default is :z
 end
 
 
-function make_symbols(n::Integer)
-    [make_symbol() for i in 1:n]
+function make_symbols(n::Integer, s::Symbol = :z)
+    [make_symbol(s) for i in 1:n]
 end
 
+# The following function is not used
 doc"""Check if a symbol like `:a` has been uniqued to `:_a_1_`"""
 function isuniqued(s::Symbol)
     ss = string(s)
@@ -22,6 +22,8 @@ function isuniqued(s::Symbol)
 end
 
 # Types for representing a flattened AST:
+
+# Combine Assignment and FunctionAssignment ?
 
 immutable Assignment
     lhs
@@ -35,88 +37,98 @@ immutable FunctionAssignment
     args
 end
 
-immutable GeneratedFunction
-    input_arguments::Vector{Symbol}
-    output_arguments::Vector{Symbol}
-    code::Expr
-end
-
 # Close to single assignment form
-type FlattenedAST
+type FlatAST
+    top  # topmost variable(s)
     input_variables::Set{Symbol}
     variables::Vector{Symbol}  # cleaned version
     intermediate::Vector{Symbol}  # generated vars
     code # ::Vector{Assignment}
 end
 
-import Base.show
-function show(io::IO, flatAST::FlattenedAST)
+
+function Base.show(io::IO, flatAST::FlatAST)
+    println(io, "top: ", flatAST.top)
     println(io, "input vars: ", flatAST.input_variables)
     println(io, "intermediate vars: ", flatAST.intermediate)
-    println(io, "code: ")
-    println(io, flatAST.code)
+    println(io, "code: ", flatAST.code)
 end
 
-FlattenedAST() = FlattenedAST(Set{Symbol}(), [], [], [])
+FlatAST() = FlatAST([], Set{Symbol}(), [], [], [])
 
-export FlattenedAST
+export FlatAST
 
 ##
+
+set_top!(flatAST::FlatAST, vars) = flatAST.top = vars  # also returns vars
+
+add_variable!(flatAST::FlatAST, var) = push!(flatAST.input_variables, var)
+
+add_intermediate!(flatAST::FlatAST, var::Symbol) = push!(flatAST.intermediate, var)
+add_intermediate!(flatAST::FlatAST, vars::Vector{Symbol}) = append!(flatAST.intermediate, vars)
+
+add_code!(flatAST::FlatAST, code) = push!(flatAST.code, code)
 
 export flatten
 
 
 function flatten(ex)
-    flatAST = FlattenedAST()
-    top_var = flatten!(flatAST, ex)
+    flatAST = FlatAST()
+    top = flatten!(flatAST, ex)
 
-    return top_var, flatAST
+    return top, flatAST
 end
 
 
 doc"""`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
-structure, stored in a FlattenedAST object. This is close to SSA (single-assignment form,
- https://en.wikipedia.org/wiki/Static_single_assignment_form).
+structure, stored in a FlatAST object. This is close to SSA (single-assignment form,
+https://en.wikipedia.org/wiki/Static_single_assignment_form).
 
- Variables that are found are considered `input_variables`.
- Generated variables introduced at intermediate nodes are stored in
- `intermediate`.
- The function returns the variable that is
-at the top of the current piece of the tree."""
-# process numbers
-function flatten!(flatAST::FlattenedAST, ex)
+Variables that are found are considered `input_variables`.
+Generated variables introduced at intermediate nodes are stored in
+`intermediate`.
+Returns the variable at the top of the current piece of the tree."""
+
+# TODO: Parameters
+
+# numbers:
+function flatten!(flatAST::FlatAST, ex)
     return ex  # nothing to do to the AST; return the number
 end
 
-function flatten!(flatAST::FlattenedAST, ex::Symbol)  # symbols are leaves
-    push!(flatAST.input_variables, ex)  # add the discovered symbol as an input variable
+# symbols:
+function flatten!(flatAST::FlatAST, ex::Symbol)  # symbols are leaves
+    add_variable!(flatAST, ex)  # add the discovered symbol as an input variable
     return ex
 end
 
 
-function flatten!(flatAST::FlattenedAST, ex::Expr)
+function flatten!(flatAST::FlatAST, ex::Expr)
+    local top
 
     if ex.head == :$    # constants written as $a
-        process_constant!(flatAST, ex)
+        top = process_constant!(flatAST, ex)
 
     elseif ex.head == :call  # function calls
-        process_call!(flatAST, ex)
+        top = process_call!(flatAST, ex)
 
     elseif ex.head == :(=)  # assignments
-        process_assignment!(flatAST, ex)
+        top = process_assignment!(flatAST, ex)
 
     elseif ex.head == :block
-        process_block!(flatAST, ex)
+        top = process_block!(flatAST, ex)
 
     elseif ex.head == :tuple
-        process_tuple!(flatAST, ex)
+        top = process_tuple!(flatAST, ex)
 
     elseif ex.head == :return
-        process_return!(flatAST, ex)
+        top = process_return!(flatAST, ex)
     end
+
+    set_top!(flatAST, top)
 end
 
-function process_constant!(flatAST::FlattenedAST, ex)
+function process_constant!(flatAST::FlatAST, ex)
     return esc(ex.args[1])  # interpolate the value of the external constant
 end
 
@@ -125,7 +137,7 @@ end
 They are processed in order.
 """
 
-function process_block!(flatAST::FlattenedAST, ex)
+function process_block!(flatAST::FlatAST, ex)
     local top
 
     for arg in ex.args
@@ -136,9 +148,9 @@ function process_block!(flatAST::FlattenedAST, ex)
     return top  # last variable assigned
 end
 
-# function process_iterated_function!(flatAST::FlattenedAST, ex)
+# function process_iterated_function!(flatAST::FlatAST, ex)
 
-function process_tuple!(flatAST::FlattenedAST, ex)
+function process_tuple!(flatAST::FlatAST, ex)
     # println("Entering process_tuple")
     # @show flatAST
     # @show ex
@@ -147,8 +159,6 @@ function process_tuple!(flatAST::FlattenedAST, ex)
     top_args = []  # the arguments returned for each element of the tuple
     for arg in ex.args
         top = flatten!(flatAST, arg)
-        # @show flatAST
-
         push!(top_args, top)
     end
 
@@ -160,7 +170,7 @@ end
 The name a is currently retained.
 TODO: It should later be made unique.
 """
-function process_assignment!(flatAST::FlattenedAST, ex)
+function process_assignment!(flatAST::FlatAST, ex)
     # println("process_assignment!:")
     #  @show ex
     #  @show ex.args[1], ex.args[2]
@@ -185,10 +195,10 @@ function process_assignment!(flatAST::FlattenedAST, ex)
         vars = [var]
     end
 
-    append!(flatAST.intermediate, vars)
+    add_intermediate!(flatAST, vars)
 
     top_level_code = Assignment(vars, :(), top)  # empty operation
-    push!(flatAST.code, top_level_code)
+    add_code!(flatAST, top_level_code)
 
     # j@show flatAST
 
@@ -198,7 +208,7 @@ end
 
 """Processes something of the form `(f↑4)(x)` (write as `\\uparrow<TAB>`)
 by rewriting it to the equivalent set of iterated functions"""
-function process_iterated_function!(flatAST::FlattenedAST, ex)
+function process_iterated_function!(flatAST::FlatAST, ex)
     total_function_call = ex.args[1]
     args = ex.args[2:end]
 
@@ -217,7 +227,7 @@ function process_iterated_function!(flatAST::FlattenedAST, ex)
 
     # @show new_expr
 
-    flatten!(flatAST, new_expr)
+    flatten!(flatAST, new_expr)  # replace the current expression with the new one
 end
 
 """A call is something like +(x, y).
@@ -225,7 +235,7 @@ A new variable is introduced for the result; its name can be specified
     using the new_var optional argument. If none is given, then a new, generated
     name is used.
 """
-function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
+function process_call!(flatAST::FlatAST, ex, new_var=nothing)
 
     #println("Entering process_call!")
     #@show ex
@@ -245,17 +255,14 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
 
     end
 
-    # rewrite +(a,b,c) as +(a,+(b,c)):
+    # rewrite +(a,b,c) as +(a,+(b,c)) by recursive splitting
     # TODO: Use @match here!
 
-    # if op in (:+, :*) && length(ex.args) > 3
-    #     return insert_variables( :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
-    # end
-
-    # new_code = quote end
-    # current_args = []  # the arguments in the current expression that will be added
-    # all_vars = Set{Symbol}()  # all variables contained in the sub-expressions
-    # generated_variables = Symbol[]
+    if op in (:+, :*) && length(ex.args) > 3
+        return flatten!(flatAST,
+            :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) )
+            )
+    end
 
     top_args = []
     for arg in ex.args[2:end]
@@ -281,7 +288,7 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
             new_var = make_symbol()
         end
 
-        push!(flatAST.intermediate, new_var)
+        add_intermediate!(flatAST, new_var)
 
         top_level_code = Assignment(new_var, op, top_args)
 
@@ -291,7 +298,7 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
             # make enough new variables for all the returned arguments:
             new_vars = make_symbols(length(registered_functions[op].generated))
 
-            append!(flatAST.intermediate, new_vars)
+            add_intermediate!(flatAST, new_vars)
 
             top_level_code = FunctionAssignment(new_vars, op, top_args)
 
@@ -305,7 +312,7 @@ function process_call!(flatAST::FlattenedAST, ex, new_var=nothing)
     end
 
 
-    push!(flatAST.code, top_level_code)
+    add_code!(flatAST, top_level_code)
 
     return new_var
 

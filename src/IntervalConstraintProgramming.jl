@@ -10,6 +10,8 @@ using FixedSizeArrays: setindex
 import Base:
     show, ∩, ∪, !, ⊆, setdiff
 
+import ValidatedNumerics: sqr
+
 export
     @contractor,
     Separator, separator, @separator, @constraint,
@@ -17,8 +19,7 @@ export
     SubPaving, Paving,
     pave, refine!,
     Vol,
-    show_code,
-    plus_rev, mul_rev 
+    show_code
 
 
 include("reverse_mode.jl")
@@ -31,5 +32,9 @@ include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
 
+import Base.∪
+import ValidatedNumerics: IntervalBox
+∪{N,T}(X::IntervalBox{N,T}, Y::IntervalBox{N,T}) =
+    IntervalBox( [(x ∪ y) for (x,y) in zip(X, Y)]... )
 
 end # module
