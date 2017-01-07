@@ -158,3 +158,9 @@ end
 
     @test C3(A, x) == IntervalBox(sqrt(A / 16))
 end
+
+@testset "Unary minus" begin
+    x = IntervalBox(-∞..∞)
+    C6 = @constraint 1 <= -x <= 3
+    @test C6(x)[1] == Interval(-3, -1)
+end

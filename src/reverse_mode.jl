@@ -35,6 +35,7 @@ end
 
 minus_rev(a,b,c) = minus_rev(promote(a,b,c)...)
 
+minus_rev(a::Interval, b::Interval) = (b = -a; return (a, b))     # a = -b
 
 function mul_rev(a::Interval, b::Interval, c::Interval)  # a = b * c
     # a = a ∩ (b * c)
