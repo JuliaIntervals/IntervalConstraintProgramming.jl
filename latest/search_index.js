@@ -145,11 +145,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api.html#IntervalConstraintProgramming.flatten!-Tuple{IntervalConstraintProgramming.FlattenedAST,Any}",
+    "location": "api.html#IntervalConstraintProgramming.flatten!-Tuple{IntervalConstraintProgramming.FlatAST,Any}",
     "page": "API",
     "title": "IntervalConstraintProgramming.flatten!",
     "category": "Method",
-    "text": "flatten! recursively converts a Julia expression into a \"flat\" (one-dimensional) structure, stored in a FlattenedAST object. This is close to SSA (single-assignment form,  https://en.wikipedia.org/wiki/Static_single_assignment_form).\n\nVariables that are found are considered input_variables.  Generated variables introduced at intermediate nodes are stored in  intermediate.  The function returns the variable that is at the top of the current piece of the tree.\n\n\n\n"
+    "text": "flatten! recursively converts a Julia expression into a \"flat\" (one-dimensional) structure, stored in a FlatAST object. This is close to SSA (single-assignment form, https://en.wikipedia.org/wiki/Static_single_assignment_form).\n\nVariables that are found are considered input_variables. Generated variables introduced at intermediate nodes are stored in intermediate. Returns the variable at the top of the current piece of the tree.\n\n\n\n"
 },
 
 {
@@ -193,7 +193,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api.html#IntervalConstraintProgramming.process_assignment!-Tuple{IntervalConstraintProgramming.FlattenedAST,Any}",
+    "location": "api.html#IntervalConstraintProgramming.process_assignment!-Tuple{IntervalConstraintProgramming.FlatAST,Any}",
     "page": "API",
     "title": "IntervalConstraintProgramming.process_assignment!",
     "category": "Method",
@@ -201,7 +201,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api.html#IntervalConstraintProgramming.process_block!-Tuple{IntervalConstraintProgramming.FlattenedAST,Any}",
+    "location": "api.html#IntervalConstraintProgramming.process_block!-Tuple{IntervalConstraintProgramming.FlatAST,Any}",
     "page": "API",
     "title": "IntervalConstraintProgramming.process_block!",
     "category": "Method",
@@ -217,7 +217,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api.html#IntervalConstraintProgramming.process_iterated_function!-Tuple{IntervalConstraintProgramming.FlattenedAST,Any}",
+    "location": "api.html#IntervalConstraintProgramming.process_iterated_function!-Tuple{IntervalConstraintProgramming.FlatAST,Any}",
     "page": "API",
     "title": "IntervalConstraintProgramming.process_iterated_function!",
     "category": "Method",
