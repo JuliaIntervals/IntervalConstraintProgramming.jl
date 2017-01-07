@@ -1,12 +1,16 @@
 export plus_rev, minus_rev, mul_rev,
     power_rev, sqrt_rev, sqr_rev # export due to quoting issue
 
+# export sqr
+# sqr(x) = x^2
+
 const rev_ops = Dict(
                     :+     => :plus_rev,
                     :-     => :minus_rev,
                     :*     => :mul_rev,
                     :^     => :power_rev,
                     :sqrt  => :sqrt_rev,
+                    :sqr   => :sqr_rev,
                     :()    => :()
                     )
 
@@ -94,7 +98,7 @@ function sqr_rev(c, x)   # c = x^2;  refine x
     x1 = sqrt(c) ∩ x
     x2 = -(sqrt(c)) ∩ x
 
-    return hull(x1, x2)
+    return (c, hull(x1, x2))
 end
 
 sqr_rev(c) = sqr_rev(c, -∞..∞)

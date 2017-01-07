@@ -10,6 +10,8 @@ using FixedSizeArrays: setindex
 import Base:
     show, ∩, ∪, !, ⊆, setdiff
 
+import ValidatedNumerics: sqr
+
 export
     @contractor,
     Separator, separator, @separator, @constraint,
