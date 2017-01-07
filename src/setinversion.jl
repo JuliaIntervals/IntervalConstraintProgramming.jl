@@ -37,17 +37,15 @@ function pave{N,T}(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ)
         inner, outer = S(X)   # here inner and outer are reversed compared to Jaulin
         # S(X) returns the pair (contractor with respect to the inside of the constraing, contractor with respect to outside)
 
-        inner2 = IntervalBox(inner)
-        outer2 = IntervalBox(outer)
-
-        inside_list = setdiff(X, outer2)
+        #@show X, outer
+        inside_list = setdiff(X, outer)
 
         if length(inside_list) > 0
             append!(inner_list, inside_list)
         end
 
 
-        boundary = inner2 ∩ outer2
+        boundary = inner ∩ outer
 
         if isempty(boundary)
             continue
@@ -77,7 +75,7 @@ function pave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ = 1e-2)
 
     inner_list, boundary_list = pave(S, [X], ϵ)
 
-    return Paving{N,T}(S, inner_list, boundary_list, ϵ)
+    return Paving(S, inner_list, boundary_list, ϵ)
 
 end
 
