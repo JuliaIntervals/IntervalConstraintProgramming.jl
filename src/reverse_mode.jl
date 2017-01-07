@@ -49,6 +49,8 @@ mul_rev(a,b,c) = mul_rev(promote(a,b,c)...)
 
 
 Base.iseven(x::Interval) = isinteger(x) && iseven(round(Int, x.lo))
+Base.isodd(x::Interval) = isinteger(x) && isodd(round(Int, x.lo))
+
 
 function power_rev(a::Interval, b::Interval, c::Interval)  # a = b^c,  log(a) = c.log(b),  b = a^(1/c)
 
@@ -63,6 +65,12 @@ function power_rev(a::Interval, b::Interval, c::Interval)  # a = b^c,  log(a) = 
     elseif iseven(c)
         b1 = b ∩ ( a^(inv(c) ))
         b2 = b ∩ ( -( a^(inv(c)) ) )
+
+        b = hull(b1, b2)
+
+    elseif isodd(c)
+        b1 = b ∩ ( (a ∩ (0..∞)) ^(inv(c) ))   # positive part
+        b2 = b ∩ (- ( (-(a ∩ (-∞..0)))^(inv(c)) ) )  # negative part
 
         b = hull(b1, b2)
 
