@@ -259,9 +259,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
     # TODO: Use @match here!
 
     if op in (:+, :*) && length(ex.args) > 3
-        return flatten!(flatAST,
-            :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) )
-            )
+        return flatten!(flatAST, :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
     end
 
     top_args = []
