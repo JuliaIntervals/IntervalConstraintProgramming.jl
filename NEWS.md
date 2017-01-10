@@ -2,12 +2,22 @@
 
 # v0.4
 - `@function f(x) = 4x` defines a function
-- Functions may be used inside constraints (only functions of a single variable,
-    returning a single variable, for now).
-- Functions may be iterated.
-- Local variables may be introduced.
-- Simple plotting solution for the results of `pave`.
-- Major internals rewrite.
+- Functions may be used inside constraints
+- Functions may be iterated
+- Functions may be multi-dimensional
+- Local variables may be introduced
+- Simple plotting solution for the results of `pave` using `Plots.jl` recipes
+(via `ValidatedNumerics.jl`):
+```
+using Plots
+gr()  # preferred (fast) backed for `Plots.jl`
+plot(paving.inner)
+plot!(paving.boundary)
+```
+- Major internals rewrite
+- Unary minus and `power_rev` with odd powers now work correctly
+- Examples updated
+- Basic documentation using `Documenter.jl`
 
 
 # v0.3
