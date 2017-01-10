@@ -1,14 +1,19 @@
 
-
-immutable Contractor{F1<:Function, F2<:Function}
+doc"""
+`Contractor` represents a `Contractor` from $\mathbb{R}^N$ to $\mathbb{R}^N$.
+"""
+immutable Contractor{N, F1<:Function, F2<:Function}
     variables::Vector{Symbol}  # input variables
-    num_outputs::Int
     forward::F1
     backward::F2
     forward_code::Expr
     backward_code::Expr
 end
 
+function Contractor(variables::Vector{Symbol}, forward, backward, forward_code, backward_code)
+    num_vars = length(variables)
+    Contractor{num_vars, typeof(forward), typeof(backward)}(variables, forward, backward, forward_code, backward_code)
+end
 
 # function Base.show(io::IO, C::Contractor)
 #     println(io, "Contractor:")
@@ -34,7 +39,7 @@ macro contractor(ex)
 end
 
 
-@compat function (C::Contractor{F1,F2}){F1,F2}(A, X) # X::IntervalBox)
+@compat function (C::Contractor{N,F1,F2}){N,F1,F2,T}(A::IntervalBox{N,T}, X::IntervalBox{N,T}) # X::IntervalBox)
     z = IntervalBox( C.forward(IntervalBox(X...)...)... )
     #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
@@ -65,8 +70,8 @@ function make_contractor(ex::Expr)
 
     num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
+
     :(Contractor($linear_AST.variables,
-                    $num_outputs,
                     $forward,
                     $backward,
                     $(Meta.quot(forward)),
