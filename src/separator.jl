@@ -27,20 +27,20 @@ end
     C = S.contractor
     a, b = S.constraint.lo, S.constraint.hi
 
-    inner = C(a..b, X)
+    inner = C(IntervalBox(a..b), X)
 
     local outer
 
     if a == -∞
-        outer = C(b..∞, X)
+        outer = C(IntervalBox(b..∞), X)
 
     elseif b == ∞
-        outer = C(-∞..a, X)
+        outer = C(IntervalBox(-∞..a), X)
 
     else
 
-        outer1 = C(-∞..a, X)
-        outer2 = C(b..∞, X)
+        outer1 = C(IntervalBox(-∞..a), X)
+        outer2 = C(IntervalBox(b..∞), X)
 
         outer = outer1 ∪ outer2
     end
