@@ -1,8 +1,9 @@
 
 doc"""
 `Contractor` represents a `Contractor` from $\mathbb{R}^N$ to $\mathbb{R}^N$.
+Nout is the output dimension of the forward part.
 """
-immutable Contractor{N, F1<:Function, F2<:Function}
+immutable Contractor{N, Nout, F1<:Function, F2<:Function}
     variables::Vector{Symbol}  # input variables
     forward::F1
     backward::F2
@@ -10,9 +11,10 @@ immutable Contractor{N, F1<:Function, F2<:Function}
     backward_code::Expr
 end
 
-function Contractor(variables::Vector{Symbol}, forward, backward, forward_code, backward_code)
-    num_vars = length(variables)
-    Contractor{num_vars, typeof(forward), typeof(backward)}(variables, forward, backward, forward_code, backward_code)
+function Contractor(variables::Vector{Symbol}, top, forward, backward, forward_code, backward_code)
+    N = length(variables)  # input dimension
+    Nout = length(top)
+    Contractor{N, Nout, typeof(forward), typeof(backward)}(variables, forward, backward, forward_code, backward_code)
 end
 
 # function Base.show(io::IO, C::Contractor)
@@ -39,17 +41,17 @@ macro contractor(ex)
 end
 
 
-@compat function (C::Contractor{N,F1,F2}){N,F1,F2,T}(A::IntervalBox{N,T}, X::IntervalBox{N,T}) # X::IntervalBox)
+@compat function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(A, X::IntervalBox{N,T}) # X::IntervalBox)
     z = IntervalBox( C.forward(IntervalBox(X...)...)... )
     #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
     # @show z
-    constrained = IntervalBox(z[1:C.num_outputs]...) ∩ IntervalBox(A...)
+    constrained = IntervalBox(z[1:Nout]...) ∩ IntervalBox(A...)
     #@show constrained
     #@show z[(C.num_outputs)+1:end]
     return IntervalBox( C.backward( X...,
                                     constrained...,
-                                    z[(C.num_outputs)+1:end]...
+                                    z[Nout+1:end]...
                                   )...
                        )
 end
@@ -70,8 +72,14 @@ function make_contractor(ex::Expr)
 
     num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
+    @show top
+
+    if isa(top, Symbol)
+        top = [top]
+    end
 
     :(Contractor($linear_AST.variables,
+                    $top,
                     $forward,
                     $backward,
                     $(Meta.quot(forward)),
