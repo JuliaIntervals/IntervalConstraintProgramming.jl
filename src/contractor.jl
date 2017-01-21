@@ -53,11 +53,8 @@ end
     constrained = IntervalBox{Nout,T}(z[1:Nout]) ∩ A
     @show constrained
     #@show z[(C.num_outputs)+1:end]
-    return IntervalBox{N,T}( C.backward( IntervalBox(
-                                        X...,
-                                    constrained...,
-                                    z[Nout+1:end]...
-                                  )))
+    return IntervalBox(C.backward(X, constrained, z[Nout+1:end]) )
+
 end
 
 function make_contractor(ex::Expr)
