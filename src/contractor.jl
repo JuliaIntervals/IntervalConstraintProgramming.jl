@@ -40,10 +40,21 @@ macro contractor(ex)
     make_contractor(ex)
 end
 
-import Base.∩
+import Base: ∩, ∪
+
+# TODO: Move these to ValidatedNumerics
 function ∩{N,T}(A::IntervalBox{N,T}, B::IntervalBox{N,T})
     IntervalBox{N,T}([(a ∩ b) for (a, b) in zip(A, B)])
 end
+
+union{T}(a::Interval{T}, b::Interval{T}) = hull(a, b)
+
+
+function ∪{N,T}(A::IntervalBox{N,T}, B::IntervalBox{N,T})
+    IntervalBox{N,T}([(a ∪ b) for (a, b) in zip(A, B)])
+end
+
+
 
 @compat function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(A::IntervalBox{Nout,T}, X::IntervalBox{N,T}) # X::IntervalBox)
     z = IntervalBox( C.forward(X))
@@ -52,8 +63,12 @@ end
      @show z
     constrained = IntervalBox{Nout,T}(z[1:Nout]) ∩ A
     @show constrained
+
+    # TODO: Add check to see if constrained is empty and therefore can eliminate
+    # backward call
+
     #@show z[(C.num_outputs)+1:end]
-    return IntervalBox(C.backward(X, constrained, z[Nout+1:end]) )
+    return IntervalBox{N,T}(C.backward(X, constrained, z[Nout+1:end]) )
 
 end
 
