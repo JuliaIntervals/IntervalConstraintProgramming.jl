@@ -141,7 +141,8 @@ function make_function(input_args, output_args, code)
     output = make_tuple(output_args)  # make a tuple of the variables
 
     quote
-        $input -> begin
+        t -> begin
+            $input = t
                     $code
                     return $output
                   end
