@@ -93,6 +93,16 @@ end
 
 end
 
+@testset "Paving a 3D torus" begin
+    S5 = @constraint (3 - sqrt(x^2 + y^2))^2 + z^2 <= 1
+    x = y = z = -∞..∞
+    X = IntervalBox(x, y, z)
+
+    paving = pave(S5, X, 1.)
+
+    @test typeof(paving) == IntervalConstraintProgramming.Paving{3, Float64}
+
+end
 
 @testset "Volume" begin
     x = 3..5

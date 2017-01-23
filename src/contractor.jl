@@ -67,15 +67,14 @@ end
 
     # intermediate = z[Nout+1:end]  # values of intermediate variables from forward run
 
-    @show intermediate
+    # @show intermediate
     # @show constrained
 
-    # TODO: Add check to see if constrained is empty and therefore can eliminate
-    # backward call:
+    # If constrained alread empty, can eliminate call to backward propagation:
 
-    # if isempty(constrained)
-    #     return emptyinterval(X)
-    # end
+    if isempty(constrained)
+        return emptyinterval(X)
+    end
 
 
     #@show z[(C.num_outputs)+1:end]
