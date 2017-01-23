@@ -133,7 +133,7 @@ function forward_backward(flatAST::FlatAST)
     @show output
 
 
-    forward = make_function(input, [output; intermediate], code)
+    forward = make_function(input, output, intermediate, code)
 
 
     code = emit_backward_code(flatAST.code)
@@ -157,13 +157,14 @@ input arguments, output arguments, and code block.
 function make_function(input_args, output_args, intermediate, code)
 
     input = make_tuple(input_args)  # make a tuple of the variables
+    intermediate = make_tuple(intermediate)
     output = make_tuple(output_args)  # make a tuple of the variables
 
     quote
         t -> begin
             $input = t
                     $code
-                    return $output
+                    return ($output, $intermediate)
                   end
         end
 end
