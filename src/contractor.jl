@@ -57,13 +57,15 @@ end
 
 
 @compat function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(A::IntervalBox{Nout,T}, X::IntervalBox{N,T}) # X::IntervalBox)
-    z = IntervalBox( C.forward(X))
+
+    output, intermediate = C.forward(X)
+    output_box = IntervalBox(output)
     #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
     # @show z
-    constrained = IntervalBox{Nout,T}(z[1:Nout]) ∩ A
+    constrained = output_box ∩ A
 
-    intermediate = z[Nout+1:end]  # values of intermediate variables from forward run
+    # intermediate = z[Nout+1:end]  # values of intermediate variables from forward run
 
     @show intermediate
     # @show constrained
