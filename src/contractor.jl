@@ -60,17 +60,29 @@ end
     z = IntervalBox( C.forward(X))
     #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
 
-     @show z
+    # @show z
     constrained = IntervalBox{Nout,T}(z[1:Nout]) ∩ A
-    @show constrained
+
+    intermediate = z[Nout+1:end]  # values of intermediate variables from forward run
+
+    @show intermediate
+    # @show constrained
 
     # TODO: Add check to see if constrained is empty and therefore can eliminate
-    # backward call
+    # backward call:
+
+    # if isempty(constrained)
+    #     return emptyinterval(X)
+    # end
+
 
     #@show z[(C.num_outputs)+1:end]
-    return IntervalBox{N,T}(C.backward(X, constrained, z[Nout+1:end]) )
+    return IntervalBox{N,T}(C.backward(X, constrained, intermediate) )
 
 end
+
+# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
+@compat (C::Contractor{N,1,F1,F2}){N,F1,F2,T}(A::Interval{T}, X::IntervalBox{N,T}) = C(IntervalBox(A), X)
 
 function make_contractor(ex::Expr)
     # println("Entering Contractor(ex) with ex=$ex")
@@ -88,7 +100,7 @@ function make_contractor(ex::Expr)
 
     num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
-    @show top
+    # @show top
 
     if isa(top, Symbol)
         top = [top]
