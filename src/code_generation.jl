@@ -127,7 +127,14 @@ function forward_backward(flatAST::FlatAST)
     flatAST.variables = input
 
     code = emit_forward_code(flatAST.code)
+
+    @show input
+    @show intermediate
+    @show output
+
+
     forward = make_function(input, [output; intermediate], code)
+
 
     code = emit_backward_code(flatAST.code)
     backward = make_function(input, output, intermediate,
@@ -147,7 +154,7 @@ doc"""
 Generate code for an anonymous function with given
 input arguments, output arguments, and code block.
 """
-function make_function(input_args, output_args, code)
+function make_function(input_args, output_args, intermediate, code)
 
     input = make_tuple(input_args)  # make a tuple of the variables
     output = make_tuple(output_args)  # make a tuple of the variables
