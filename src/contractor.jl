@@ -41,28 +41,20 @@ macro contractor(ex)
 end
 
 
-@compat function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(A::IntervalBox{Nout,T}, X::IntervalBox{N,T}) # X::IntervalBox)
+@compat function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(
+    A::IntervalBox{Nout,T}, X::IntervalBox{N,T})
 
     output, intermediate = C.forward(X)
     output_box = IntervalBox(output)
-    #z = [1:C.num_outputs] = tuple(IntervalBox(z[1:C.num_outputs]...) ∩ A
-
-    # @show z
     constrained = output_box ∩ A
 
-    # intermediate = z[Nout+1:end]  # values of intermediate variables from forward run
 
-    # @show intermediate
-    # @show constrained
-
-    # If constrained alread empty, can eliminate call to backward propagation:
+    # if constrained is already empty, eliminate call to backward propagation:
 
     if isempty(constrained)
         return emptyinterval(X)
     end
 
-
-    #@show z[(C.num_outputs)+1:end]
     return IntervalBox{N,T}(C.backward(X, constrained, intermediate) )
 
 end

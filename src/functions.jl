@@ -13,14 +13,10 @@ type ConstraintFunction{F <: Function, G <: Function}
     backward_code::Expr
 end
 
-type FunctionArguments
-    # input::Vector{Symbol}  # input arguments for forward function
-    # output::Vector{Symbol}  # output arguments
-    # generated::Vector{Symbol} # local variables generated
-
+immutable FunctionArguments
     input
-    generated
     return_arguments
+    intermediate
 end
 
 
@@ -50,13 +46,15 @@ Example: `@function f(x, y) = x^2 + y^2`
     flatAST.intermediate = setdiff(flatAST.intermediate, return_arguments)
 
     # println("HERE")
-    flatAST.intermediate = [return_arguments; flatAST.intermediate]
+    # flatAST.intermediate = [return_arguments; flatAST.intermediate]
 
 
-    registered_functions[f] = FunctionArguments(flatAST.variables, flatAST.intermediate, return_arguments)
+
 
     forward, backward = forward_backward(flatAST)
 
+    registered_functions[f] = FunctionArguments(
+            flatAST.variables, return_arguments, flatAST.intermediate)
 
 
     return quote

@@ -162,11 +162,11 @@ function make_function(input_args, output_args, intermediate, code)
 
     quote
         t -> begin
-            $input = t
-                    $code
-                    return ($output, $intermediate)
-                  end
-        end
+                $input = t
+                $code
+                return ($output, $intermediate)
+             end
+    end
 end
 
 function make_function(input1, input2, input3, output_args, code)
@@ -181,8 +181,8 @@ function make_function(input1, input2, input3, output_args, code)
             $input1 = t1
             $input2 = t2
             $input3 = t3
-                    $code
-                    return $output
-                  end
+            $code
+            return $output
         end
+    end
 end
