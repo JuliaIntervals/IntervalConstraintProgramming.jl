@@ -128,9 +128,9 @@ function forward_backward(flatAST::FlatAST)
 
     code = emit_forward_code(flatAST.code)
 
-    @show input
-    @show intermediate
-    @show output
+    # @show input
+    # @show intermediate
+    # @show output
 
 
     forward = make_function(input, output, intermediate, code)

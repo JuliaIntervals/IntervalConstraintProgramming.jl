@@ -93,21 +93,21 @@ end
 
 
 function new_parse_comparison(ex)
-    @show ex
+    # @show ex
     if @capture ex begin
             (op_(a_, b_))
         end
 
         #return (op, a, b)
-        @show op, a, b
+        # @show op, a, b
 
     elseif ex.head == :comparison
         println("Comparison")
         symbols = ex.args[1:2:5]
         operators = ex.args[2:2:4]
 
-        @show symbols
-        @show operators
+        # @show symbols
+        # @show operators
 
     end
 end
