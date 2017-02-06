@@ -93,6 +93,16 @@ end
 
 end
 
+@testset "Paving a 3D torus" begin
+    S5 = @constraint (3 - sqrt(x^2 + y^2))^2 + z^2 <= 1
+    x = y = z = -∞..∞
+    X = IntervalBox(x, y, z)
+
+    paving = pave(S5, X, 1.)
+
+    @test typeof(paving) == IntervalConstraintProgramming.Paving{3, Float64}
+
+end
 
 @testset "Volume" begin
     x = 3..5
@@ -108,7 +118,7 @@ end
     @function f(x) = 4x
     C1 = @contractor f(x)
     A = 0.5..1
-    x = 0..1
+    x = IntervalBox(0..1)
 
     @test C1(A, x) == IntervalBox(0.125..0.25)   # x such that 4x ∈ A=[0.5, 1]
 
@@ -163,4 +173,22 @@ end
     x = -∞..∞
     a = -8..27
     power_rev(a, x, 3)[2] == Interval(-2.0000000000000004, 3.0000000000000004)
+end
+
+@testset "Multidimensional functions" begin
+
+    @function g4(x, y) = (2x, 2y)
+
+    A = IntervalBox(0.5..1, 0.5..1)
+    x = y = 0..1
+
+    C4 = @contractor g4(x, y)
+
+    @test IntervalBox(C4(A, x, y)) == A / 2
+
+
+    C5 = @contractor (g4↑2)(x, y)
+
+    @test IntervalBox(C5(A, x, y)) == A / 4
+
 end

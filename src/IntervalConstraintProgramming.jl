@@ -32,5 +32,8 @@ include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
 
+import Base.∪
+import ValidatedNumerics: IntervalBox
+
 
 end # module

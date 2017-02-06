@@ -11,6 +11,18 @@ function make_tuple(args)
     return Expr(:tuple, args...)
 end
 
+function really_make_tuple(args)
+
+    # if isa(args, Symbol)
+    #     # args = [args]
+    #     return args
+    # end
+    #
+    # length(args) == 1 && return args[1]
+
+    return Expr(:tuple, args...)
+end
+
 
 function emit_forward_code(a::Assignment)
 
@@ -115,10 +127,17 @@ function forward_backward(flatAST::FlatAST)
     flatAST.variables = input
 
     code = emit_forward_code(flatAST.code)
-    forward = make_function(input, [output; intermediate], code)
+
+    @show input
+    @show intermediate
+    @show output
+
+
+    forward = make_function(input, output, intermediate, code)
+
 
     code = emit_backward_code(flatAST.code)
-    backward = make_function([input; output; intermediate],
+    backward = make_function(input, output, intermediate,
                                 input, code)
 
 # @show input
@@ -135,13 +154,33 @@ doc"""
 Generate code for an anonymous function with given
 input arguments, output arguments, and code block.
 """
-function make_function(input_args, output_args, code)
+function make_function(input_args, output_args, intermediate, code)
 
     input = make_tuple(input_args)  # make a tuple of the variables
+    intermediate = make_tuple(intermediate)
     output = make_tuple(output_args)  # make a tuple of the variables
 
     quote
-        $input -> begin
+        t -> begin
+            $input = t
+                    $code
+                    return ($output, $intermediate)
+                  end
+        end
+end
+
+function make_function(input1, input2, input3, output_args, code)
+
+    input1 = really_make_tuple(input1)  # make a tuple of the variables
+    input2 = really_make_tuple(input2)
+    input3 = really_make_tuple(input3)
+    output = really_make_tuple(output_args)  # make a tuple of the variables
+
+    quote
+        (t1, t2, t3) -> begin
+            $input1 = t1
+            $input2 = t2
+            $input3 = t3
                     $code
                     return $output
                   end
