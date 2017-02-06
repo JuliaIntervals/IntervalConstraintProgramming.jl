@@ -32,9 +32,5 @@ include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
 
-import Base.∪
-import ValidatedNumerics: IntervalBox
-∪{N,T}(X::IntervalBox{N,T}, Y::IntervalBox{N,T}) =
-    IntervalBox( [(x ∪ y) for (x,y) in zip(X, Y)]... )
 
 end # module
