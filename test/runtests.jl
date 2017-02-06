@@ -171,14 +171,15 @@ end
 
     A = IntervalBox(0.5..1, 0.5..1)
     x = y = 0..1
+    X = IntervalBox(x, y)
 
     C4 = @contractor g4(x, y)
 
-    @test IntervalBox(C4(A, x, y)) == A / 2
+    @test C4(A, X) == A / 2
 
 
     C5 = @contractor (g4↑2)(x, y)
 
-    @test IntervalBox(C5(A, x, y)) == A / 4
+    @test C5(A, X) == A / 4
 
 end
