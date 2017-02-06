@@ -40,21 +40,6 @@ macro contractor(ex)
     make_contractor(ex)
 end
 
-import Base: ∩, ∪
-
-# TODO: Move these to ValidatedNumerics
-function ∩{N,T}(A::IntervalBox{N,T}, B::IntervalBox{N,T})
-    IntervalBox{N,T}([(a ∩ b) for (a, b) in zip(A, B)])
-end
-
-union{T}(a::Interval{T}, b::Interval{T}) = hull(a, b)
-
-
-function ∪{N,T}(A::IntervalBox{N,T}, B::IntervalBox{N,T})
-    IntervalBox{N,T}([(a ∪ b) for (a, b) in zip(A, B)])
-end
-
-
 
 @compat function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(A::IntervalBox{Nout,T}, X::IntervalBox{N,T}) # X::IntervalBox)
 
