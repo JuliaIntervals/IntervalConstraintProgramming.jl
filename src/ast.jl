@@ -35,7 +35,7 @@ immutable FunctionAssignment
     f  # function name
     args  # input arguments
     return_arguments
-    intermediate_tuple  # tuple of intermediate variables
+    intermediate  # tuple of intermediate variables
 end
 
 # Close to single assignment form
@@ -155,13 +155,14 @@ function process_tuple!(flatAST::FlatAST, ex)
     # println("Entering process_tuple")
     # @show flatAST
     # @show ex
-    # top_args = [flatten!(flatAST, arg) for arg in ex.args]
 
-    top_args = []  # the arguments returned for each element of the tuple
-    for arg in ex.args
-        top = flatten!(flatAST, arg)
-        push!(top_args, top)
-    end
+    top_args = [flatten!(flatAST, arg) for arg in ex.args]
+
+    # top_args = []  # the arguments returned for each element of the tuple
+    # for arg in ex.args
+    #     top = flatten!(flatAST, arg)
+    #     push!(top_args, top)
+    # end
 
     return top_args
 
@@ -297,14 +298,14 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
             # make enough new variables for all the returned arguments:
             return_args = make_symbols(length(registered_functions[op].return_arguments))
 
-            intermediate_tuple = make_symbol(:z_tuple)
+            intermediate = registered_functions[op].intermediate  # make_symbol(:z_tuple)
 
             add_intermediate!(flatAST, return_args)
-            add_intermediate!(flatAST, intermediate_tuple)
+            add_intermediate!(flatAST, intermediate)
 
-            top_level_code = FunctionAssignment(op, top_args, return_args, intermediate_tuple)
+            top_level_code = FunctionAssignment(op, top_args, return_args, intermediate)
 
-            new_var = return_args 
+            new_var = return_args
 
 
         else

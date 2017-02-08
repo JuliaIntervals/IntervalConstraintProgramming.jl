@@ -40,22 +40,6 @@ function emit_forward_code(a::Assignment)
 end
 
 
-function emit_forward_code(a::FunctionAssignment)
-    f = a.func
-    args = isa(a.args, Vector) ? a.args : [a.args]
-    lhs = make_tuple(a.lhs)
-
-    :($lhs = $(esc(f)).forward($(a.args...) ) )
-end
-
-
-function emit_forward_code(code)  # code::Vector{Assignment})
-    new_code = quote end
-    new_code.args = vcat([emit_forward_code(line) for line in code])
-    return new_code
-end
-
-
 function emit_backward_code(a::Assignment)
 
     args = isa(a.args, Vector) ? a.args : [a.args]
@@ -86,23 +70,46 @@ function emit_backward_code(a::Assignment)
 
 end
 
-function emit_backward_code(a::FunctionAssignment)
-    f = a.func
 
-    input_args = [a.args; a.lhs]
+# TODO: Just pass intermediate as tuple between forward and backward for functions
 
-    output_args = make_tuple(a.args)
+function emit_forward_code(a::FunctionAssignment)
+    f = a.f
 
-    :($output_args = $(esc(f)).backward($(input_args...) ) )
+    args = isa(a.args, Vector) ? a.args : [a.args]
+    args_tuple = make_tuple(args)
+
+    return_tuple = make_tuple(a.return_arguments)
+    intermediate = make_tuple(a.intermediate)
+
+    :( ( $return_tuple, $intermediate ) = $(esc(f)).forward($args_tuple))
 end
 
+function emit_backward_code(a::FunctionAssignment)
+    f = a.f
+
+    args = isa(a.args, Vector) ? a.args : [a.args]
+    args_tuple = make_tuple(args)
+
+    intermediate = make_tuple(a.intermediate)
+
+    return_tuple = make_tuple(a.return_arguments)
+
+    :($args_tuple = $(esc(f)).backward($args_tuple, $return_tuple, $intermediate))
+end
+
+
+function emit_forward_code(code)  # code::Vector{Assignment})
+    new_code = quote end
+    new_code.args = vcat([emit_forward_code(line) for line in code])
+    return new_code
+end
 
 function emit_backward_code(code) #::Vector{Assignment})
     new_code = quote end
     new_code.args = vcat([emit_backward_code(line) for line in reverse(code)])
     return new_code
 end
-
 
 
 function forward_backward(flatAST::FlatAST)
@@ -118,33 +125,28 @@ function forward_backward(flatAST::FlatAST)
         output = flatAST.top
     end
 
-    #@show input
-    #@show flatAST.intermediate
+    # @show input
+    # @show flatAST.intermediate
 
     input = setdiff(input, flatAST.intermediate)  # remove local variables
     intermediate = setdiff(flatAST.intermediate, output)
 
     flatAST.variables = input
 
-    code = emit_forward_code(flatAST.code)
+    forward_code = emit_forward_code(flatAST.code)
+    forward = make_forward_function(input, output, intermediate, forward_code)
 
     # @show input
     # @show intermediate
     # @show output
 
+    backward_code = emit_backward_code(flatAST.code)
+    backward = make_backward_function(input, output, intermediate,
+                                input, backward_code)
 
-    forward = make_function(input, output, intermediate, code)
-
-
-    code = emit_backward_code(flatAST.code)
-    backward = make_function(input, output, intermediate,
-                                input, code)
-
-# @show input
-# @show output
-# @show intermediate
-
-    # return GeneratedFunction(input, output, intermediate, code)
+    # @show input
+    # @show output
+    # @show intermediate
 
     return (forward, backward)
 end
@@ -154,7 +156,7 @@ doc"""
 Generate code for an anonymous function with given
 input arguments, output arguments, and code block.
 """
-function make_function(input_args, output_args, intermediate, code)
+function make_forward_function(input_args, output_args, intermediate, code)
 
     input = make_tuple(input_args)  # make a tuple of the variables
     intermediate = make_tuple(intermediate)
@@ -169,7 +171,7 @@ function make_function(input_args, output_args, intermediate, code)
     end
 end
 
-function make_function(input1, input2, input3, output_args, code)
+function make_backward_function(input1, input2, input3, output_args, code)
 
     input1 = really_make_tuple(input1)  # make a tuple of the variables
     input2 = really_make_tuple(input2)
