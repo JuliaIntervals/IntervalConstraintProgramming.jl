@@ -32,18 +32,19 @@ immutable Assignment
 end
 
 immutable FunctionAssignment
-    lhs
-    func
-    args
+    f  # function name
+    args  # input arguments
+    return_arguments
+    intermediate  # tuple of intermediate variables
 end
 
 # Close to single assignment form
 type FlatAST
     top  # topmost variable(s)
     input_variables::Set{Symbol}
-    variables::Vector{Symbol}  # cleaned version
     intermediate::Vector{Symbol}  # generated vars
     code # ::Vector{Assignment}
+    variables::Vector{Symbol}  # cleaned version of input_variables
 end
 
 
@@ -154,13 +155,14 @@ function process_tuple!(flatAST::FlatAST, ex)
     # println("Entering process_tuple")
     # @show flatAST
     # @show ex
-    # top_args = [flatten!(flatAST, arg) for arg in ex.args]
 
-    top_args = []  # the arguments returned for each element of the tuple
-    for arg in ex.args
-        top = flatten!(flatAST, arg)
-        push!(top_args, top)
-    end
+    top_args = [flatten!(flatAST, arg) for arg in ex.args]
+
+    # top_args = []  # the arguments returned for each element of the tuple
+    # for arg in ex.args
+    #     top = flatten!(flatAST, arg)
+    #     push!(top_args, top)
+    # end
 
     return top_args
 
@@ -294,13 +296,16 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
         if haskey(registered_functions, op)
 
             # make enough new variables for all the returned arguments:
-            new_vars = make_symbols(length(registered_functions[op].generated))
+            return_args = make_symbols(length(registered_functions[op].return_arguments))
 
-            add_intermediate!(flatAST, new_vars)
+            intermediate = registered_functions[op].intermediate  # make_symbol(:z_tuple)
 
-            top_level_code = FunctionAssignment(new_vars, op, top_args)
+            add_intermediate!(flatAST, return_args)
+            add_intermediate!(flatAST, intermediate)
 
-            new_var = new_vars[1:length(registered_functions[op].return_arguments)]
+            top_level_code = FunctionAssignment(op, top_args, return_args, intermediate)
+
+            new_var = return_args
 
 
         else

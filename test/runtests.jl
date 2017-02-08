@@ -93,6 +93,16 @@ end
 
 end
 
+@testset "Paving a 3D torus" begin
+    S5 = @constraint (3 - sqrt(x^2 + y^2))^2 + z^2 <= 1
+    x = y = z = -∞..∞
+    X = IntervalBox(x, y, z)
+
+    paving = pave(S5, X, 1.)
+
+    @test typeof(paving) == IntervalConstraintProgramming.Paving{3, Float64}
+
+end
 
 @testset "Volume" begin
     x = 3..5
@@ -105,10 +115,10 @@ end
 end
 
 @testset "Functions" begin
-    @function f(x) = 4x
-    C1 = @contractor f(x)
-    A = 0.5..1
-    x = 0..1
+    @function f(x) = 4x;
+    C1 = @contractor f(x);
+    A = IntervalBox(0.5..1);
+    x = IntervalBox(0..1);
 
     @test C1(A, x) == IntervalBox(0.125..0.25)   # x such that 4x ∈ A=[0.5, 1]
 
@@ -134,8 +144,8 @@ end
 
     C = @contractor g(x)
 
-    A = 0.5..1
-    x = 0..1
+    A = IntervalBox(0.5..1)
+    x = IntervalBox(0..1)
 
     @test C(A, x) == IntervalBox(sqrt(A / 4))
 
@@ -150,8 +160,8 @@ end
 
     @function f(x) = 2x
 
-    A = 0.5..1
-    x = 0..1
+    A = IntervalBox(0.5..1)
+    x = IntervalBox(0..1)
 
     @function g3(x) = ( a = (f↑2)(x); a^2 )
     C3 = @contractor g3(x)

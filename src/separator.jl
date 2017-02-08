@@ -27,23 +27,23 @@ end
     C = S.contractor
     a, b = S.constraint.lo, S.constraint.hi
 
-    inner = C(a..b, X)
+    inner = C(IntervalBox(Interval(a, b)), X)
 
-    local outer
+    #local outer
 
-    if a == -∞
-        outer = C(b..∞, X)
+    # if a == -∞
+    #     outer = C(IntervalBox(Interval(b, ∞)), X)
+    #
+    # elseif b == ∞
+    #     outer = C(IntervalBox(Interval(-∞, a)), X)
+    #
+    # else
 
-    elseif b == ∞
-        outer = C(-∞..a, X)
-
-    else
-
-        outer1 = C(-∞..a, X)
-        outer2 = C(b..∞, X)
+        outer1 = C(IntervalBox(Interval(-∞, a)), X)
+        outer2 = C(IntervalBox(Interval(b, ∞)), X)
 
         outer = outer1 ∪ outer2
-    end
+    # end
 
     return (inner, outer)
 end
@@ -93,21 +93,21 @@ end
 
 
 function new_parse_comparison(ex)
-    @show ex
+    # @show ex
     if @capture ex begin
             (op_(a_, b_))
         end
 
         #return (op, a, b)
-        @show op, a, b
+        # @show op, a, b
 
     elseif ex.head == :comparison
         println("Comparison")
         symbols = ex.args[1:2:5]
         operators = ex.args[2:2:4]
 
-        @show symbols
-        @show operators
+        # @show symbols
+        # @show operators
 
     end
 end

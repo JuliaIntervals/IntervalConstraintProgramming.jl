@@ -1,3 +1,13 @@
+# doc"""
+# A generated function, with the code that generated it
+# """
+# immutable GeneratedFunction{F}
+#     f::F
+#     code::Expr
+# end
+#
+# (f::GeneratedFunction{F}){F}(x...) = f.f(x...)
+
 
 function make_tuple(args)
 
@@ -7,6 +17,22 @@ function make_tuple(args)
     end
 
     length(args) == 1 && return args[1]
+
+    return Expr(:tuple, args...)
+end
+
+function really_make_tuple(args)
+
+    # if isa(args, Symbol)
+    #     # args = [args]
+    #     return args
+    # end
+    #
+    # length(args) == 1 && return args[1]
+
+    # if !(isa(args, Array))
+    #     args = [args]
+    # end
 
     return Expr(:tuple, args...)
 end
@@ -25,22 +51,6 @@ function emit_forward_code(a::Assignment)
     else
         :($lhs = $(a.op)($(args...) ) )
     end
-end
-
-
-function emit_forward_code(a::FunctionAssignment)
-    f = a.func
-    args = isa(a.args, Vector) ? a.args : [a.args]
-    lhs = make_tuple(a.lhs)
-
-    :($lhs = $(esc(f)).forward($(a.args...) ) )
-end
-
-
-function emit_forward_code(code)  # code::Vector{Assignment})
-    new_code = quote end
-    new_code.args = vcat([emit_forward_code(line) for line in code])
-    return new_code
 end
 
 
@@ -74,23 +84,56 @@ function emit_backward_code(a::Assignment)
 
 end
 
-function emit_backward_code(a::FunctionAssignment)
-    f = a.func
 
-    input_args = [a.args; a.lhs]
+# TODO: Just pass intermediate as tuple between forward and backward for functions
 
-    output_args = make_tuple(a.args)
+function emit_forward_code(a::FunctionAssignment)
+    f = a.f
 
-    :($output_args = $(esc(f)).backward($(input_args...) ) )
+    args = isa(a.args, Vector) ? a.args : [a.args]
+    args_tuple = really_make_tuple(args)
+
+    return_tuple = really_make_tuple(a.return_arguments)
+    intermediate = really_make_tuple(a.intermediate)
+
+    # Remove the following once https://github.com/JuliaLang/julia/issues/20524 fixed and replace with
+    # :( ( $return_tuple, $intermediate ) = $(esc(f)).forward($args_tuple))
+
+    temp1 = make_symbol(:z_tuple)
+    temp2 = make_symbol(:z_tuple)
+
+    return quote
+        ($temp1, $temp2) = $(esc(f)).forward($args_tuple)
+        $return_tuple = $temp1
+        $intermediate = $temp2
+    end
 end
 
+function emit_backward_code(a::FunctionAssignment)
+    f = a.f
+
+    args = isa(a.args, Vector) ? a.args : [a.args]
+    args_tuple = really_make_tuple(args)
+
+    intermediate = really_make_tuple(a.intermediate)
+
+    return_tuple = really_make_tuple(a.return_arguments)
+
+    :($args_tuple = $(esc(f)).backward($args_tuple, $return_tuple, $intermediate))
+end
+
+
+function emit_forward_code(code)  # code::Vector{Assignment})
+    new_code = quote end
+    new_code.args = vcat([emit_forward_code(line) for line in code])
+    return new_code
+end
 
 function emit_backward_code(code) #::Vector{Assignment})
     new_code = quote end
     new_code.args = vcat([emit_backward_code(line) for line in reverse(code)])
     return new_code
 end
-
 
 
 function forward_backward(flatAST::FlatAST)
@@ -106,26 +149,28 @@ function forward_backward(flatAST::FlatAST)
         output = flatAST.top
     end
 
-    #@show input
-    #@show flatAST.intermediate
+    # @show input
+    # @show flatAST.intermediate
 
     input = setdiff(input, flatAST.intermediate)  # remove local variables
     intermediate = setdiff(flatAST.intermediate, output)
 
     flatAST.variables = input
 
-    code = emit_forward_code(flatAST.code)
-    forward = make_function(input, [output; intermediate], code)
+    forward_code = emit_forward_code(flatAST.code)
+    forward = make_forward_function(input, output, intermediate, forward_code)
 
-    code = emit_backward_code(flatAST.code)
-    backward = make_function([input; output; intermediate],
-                                input, code)
+    # @show input
+    # @show intermediate
+    # @show output
 
-# @show input
-# @show output
-# @show intermediate
+    backward_code = emit_backward_code(flatAST.code)
+    backward = make_backward_function(input, output, intermediate,
+                                input, backward_code)
 
-    # return GeneratedFunction(input, output, intermediate, code)
+    # @show input
+    # @show output
+    # @show intermediate
 
     return (forward, backward)
 end
@@ -135,15 +180,35 @@ doc"""
 Generate code for an anonymous function with given
 input arguments, output arguments, and code block.
 """
-function make_function(input_args, output_args, code)
+function make_forward_function(input_args, output_args, intermediate, code)
 
-    input = make_tuple(input_args)  # make a tuple of the variables
+    input = really_make_tuple(input_args)  # make a tuple of the variables
+    intermediate = really_make_tuple(intermediate)
     output = make_tuple(output_args)  # make a tuple of the variables
 
     quote
-        $input -> begin
-                    $code
-                    return $output
-                  end
+        t -> begin
+                $input = t
+                $code
+                return ($output, $intermediate)
+             end
+    end
+end
+
+function make_backward_function(input1, input2, input3, output_args, code)
+
+    input1 = really_make_tuple(input1)  # make a tuple of the variables
+    input2 = really_make_tuple(input2)
+    input3 = really_make_tuple(input3)
+    output = really_make_tuple(output_args)  # make a tuple of the variables
+
+    quote
+        (t1, t2, t3) -> begin
+            $input1 = t1
+            $input2 = t2
+            $input3 = t3
+            $code
+            return $output
         end
+    end
 end
