@@ -29,6 +29,10 @@ end
     A::IntervalBox{Nout,T}, X::IntervalBox{N,T})
 
     output, intermediate = C.forward(X)
+
+    # @show output
+    # @show intermediate
+
     output_box = IntervalBox(output)
     constrained = output_box ∩ A
 
@@ -38,6 +42,10 @@ end
         return emptyinterval(X)
     end
 
+    # @show X
+    # @show constrained
+    # @show intermediate
+    # @show C.backward(X, constrained, intermediate)
     return IntervalBox{N,T}(C.backward(X, constrained, intermediate) )
 
 end

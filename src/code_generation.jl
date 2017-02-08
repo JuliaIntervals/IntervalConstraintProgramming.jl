@@ -30,6 +30,10 @@ function really_make_tuple(args)
     #
     # length(args) == 1 && return args[1]
 
+    # if !(isa(args, Array))
+    #     args = [args]
+    # end
+
     return Expr(:tuple, args...)
 end
 
@@ -87,10 +91,10 @@ function emit_forward_code(a::FunctionAssignment)
     f = a.f
 
     args = isa(a.args, Vector) ? a.args : [a.args]
-    args_tuple = make_tuple(args)
+    args_tuple = really_make_tuple(args)
 
-    return_tuple = make_tuple(a.return_arguments)
-    intermediate = make_tuple(a.intermediate)
+    return_tuple = really_make_tuple(a.return_arguments)
+    intermediate = really_make_tuple(a.intermediate)
 
     # Remove the following once https://github.com/JuliaLang/julia/issues/20524 fixed and replace with
     # :( ( $return_tuple, $intermediate ) = $(esc(f)).forward($args_tuple))
@@ -109,9 +113,9 @@ function emit_backward_code(a::FunctionAssignment)
     f = a.f
 
     args = isa(a.args, Vector) ? a.args : [a.args]
-    args_tuple = make_tuple(args)
+    args_tuple = really_make_tuple(args)
 
-    intermediate = make_tuple(a.intermediate)
+    intermediate = really_make_tuple(a.intermediate)
 
     return_tuple = really_make_tuple(a.return_arguments)
 
@@ -178,8 +182,8 @@ input arguments, output arguments, and code block.
 """
 function make_forward_function(input_args, output_args, intermediate, code)
 
-    input = make_tuple(input_args)  # make a tuple of the variables
-    intermediate = make_tuple(intermediate)
+    input = really_make_tuple(input_args)  # make a tuple of the variables
+    intermediate = really_make_tuple(intermediate)
     output = make_tuple(output_args)  # make a tuple of the variables
 
     quote
