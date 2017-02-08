@@ -46,7 +46,7 @@ end
 @compat (C::Contractor{N,1,F1,F2}){N,F1,F2,T}(A::Interval{T}, X::IntervalBox{N,T}) = C(IntervalBox(A), X)
 
 function make_contractor(ex::Expr)
-    println("Entering Contractor(ex) with ex=$ex")
+    # println("Entering Contractor(ex) with ex=$ex")
     expr, constraint_interval = parse_comparison(ex)
 
     if constraint_interval != entireinterval()
@@ -56,9 +56,9 @@ function make_contractor(ex::Expr)
 
     top, linear_AST = flatten(expr)
 
-     @show expr
-     @show top
-     @show linear_AST
+    #  @show expr
+    #  @show top
+    #  @show linear_AST
 
     forward_code, backward_code  = forward_backward(linear_AST)
 
@@ -70,7 +70,9 @@ function make_contractor(ex::Expr)
         top = [top]
     end
 
-    @show forward_code
+    # @show forward_code
+    # @show backward_code
+
 
     :(Contractor($(linear_AST.variables),
                     $top,

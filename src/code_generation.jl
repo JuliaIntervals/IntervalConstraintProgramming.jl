@@ -1,3 +1,13 @@
+# doc"""
+# A generated function, with the code that generated it
+# """
+# immutable GeneratedFunction{F}
+#     f::F
+#     code::Expr
+# end
+#
+# (f::GeneratedFunction{F}){F}(x...) = f.f(x...)
+
 
 function make_tuple(args)
 
@@ -82,7 +92,17 @@ function emit_forward_code(a::FunctionAssignment)
     return_tuple = make_tuple(a.return_arguments)
     intermediate = make_tuple(a.intermediate)
 
-    :( ( $return_tuple, $intermediate ) = $(esc(f)).forward($args_tuple))
+    # Remove the following once https://github.com/JuliaLang/julia/issues/20524 fixed and replace with
+    # :( ( $return_tuple, $intermediate ) = $(esc(f)).forward($args_tuple))
+
+    temp1 = make_symbol(:z_tuple)
+    temp2 = make_symbol(:z_tuple)
+
+    return quote
+        ($temp1, $temp2) = $(esc(f)).forward($args_tuple)
+        $return_tuple = $temp1
+        $intermediate = $temp2
+    end
 end
 
 function emit_backward_code(a::FunctionAssignment)
@@ -93,7 +113,7 @@ function emit_backward_code(a::FunctionAssignment)
 
     intermediate = make_tuple(a.intermediate)
 
-    return_tuple = make_tuple(a.return_arguments)
+    return_tuple = really_make_tuple(a.return_arguments)
 
     :($args_tuple = $(esc(f)).backward($args_tuple, $return_tuple, $intermediate))
 end
