@@ -12,9 +12,9 @@ The package is based on interval arithmetic using the author's
 in particular multi-dimensional `IntervalBox`es (i.e. Cartesian products of one-dimensional intervals).
 
 ## Documentation
-Documentation for the package is available [here](http://dpsanders.github.io/IntervalConstraintProgramming.jl/latest/)
+Documentation for the package is available [here](http://dpsanders.github.io/IntervalConstraintProgramming.jl/latest/).
 
-See, in particular, the [example notebooks](https://github.com/dpsanders/IntervalConstraintProgramming.jl/tree/master/examples) for usage examples.
+The best way to learn how to use the package is to look at the example notebooks, available in a separate repository [here](https://github.com/dpsanders/IntervalConstraintProgrammingNotebooks).
 
 
 ## Author
