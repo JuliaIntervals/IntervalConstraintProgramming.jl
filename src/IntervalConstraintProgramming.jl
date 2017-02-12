@@ -32,5 +32,6 @@ include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
+include("tree.jl")
 
 end # module
