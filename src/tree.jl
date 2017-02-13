@@ -26,16 +26,49 @@ function add_child!{T}(tree::Tree{T}, parent::Int, child::T)
 end
 
 using ValidatedNumerics, IntervalConstraintProgramming
+
 immutable Separation{N,T}
     inner::IntervalBox{N,T}
     outer::IntervalBox{N,T}
 end
 
-#Separation(S::Separator, IntervalBox{N,T})
+Separation{N,T}(S::Separator, X::IntervalBox{N,T}) = Separation(S(X)...)
+
+
+# function simplify!{N,T}(tree::Tree{Separation{N,T}}, i::Integer)
+#     # println(i)
+#
+#     for child in tree.children[i]  # there might not be any
+#         simplify!(tree, child)
+#     end
+#
+#     if isleaf(tree, i) && i != 1  # not root
+#         j = setdiff(tree.children[tree.parent[i]], i)[1]  # sibling node
+#
+#         sep_i = tree.data[i]
+#         sep_j = tree.data[j]
+#         sep_parent = tree.data[tree.parent[i]]
+#
+#         # conditions from Jaulin + Desrochers 2014:
+#         if isempty(sep_i.inner) || isempty(sep_i.outer) ||
+#                 isempty(sep_j.inner) || isempty(sep_j.outer) ||
+#
+#                 sep_parent.inner ∩ sep_parent.outer !=
+#                   hull(sep_i.inner ∩ sep_i.outer, sep_j.inner ∩ sep_j.outer)
+#
+#         end
+#
+#         new_parent_inner = sep_parent.inner ∪ sep_i.inner ∪ sep_j.inner
+#
+#     end
+# end
+
+
+isleaf(tree, i) = isempty(tree.children[i])
 
 function newpave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ=0.1)
 
-    separation = Separation(S(X)...)
+    separation = Separation(S, X)
 
     tree = Tree(separation)
     working = [1]
@@ -51,28 +84,49 @@ function newpave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ=0.1)
 
         # @show separation
 
-
         if isempty(separation.inner) || isempty(separation.outer)
             continue
         end
 
-        boundary = separation.inner ∩ separation.outer
+        X = separation.inner ∩ separation.outer  # boundary
 
-        if diam(boundary) < ϵ || isempty(boundary)
+        if diam(X) < ϵ || isempty(X)
             continue
         end
 
-        separation = Separation(S(X)...)
+        old_diam = 2*diam(X)
 
+        # repeatedly contract:
+        while diam(X) < 0.8 * old_diam
 
-        X1, X2 = IntervalConstraintProgramming.bisect(boundary)
+            old_diam = diam(X)
+            separation = Separation(S, X)
 
-        child1 = add_child!(tree, parent, Separation(S(X1)...))
-        child2 = add_child!(tree, parent, Separation(S(X2)...))
+            child = add_child!(tree, parent, separation)
+            parent = child
+
+            X = separation.inner ∩ separation.outer
+
+            if diam(X) < ϵ || isempty(X)
+                break
+            end
+        end
+
+        if diam(X) < ϵ || isempty(X)
+            continue
+        end
+
+        X1, X2 = IntervalConstraintProgramming.bisect(X)
+
+        child1 = add_child!(tree, parent, Separation(S, X1))
+        child2 = add_child!(tree, parent, Separation(S, X2))
 
         push!(working, child1, child2)
 
     end
+
+    # simplify!(tree, 1)
+
 
     return tree
 
