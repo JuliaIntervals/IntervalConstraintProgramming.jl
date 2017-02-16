@@ -34,6 +34,19 @@ end
 
 Separation{N,T}(S::Separator, X::IntervalBox{N,T}) = Separation(S(X)...)
 
+function traverse!{N,T}(tree::Tree{Separation{N,T}}, i::Integer)
+    # println(i)
+
+    if isleaf(tree, i)
+        for child in tree.children[i]  # there might not be any
+            traverse!(tree, child)
+        end
+    else
+        inner, outer = tree.data[i].inner, tree.data[i].outer
+        println(inner, outer, inner ∩ outer)
+    end
+end
+#
 
 # function simplify!{N,T}(tree::Tree{Separation{N,T}}, i::Integer)
 #     # println(i)
