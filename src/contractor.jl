@@ -69,13 +69,13 @@ end
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
 @compat (C::Contractor{N,1,F1,F2}){N,F1,F2,T}(A::Interval{T}, X::IntervalBox{N,T}) = C(IntervalBox(A), X)
 
-function make_contractor(ex::Expr)
+function make_contractor(expr::Expr)
     # println("Entering Contractor(ex) with ex=$ex")
-    expr, constraint_interval = parse_comparison(ex)
+    # expr, constraint_interval = parse_comparison(ex)
 
-    if constraint_interval != entireinterval()
-        warn("Ignoring constraint; include as first argument")
-    end
+    # if constraint_interval != entireinterval()
+    #     warn("Ignoring constraint; include as first argument")
+    # end
 
 
     top, linear_AST = flatten(expr)
@@ -91,10 +91,16 @@ function make_contractor(ex::Expr)
 
     if isa(top, Symbol)
         top = [top]
+
+    elseif isa(top, Expr) && top.head == :tuple
+        top = top.args
+        
     end
 
     #@show forward_code
     # @show backward_code
+
+
 
 
     :(Contractor($(linear_AST.variables),
