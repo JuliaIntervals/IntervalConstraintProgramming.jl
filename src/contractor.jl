@@ -12,8 +12,24 @@ immutable Contractor{N, Nout, F1<:Function, F2<:Function}
 end
 
 function Contractor(variables::Vector{Symbol}, top, forward, backward, forward_code, backward_code)
+
+    @show variables
+    @show top
+
     N = length(variables)  # input dimension
-    Nout = length(top)
+
+    local Nout  # number of outputs
+
+    if isa(top, Symbol)
+        Nout = 1
+
+    elseif isa(top, Expr) && top.head == :tuple
+        Nout = length(top.args)
+
+    else
+        Nout = length(top)
+    end
+
     Contractor{N, Nout, typeof(forward), typeof(backward)}(variables, forward, backward, forward_code, backward_code)
 end
 
@@ -70,15 +86,14 @@ function make_contractor(ex::Expr)
 
     forward_code, backward_code  = forward_backward(linear_AST)
 
-    num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
-    # @show top
+    @show top
 
     if isa(top, Symbol)
         top = [top]
     end
 
-    # @show forward_code
+    #@show forward_code
     # @show backward_code
 
 

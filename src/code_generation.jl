@@ -141,16 +141,25 @@ function forward_backward(flatAST::FlatAST)
     # @show flatAST.input_variables
     # @show flatAST.intermediate
 
+
     input = sort(collect(flatAST.input_variables))
+
+    @show flatAST.top
 
     if isa(flatAST.top, Symbol)
         output = [flatAST.top]
+
+    elseif isa(flatAST.top, Expr) && flatAST.top.head == :tuple
+        output = flatAST.top.args
+
     else
         output = flatAST.top
+        @show output
     end
 
     # @show input
     # @show flatAST.intermediate
+    # @show output
 
     input = setdiff(input, flatAST.intermediate)  # remove local variables
     intermediate = setdiff(flatAST.intermediate, output)

@@ -74,6 +74,7 @@ export flatten
 
 
 function flatten(ex)
+    ex = MacroTools.striplines(ex)
     flatAST = FlatAST()
     top = flatten!(flatAST, ex)
 
@@ -124,6 +125,10 @@ function flatten!(flatAST::FlatAST, ex::Expr)
 
     elseif ex.head == :return
         top = process_return!(flatAST, ex)
+
+    else
+        error("Currently unable to process expressions with ex.head=$(ex.head)")
+
     end
 
     set_top!(flatAST, top)
