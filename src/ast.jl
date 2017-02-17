@@ -1,17 +1,38 @@
 const symbol_numbers = Dict{Symbol, Int}()
 
-doc"""Return a new, unique symbol like _z3_"""
-function make_symbol(s::Symbol = :z)  # default is :z
 
-    i = get(symbol_numbers, s, 1)
+doc"""Return a new, unique symbol like _z3_"""
+function make_symbol(s::Symbol)  # default is :z
+
+    i = get(symbol_numbers, s, 0)
     symbol_numbers[s] = i + 1
 
-    Symbol("_$(s)_$(i)_")
+    if i == 0
+        return Symbol("_", s)
+    else
+        return Symbol("_", s, i)
+    end
 end
 
+make_symbol(c::Char) = make_symbol(Symbol(c))
 
-function make_symbols(n::Integer, s::Symbol = :z)
-    [make_symbol(s) for i in 1:n]
+let current_symbol = 'a'
+    function make_symbol()
+        current_sym = current_symbol
+
+        if current_sym < 'z'
+            current_symbol += 1
+        else
+            current_symbol = 'a'
+        end
+
+        return make_symbol(current_sym)
+
+    end
+end
+
+function make_symbols(n::Integer)
+    [make_symbol() for i in 1:n]
 end
 
 # The following function is not used
