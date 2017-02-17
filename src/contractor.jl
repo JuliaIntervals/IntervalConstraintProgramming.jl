@@ -12,8 +12,24 @@ immutable Contractor{N, Nout, F1<:Function, F2<:Function}
 end
 
 function Contractor(variables::Vector{Symbol}, top, forward, backward, forward_code, backward_code)
+
+    @show variables
+    @show top
+
     N = length(variables)  # input dimension
-    Nout = length(top)
+
+    local Nout  # number of outputs
+
+    if isa(top, Symbol)
+        Nout = 1
+
+    elseif isa(top, Expr) && top.head == :tuple
+        Nout = length(top.args)
+
+    else
+        Nout = length(top)
+    end
+
     Contractor{N, Nout, typeof(forward), typeof(backward)}(variables, forward, backward, forward_code, backward_code)
 end
 
@@ -53,13 +69,13 @@ end
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
 @compat (C::Contractor{N,1,F1,F2}){N,F1,F2,T}(A::Interval{T}, X::IntervalBox{N,T}) = C(IntervalBox(A), X)
 
-function make_contractor(ex::Expr)
+function make_contractor(expr::Expr)
     # println("Entering Contractor(ex) with ex=$ex")
-    expr, constraint_interval = parse_comparison(ex)
+    # expr, constraint_interval = parse_comparison(ex)
 
-    if constraint_interval != entireinterval()
-        warn("Ignoring constraint; include as first argument")
-    end
+    # if constraint_interval != entireinterval()
+    #     warn("Ignoring constraint; include as first argument")
+    # end
 
 
     top, linear_AST = flatten(expr)
@@ -70,16 +86,21 @@ function make_contractor(ex::Expr)
 
     forward_code, backward_code  = forward_backward(linear_AST)
 
-    num_outputs = isa(linear_AST.top, Symbol) ? 1 : length(linear_AST.top)
 
-    # @show top
+    @show top
 
     if isa(top, Symbol)
         top = [top]
+
+    elseif isa(top, Expr) && top.head == :tuple
+        top = top.args
+        
     end
 
-    # @show forward_code
+    #@show forward_code
     # @show backward_code
+
+
 
 
     :(Contractor($(linear_AST.variables),
