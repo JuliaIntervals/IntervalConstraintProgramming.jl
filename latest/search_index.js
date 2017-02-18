@@ -177,10 +177,10 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api.html#IntervalConstraintProgramming.make_symbol",
+    "location": "api.html#IntervalConstraintProgramming.make_symbol-Tuple{Symbol}",
     "page": "API",
     "title": "IntervalConstraintProgramming.make_symbol",
-    "category": "Function",
+    "category": "Method",
     "text": "Return a new, unique symbol like _z3_\n\n\n\n"
 },
 
