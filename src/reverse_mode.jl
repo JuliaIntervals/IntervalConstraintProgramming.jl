@@ -51,10 +51,7 @@ mul_rev(a,b,c) = mul_rev(promote(a,b,c)...)
 Base.iseven(x::Interval) = isinteger(x) && iseven(round(Int, x.lo))
 Base.isodd(x::Interval) = isinteger(x) && isodd(round(Int, x.lo))
 
-
-function power_rev(a::Interval, b::Interval, c::Interval)  # a = b^c,  log(a) = c.log(b),  b = a^(1/c)
-
-    # special if c is an even integer: include the possibility of the negative root
+function power_rev(a::Interval, b::Interval, c::Integer)  # a = b^c,  log(a) = c.log(b),  b = a^(1/c)
 
     if c == 2  # a = b^2
         b1 = b ∩ √a
@@ -73,19 +70,23 @@ function power_rev(a::Interval, b::Interval, c::Interval)  # a = b^c,  log(a) = 
         b2 = b ∩ (- ( (-(a ∩ (-∞..0)))^(inv(c)) ) )  # negative part
 
         b = hull(b1, b2)
-
-    else
-
-        b = b ∩ ( a^(inv(c) ))
     end
 
-    # a = a ∩ (b ^ c)
+    return (a, b, c)
+end
+
+
+function power_rev(a::Interval, b::Interval, c::Interval)  # a = b^c
+
+    # log(a) = c.log(b),  b = a^(1/c)
+
+    b = b ∩ ( a^(inv(c) ))
     c = c ∩ (log(a) / log(b))
 
     return a, b, c
 end
 
-power_rev(a,b,c) = power_rev(promote(a,b,c)...)
+power_rev(a, b, c) = power_rev(promote(a, b, c)...)
 
 
 function sqrt_rev(a::Interval, b::Interval)  # a = sqrt(b)
