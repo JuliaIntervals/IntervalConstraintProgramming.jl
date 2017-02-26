@@ -76,6 +76,40 @@ end
 #     end
 # end
 
+function print_leaves{N,T}(tree::Tree{Separation{N,T}}, i::Integer)
+    # println(i)
+
+    for child in tree.children[i]  # there might not be any
+        print_leaves(tree, child)
+    end
+
+    if isleaf(tree, i) && i != 1  # not root
+        # j = setdiff(tree.children[tree.parent[i]], i)[1]  # sibling node
+        #
+        # sep_i = tree.data[i]
+        # sep_j = tree.data[j]
+        # sep_parent = tree.data[tree.parent[i]]
+        #
+        # # conditions from Jaulin + Desrochers 2014:
+        # if isempty(sep_i.inner) || isempty(sep_i.outer) ||
+        #         isempty(sep_j.inner) || isempty(sep_j.outer) ||
+        #
+        #         sep_parent.inner ∩ sep_parent.outer !=
+        #           hull(sep_i.inner ∩ sep_i.outer, sep_j.inner ∩ sep_j.outer)
+        #
+        # end
+        #
+        # new_parent_inner = sep_parent.inner ∪ sep_i.inner ∪ sep_j.inner
+
+        println("\nLeaf $i:")
+        println("Parent: ", tree.data[tree.parent[i]])
+        sibling = setdiff(tree.children[tree.parent[i]], i)[1]  # sibling node
+        println("Node i: ", tree.data[i])
+        println("Sibling: ", tree.data[sibling])
+
+
+    end
+end
 
 isleaf(tree, i) = isempty(tree.children[i])
 
