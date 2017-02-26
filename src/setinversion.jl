@@ -1,4 +1,3 @@
-
 doc"""
 `pave` takes the given working list of boxes and splits them into inner and boundary
 lists with the given separator
