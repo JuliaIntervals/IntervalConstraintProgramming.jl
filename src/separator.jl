@@ -29,21 +29,21 @@ end
 
     inner = C(IntervalBox(Interval(a, b)), X)
 
-    #local outer
+    local outer
 
-    # if a == -∞
-    #     outer = C(IntervalBox(Interval(b, ∞)), X)
-    #
-    # elseif b == ∞
-    #     outer = C(IntervalBox(Interval(-∞, a)), X)
-    #
-    # else
+    if a == -∞
+        outer = C(IntervalBox(Interval(b, ∞)), X)
+
+    elseif b == ∞
+        outer = C(IntervalBox(Interval(-∞, a)), X)
+
+    else
 
         outer1 = C(IntervalBox(Interval(-∞, a)), X)
         outer2 = C(IntervalBox(Interval(b, ∞)), X)
 
         outer = outer1 ∪ outer2
-    # end
+    end
 
     return (inner, outer)
 end
@@ -154,11 +154,11 @@ end
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")
-    print(io, "- variables: ")
+    print(io, "  - variables: ")
     print(io, join(map(string, S.variables), ", "))
     println(io)
-    print(io, "- expression: ")
-    println(io, S.expression)
+    print(io, "  - expression: ")
+    print(io, S.expression)
 end
 
 
