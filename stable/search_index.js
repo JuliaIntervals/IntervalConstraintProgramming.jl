@@ -137,6 +137,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api.html#IntervalConstraintProgramming.Contractor",
+    "page": "API",
+    "title": "IntervalConstraintProgramming.Contractor",
+    "category": "Type",
+    "text": "Contractor represents a Contractor from mathbbR^N to mathbbR^N. Nout is the output dimension of the forward part.\n\n\n\n"
+},
+
+{
     "location": "api.html#Base.:∩-Tuple{IntervalConstraintProgramming.Separator,IntervalConstraintProgramming.Separator}",
     "page": "API",
     "title": "Base.:∩",
@@ -161,18 +169,18 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api.html#IntervalConstraintProgramming.make_function-Tuple{Any,Any,Any}",
+    "location": "api.html#IntervalConstraintProgramming.make_forward_function-Tuple{Any,Any,Any,Any}",
     "page": "API",
-    "title": "IntervalConstraintProgramming.make_function",
+    "title": "IntervalConstraintProgramming.make_forward_function",
     "category": "Method",
     "text": "Generate code for an anonymous function with given input arguments, output arguments, and code block.\n\n\n\n"
 },
 
 {
-    "location": "api.html#IntervalConstraintProgramming.make_symbol",
+    "location": "api.html#IntervalConstraintProgramming.make_symbol-Tuple{Symbol}",
     "page": "API",
     "title": "IntervalConstraintProgramming.make_symbol",
-    "category": "Function",
+    "category": "Method",
     "text": "Return a new, unique symbol like _z3_\n\n\n\n"
 },
 
