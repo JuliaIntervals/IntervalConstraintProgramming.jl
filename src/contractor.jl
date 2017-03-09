@@ -36,7 +36,7 @@ end
 
 function Base.show{N,Nout,F1,F2}(io::IO, C::Contractor{N,Nout,F1,F2})
     println(io, "Contractor in $(N) dimensions:")
-    println(io, "Forward pass contracts to $(Nout) dimensions")
+    println(io, "  - forward pass contracts to $(Nout) dimensions")
     println(io, "  - variables: $(C.variables)")
     print(io, "  - expression: $(C.expression)")
 end

@@ -5,7 +5,6 @@ module IntervalConstraintProgramming
 using ValidatedNumerics, ValidatedNumerics.RootFinding
 using MacroTools
 using Compat
-using FixedSizeArrays: setindex
 
 import Base:
     show, ∩, ∪, !, ⊆, setdiff

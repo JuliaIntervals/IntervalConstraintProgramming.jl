@@ -154,11 +154,11 @@ end
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")
-    print(io, "- variables: ")
+    print(io, "  - variables: ")
     print(io, join(map(string, S.variables), ", "))
     println(io)
-    print(io, "- expression: ")
-    println(io, S.expression)
+    print(io, "  - expression: ")
+    print(io, S.expression)
 end
 
 
