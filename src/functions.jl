@@ -11,7 +11,16 @@ type ConstraintFunction{F <: Function, G <: Function}
     backward::G
     forward_code::Expr
     backward_code::Expr
+    expression::Expr
 end
+
+function Base.show{F,G}(io::IO, f::ConstraintFunction{F,G})
+    println(io, "ConstraintFunction:")
+    println(io, "  - input arguments: $(f.input)")
+    println(io, "  - output arguments: $(f.output)")
+    print(io, "  - expression: $(MacroTools.striplines(f.expression))")
+end
+
 
 immutable FunctionArguments
     input
@@ -65,7 +74,8 @@ Example: `@function f(x, y) = x^2 + y^2`
                                 $(forward),
                                 $(backward),
                                 $(Meta.quot(forward)),
-                                $(Meta.quot(backward))
+                                $(Meta.quot(backward)),
+                                $(Meta.quot(ex))
                                 )
 
     end
