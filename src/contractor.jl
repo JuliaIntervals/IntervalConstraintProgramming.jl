@@ -9,12 +9,13 @@ immutable Contractor{N, Nout, F1<:Function, F2<:Function}
     backward::F2
     forward_code::Expr
     backward_code::Expr
+    expression::Expr
 end
 
-function Contractor(variables::Vector{Symbol}, top, forward, backward, forward_code, backward_code)
+function Contractor(variables::Vector{Symbol}, top, forward, backward, forward_code, backward_code, expression)
 
-    @show variables
-    @show top
+    # @show variables
+    # @show top
 
     N = length(variables)  # input dimension
 
@@ -30,14 +31,15 @@ function Contractor(variables::Vector{Symbol}, top, forward, backward, forward_c
         Nout = length(top)
     end
 
-    Contractor{N, Nout, typeof(forward), typeof(backward)}(variables, forward, backward, forward_code, backward_code)
+    Contractor{N, Nout, typeof(forward), typeof(backward)}(variables, forward, backward, forward_code, backward_code, expression)
 end
 
-# function Base.show(io::IO, C::Contractor)
-#     println(io, "Contractor:")
-#     println(io, "  - variables: $(C.variables)")
-#     print(io, "  - constraint: $(C.constraint_expression)")
-# end
+function Base.show{N,Nout,F1,F2}(io::IO, C::Contractor{N,Nout,F1,F2})
+    println(io, "Contractor in $(N) dimensions:")
+    println(io, "Forward pass contracts to $(Nout) dimensions")
+    println(io, "  - variables: $(C.variables)")
+    print(io, "  - expression: $(C.expression)")
+end
 
 
 
@@ -87,28 +89,26 @@ function make_contractor(expr::Expr)
     forward_code, backward_code  = forward_backward(linear_AST)
 
 
-    @show top
+    # @show top
 
     if isa(top, Symbol)
         top = [top]
 
     elseif isa(top, Expr) && top.head == :tuple
         top = top.args
-        
+
     end
 
-    #@show forward_code
+    # @show forward_code
     # @show backward_code
-
-
-
 
     :(Contractor($(linear_AST.variables),
                     $top,
                     $forward_code,
                     $backward_code,
                     $(Meta.quot(forward_code)),
-                    $(Meta.quot(backward_code))))
+                    $(Meta.quot(backward_code)),
+                    $(Meta.quot(expr))))
 
 end
 

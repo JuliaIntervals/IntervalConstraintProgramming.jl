@@ -144,7 +144,7 @@ function forward_backward(flatAST::FlatAST)
 
     input = sort(collect(flatAST.input_variables))
 
-    @show flatAST.top
+    # @show flatAST.top
 
     if isa(flatAST.top, Symbol)
         output = [flatAST.top]
@@ -154,7 +154,7 @@ function forward_backward(flatAST::FlatAST)
 
     else
         output = flatAST.top
-        @show output
+        # @show output
     end
 
     # @show input
@@ -200,7 +200,7 @@ function make_forward_function(input_args, output_args, intermediate, code)
                 $input = t
                 $code
                 return ($output, $intermediate)
-             end
+            end
     end
 end
 
