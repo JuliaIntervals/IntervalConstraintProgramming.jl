@@ -1,26 +1,4 @@
 
-
-function bisect(X::Interval)
-    m = mid(X)
-    return ( Interval(X.lo, m), Interval(m, X.hi) )
-end
-
-
-function bisect(X::IntervalBox)
-    i = findmax([diam(x) for x in X])[2]  # find largest
-
-    x1, x2 = bisect(X[i])
-
-    # the following is ugly -- replace by iterators once https://github.com/JuliaLang/julia/pull/15516
-    # has landed?
-    # X1 = IntervalBox(X[1:i-1]..., x1, X[i+1:end]...)  # insert x1 in i'th place
-    # X2 = IntervalBox(X[1:i-1]..., x2, X[i+1:end]...)
-    X1 = setindex(X, x1, i)
-    X2 = setindex(X, x2, i)
-
-    return (X1, X2)
-end
-
 doc"""
 `pave` takes the given working list of boxes and splits them into inner and boundary
 lists with the given separator

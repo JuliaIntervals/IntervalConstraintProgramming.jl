@@ -2,7 +2,7 @@ __precompile__(true)
 
 module IntervalConstraintProgramming
 
-using ValidatedNumerics
+using ValidatedNumerics, ValidatedNumerics.RootFinding
 using MacroTools
 using Compat
 using FixedSizeArrays: setindex
