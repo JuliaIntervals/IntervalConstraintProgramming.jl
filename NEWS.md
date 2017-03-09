@@ -1,5 +1,13 @@
 # IntervalConstraintProgramming.jl
 
+# v0.5
+- API change: Contractors now have their dimension as a type parameter
+- Refactoring for type stability
+- Removed reference to FixedSizeArrays; everything (including `bisect`) is now provided by `ValidatedNumerics`
+- Removed all functions acting directly on `Interval`s and `IntervalBox`es that should belong to `ValidatedNumerics`
+- Generated code uses simpler symbols
+- Example notebooks have been split out into a separate repository: https://github.com/dpsanders/IntervalConstraintProgrammingNotebooks
+
 # v0.4
 - `@function f(x) = 4x` defines a function
 - Functions may be used inside constraints
