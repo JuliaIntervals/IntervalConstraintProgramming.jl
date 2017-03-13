@@ -147,12 +147,12 @@ end
     A = IntervalBox(0.5..1)
     x = IntervalBox(0..1)
 
-    @test C(A, x) == IntervalBox(sqrt(A / 4))
+    @test C(A, x) == IntervalBox(sqrt(A[1] / 4))
 
     @function g2(x) = ( a = f(f(x)); a^2 )
     C2 = @contractor g2(x)
 
-    @test C2(A, x) == IntervalBox(sqrt(A / 16))
+    @test C2(A, x) == IntervalBox(sqrt(A[1] / 16))
 
 end
 
@@ -166,7 +166,7 @@ end
     @function g3(x) = ( a = (f↑2)(x); a^2 )
     C3 = @contractor g3(x)
 
-    @test C3(A, x) == IntervalBox(sqrt(A / 16))
+    @test C3(A, x) == IntervalBox(sqrt(A[1] / 16))
 end
 
 @testset "power_rev for odd power" begin
