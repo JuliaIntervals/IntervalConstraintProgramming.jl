@@ -3,13 +3,14 @@ __precompile__()
 module IntervalConstraintProgramming
 
 using IntervalArithmetic, IntervalRootFinding
+
 using MacroTools
 using Compat
 
 import Base:
     show, ∩, ∪, !, ⊆, setdiff
 
-import IntervalArithmetic: sqr
+import IntervalArithmetic: sqr, setindex
 
 export
     @contractor,

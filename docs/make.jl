@@ -1,5 +1,5 @@
 using Documenter
-using IntervalConstraintProgramming, ValidatedNumerics
+using IntervalConstraintProgramming, IntervalArithmetic
 
 makedocs(
     modules = [IntervalConstraintProgramming],
