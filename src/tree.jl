@@ -1,8 +1,5 @@
 # Represent a sub-paving as a binary tree
 
-@enum STATUS inside outside boundary
-
-
 immutable Tree{T}
     data::Vector{T}
     children::Vector{Vector{Int}}
@@ -25,12 +22,7 @@ function add_child!{T}(tree::Tree{T}, parent::Int, child::T)
     return which
 end
 
-immutable Separation{N,T}
-    inner::IntervalBox{N,T}
-    outer::IntervalBox{N,T}
-end
 
-Separation{N,T}(S::Separator, X::IntervalBox{N,T}) = Separation(S(X)...)
 
 function traverse!{N,T}(tree::Tree{Separation{N,T}}, i::Integer)
     # println(i)
@@ -113,7 +105,7 @@ isleaf(tree, i) = isempty(tree.children[i])
 
 function newpave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ=0.1)
 
-    separation = Separation(S, X)
+    separation = S(X)
 
     tree = Tree(separation)
     working = [1]
@@ -145,7 +137,7 @@ function newpave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ=0.1)
         while diam(X) < 0.8 * old_diam
 
             old_diam = diam(X)
-            separation = Separation(S, X)
+            separation = S(X)
 
             child = add_child!(tree, parent, separation)
             parent = child
@@ -163,8 +155,8 @@ function newpave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ=0.1)
 
         X1, X2 = IntervalConstraintProgramming.bisect(X)
 
-        child1 = add_child!(tree, parent, Separation(S, X1))
-        child2 = add_child!(tree, parent, Separation(S, X2))
+        child1 = add_child!(tree, parent, S(X1))
+        child2 = add_child!(tree, parent, S(X2))
 
         push!(working, child1, child2)
 

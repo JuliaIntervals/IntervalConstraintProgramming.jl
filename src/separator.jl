@@ -1,5 +1,11 @@
 abstract Separator
 
+immutable Separation{N,T}
+    inner::IntervalBox{N,T}
+    outer::IntervalBox{N,T}
+end
+
+Separation{N,T}(S::Separator, X::IntervalBox{N,T}) = Separation(S(X)...)
 
 doc"""
 ConstraintSeparator is a separator that represents a constraint defined directly
@@ -45,7 +51,7 @@ function (S::ConstraintSeparator)(X::IntervalBox)
         outer = outer1 ∪ outer2
     end
 
-    return (inner, outer)
+    return Separation(inner, outer)
 end
 
 

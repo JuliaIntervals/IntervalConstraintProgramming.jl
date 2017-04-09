@@ -11,7 +11,9 @@ function pave{N,T}(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ)
 
         X = pop!(working)
 
-        inner, outer = S(X)   # here inner and outer are reversed compared to Jaulin
+        separation = S(X)
+
+        inner, outer = separation.inner, separation.outer   # here inner and outer are reversed compared to Jaulin
         # S(X) returns the pair (contractor with respect to the inside of the constraing, contractor with respect to outside)
 
         #@show X, outer
