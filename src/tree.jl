@@ -25,8 +25,6 @@ function add_child!{T}(tree::Tree{T}, parent::Int, child::T)
     return which
 end
 
-using ValidatedNumerics, IntervalConstraintProgramming
-
 immutable Separation{N,T}
     inner::IntervalBox{N,T}
     outer::IntervalBox{N,T}
