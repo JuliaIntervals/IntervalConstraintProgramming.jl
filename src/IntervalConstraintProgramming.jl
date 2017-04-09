@@ -2,14 +2,14 @@ __precompile__()
 
 module IntervalConstraintProgramming
 
-using ValidatedNumerics, ValidatedNumerics.RootFinding
+using IntervalArithmetic, IntervalRootFinding
 using MacroTools
 using Compat
 
 import Base:
     show, ∩, ∪, !, ⊆, setdiff
 
-import ValidatedNumerics: sqr
+import IntervalArithmetic: sqr
 
 export
     @contractor,
