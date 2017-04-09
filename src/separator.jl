@@ -5,8 +5,6 @@ immutable Separation{N,T}
     outer::IntervalBox{N,T}
 end
 
-Separation{N,T}(S::Separator, X::IntervalBox{N,T}) = Separation(S(X)...)
-
 doc"""
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.

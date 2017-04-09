@@ -131,27 +131,27 @@ function newpave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ=0.1)
             continue
         end
 
-        old_diam = 2*diam(X)
-
-        # repeatedly contract:
-        while diam(X) < 0.8 * old_diam
-
-            old_diam = diam(X)
-            separation = S(X)
-
-            child = add_child!(tree, parent, separation)
-            parent = child
-
-            X = separation.inner ∩ separation.outer
-
-            if diam(X) < ϵ || isempty(X)
-                break
-            end
-        end
-
-        if diam(X) < ϵ || isempty(X)
-            continue
-        end
+        # old_diam = 2*diam(X)
+        #
+        # # repeatedly contract:
+        # while diam(X) < 0.8 * old_diam
+        #
+        #     old_diam = diam(X)
+        #     separation = S(X)
+        #
+        #     child = add_child!(tree, parent, separation)
+        #     parent = child
+        #
+        #     X = separation.inner ∩ separation.outer
+        #
+        #     if diam(X) < ϵ || isempty(X)
+        #         break
+        #     end
+        # end
+        #
+        # if diam(X) < ϵ || isempty(X)
+        #     continue
+        # end
 
         X1, X2 = IntervalConstraintProgramming.bisect(X)
 
