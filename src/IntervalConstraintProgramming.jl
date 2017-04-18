@@ -5,7 +5,6 @@ module IntervalConstraintProgramming
 using IntervalArithmetic, IntervalRootFinding
 
 using MacroTools
-using Compat
 
 import Base:
     show, ∩, ∪, !, ⊆, setdiff

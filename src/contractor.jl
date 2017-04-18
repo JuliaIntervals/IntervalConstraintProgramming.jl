@@ -43,7 +43,7 @@ end
 
 
 
-@compat function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(
+function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(
     A::IntervalBox{Nout,T}, X::IntervalBox{N,T})
 
     output, intermediate = C.forward(X)
@@ -69,7 +69,7 @@ end
 end
 
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
-@compat (C::Contractor{N,1,F1,F2}){N,F1,F2,T}(A::Interval{T}, X::IntervalBox{N,T}) = C(IntervalBox(A), X)
+(C::Contractor{N,1,F1,F2}){N,F1,F2,T}(A::Interval{T}, X::IntervalBox{N,T}) = C(IntervalBox(A), X)
 
 function make_contractor(expr::Expr)
     # println("Entering Contractor(ex) with ex=$ex")

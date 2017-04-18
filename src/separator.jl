@@ -23,7 +23,7 @@ immutable CombinationSeparator{F} <: Separator
     expression::Expr
 end
 
-@compat function (S::ConstraintSeparator)(X::IntervalBox)
+function (S::ConstraintSeparator)(X::IntervalBox)
     C = S.contractor
     a, b = S.constraint.lo, S.constraint.hi
 
@@ -162,7 +162,7 @@ function show(io::IO, S::Separator)
 end
 
 
-@compat (S::CombinationSeparator)(X) = S.separator(X)
+(S::CombinationSeparator)(X) = S.separator(X)
 
 
 doc"Unify the variables of two separators"
