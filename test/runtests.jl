@@ -7,7 +7,7 @@ else
 end
 
 using IntervalConstraintProgramming
-using ValidatedNumerics #, ValidatedNumerics.RootFinding
+using IntervalArithmetic #, IntervalArithmetic.RootFinding
 
 #using Base.Test
 

@@ -5,7 +5,7 @@ rigorously calculate inner and outer approximations to the *feasible set*,
 i.e. the set that satisfies the constraints.
 
 This uses interval arithmetic provided by the author's
-[`ValidatedNumerics.jl`](https://github.com/dpsanders/ValidatedNumerics.jl) package,
+[`IntervalArithmetic.jl`](https://github.com/dpsanders/IntervalArithmetic.jl) package,
 in particular multi-dimensional `IntervalBox`es, i.e. Cartesian products of one-dimensional intervals.
 
 To do this, *interval constraint programming* is used, in particular the
@@ -14,14 +14,14 @@ so-called "forward--backward contractor". This is implemented in terms of *separ
 
 ```@meta
 DocTestSetup = quote
-    using IntervalConstraintProgramming, ValidatedNumerics
+    using IntervalConstraintProgramming, IntervalArithmetic
 end
 ```
 
 ## Usage
 Let's define a constraint, using the `@constraint` macro:
 ```jldoctest
-julia> using IntervalConstraintProgramming, ValidatedNumerics
+julia> using IntervalConstraintProgramming, IntervalArithmetic
 
 julia> S = @constraint x^2 + y^2 <= 1
 Separator:
@@ -33,7 +33,7 @@ The macro creates a `Separator` object, in this case a `ConstraintSeparator`.
 
 We now create an initial interval box in the $x$--$y$ plane:
 ```julia
-julia> x = y = -100..100   # notation for creating an interval with `ValidatedNumerics.jl`
+julia> x = y = -100..100   # notation for creating an interval with `IntervalArithmetic.jl`
 
 julia> X = IntervalBox(x, y)
 ```
@@ -81,7 +81,7 @@ an `inner` approximation, of type `SubPaving`, which is an alias for a `Vector` 
 a `SubPaving` representing the boxes on the boundary that could not be assigned either to the inside or outside of the set;
 and the tolerance.
 
-We may draw the result using a plot recipe from `ValidatedNumerics`. Either a
+We may draw the result using a plot recipe from `IntervalArithmetic`. Either a
 single `IntervalBox`, or a `Vector` of `IntervalBox`es (which a `SubPaving` is)
 maybe be drawn using `plot` from `Plots.jl`:
 ```julia
