@@ -5,14 +5,12 @@ Nout is the output dimension of the forward part.
 """
 immutable Contractor{N, Nout, F1<:Function, F2<:Function}
     variables::Vector{Symbol}  # input variables
-    forward::F1
-    backward::F2
-    forward_code::Expr
-    backward_code::Expr
+    forward::GeneratedFunction{F1}
+    backward::GeneratedFunction{F2}
     expression::Expr
 end
 
-function Contractor(variables::Vector{Symbol}, top, forward, backward, forward_code, backward_code, expression)
+function Contractor(variables::Vector{Symbol}, top, forward, backward, expression)
 
     # @show variables
     # @show top
@@ -31,7 +29,7 @@ function Contractor(variables::Vector{Symbol}, top, forward, backward, forward_c
         Nout = length(top)
     end
 
-    Contractor{N, Nout, typeof(forward), typeof(backward)}(variables, forward, backward, forward_code, backward_code, expression)
+    Contractor{N, Nout, typeof(forward.f), typeof(backward.f)}(variables, forward, backward, expression)
 end
 
 function Base.show{N,Nout,F1,F2}(io::IO, C::Contractor{N,Nout,F1,F2})
@@ -104,10 +102,8 @@ function make_contractor(expr::Expr)
 
     :(Contractor($(linear_AST.variables),
                     $top,
-                    $forward_code,
-                    $backward_code,
-                    $(Meta.quot(forward_code)),
-                    $(Meta.quot(backward_code)),
+                    GeneratedFunction($forward_code, $(Meta.quot(forward_code))),
+                    GeneratedFunction($backward_code, $(Meta.quot(backward_code))),
                     $(Meta.quot(expr))))
 
 end

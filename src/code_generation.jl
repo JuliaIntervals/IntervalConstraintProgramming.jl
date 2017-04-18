@@ -1,12 +1,16 @@
-# doc"""
-# A generated function, with the code that generated it
-# """
-# immutable GeneratedFunction{F}
-#     f::F
-#     code::Expr
-# end
-#
-# (f::GeneratedFunction{F}){F}(x...) = f.f(x...)
+doc"""
+A generated function, with the code that generated it
+"""
+immutable GeneratedFunction{F}
+    f::F
+    code::Expr
+end
+
+
+
+# GeneratedFunction(code::Expr) = GeneratedFunction(eval(code), code)
+
+(f::GeneratedFunction{F}){F}(x...) = f.f(x...)
 
 
 function make_tuple(args)
@@ -21,18 +25,8 @@ function make_tuple(args)
     return Expr(:tuple, args...)
 end
 
+
 function really_make_tuple(args)
-
-    # if isa(args, Symbol)
-    #     # args = [args]
-    #     return args
-    # end
-    #
-    # length(args) == 1 && return args[1]
-
-    # if !(isa(args, Array))
-    #     args = [args]
-    # end
 
     return Expr(:tuple, args...)
 end
