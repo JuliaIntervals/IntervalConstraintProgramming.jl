@@ -1,5 +1,15 @@
 # IntervalConstraintProgramming.jl
 
+# v0.6
+## Minimum Julia version
+- The minimum Julia version required has been bumped to 0.5
+
+## API change
+- Objects such as `Contractor` have been simplified by putting functions and the code that generated them inside a `GeneratedFunction` type
+
+## Dependency change
+- The dependency on `ValidatedNumerics.jl` has been replaced by `IntervalArithmetic.jl` and `IntervalRootFinding.jl` 
+
 # v0.5
 - API change: Contractors now have their dimension as a type parameter
 - Refactoring for type stability
