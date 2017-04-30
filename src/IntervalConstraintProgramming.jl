@@ -2,7 +2,9 @@ __precompile__()
 
 module IntervalConstraintProgramming
 
-using IntervalArithmetic, IntervalRootFinding
+using   IntervalArithmetic,
+        IntervalRootFinding,
+        IntervalContractors
 
 using MacroTools
 
@@ -21,7 +23,6 @@ export
     show_code
 
 
-include("reverse_mode.jl")
 include("ast.jl")
 include("code_generation.jl")
 include("contractor.jl")
