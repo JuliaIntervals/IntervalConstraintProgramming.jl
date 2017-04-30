@@ -22,6 +22,7 @@ export
     Vol,
     show_code
 
+const rev_ops = IntervalContractors.rev_ops
 
 include("ast.jl")
 include("code_generation.jl")
