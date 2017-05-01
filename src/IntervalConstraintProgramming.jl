@@ -22,7 +22,7 @@ export
     Vol,
     show_code
 
-const rev_ops = IntervalContractors.rev_ops
+const reverse_operations = IntervalContractors.reverse_operations
 
 include("ast.jl")
 include("code_generation.jl")

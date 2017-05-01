@@ -309,7 +309,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
 
     #@show op
 
-    if op ∈ keys(rev_ops)  # standard operator
+    if op ∈ keys(reverse_operations)  # standard operator
         if new_var == nothing
             new_var = make_symbol()
         end

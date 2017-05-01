@@ -53,7 +53,7 @@ function emit_backward_code(a::Assignment)
     args = isa(a.args, Vector) ? a.args : [a.args]
 
     return_args = [a.lhs, args...]
-    rev_op = rev_ops[a.op]  # find reverse operation
+    rev_op = reverse_operations[a.op]  # find reverse operation
 
     if rev_op == :()   # empty
         args = make_tuple(args)
