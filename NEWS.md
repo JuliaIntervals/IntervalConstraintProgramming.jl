@@ -1,5 +1,11 @@
 # IntervalConstraintProgramming.jl
 
+# v0.7
+
+## New dependency: `IntervalContractors.jl`
+
+The reverse functions used for constraint propagation have been factored out into the `IntervalContractors.jl` package.
+
 # v0.6
 ## Minimum Julia version
 - The minimum Julia version required has been bumped to 0.5
