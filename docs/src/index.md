@@ -5,7 +5,7 @@ rigorously calculate inner and outer approximations to the *feasible set*,
 i.e. the set that satisfies the constraints.
 
 This uses interval arithmetic provided by the author's
-[`IntervalArithmetic.jl`](https://github.com/dpsanders/IntervalArithmetic.jl) package,
+[`IntervalArithmetic.jl`](https://github.com/JuliaIntervals/IntervalArithmetic.jl) package,
 in particular multi-dimensional `IntervalBox`es, i.e. Cartesian products of one-dimensional intervals.
 
 To do this, *interval constraint programming* is used, in particular the
@@ -101,7 +101,7 @@ and the white boxes to be outside the set. The grey boxes show those that lie on
 
 The package works in any number of dimensions, although it suffers from the usual exponential slowdown in higher dimensions ("combinatorial explosion"); in 3D, it is still relatively fast.
 
-There are sample 3D calculations in the `examples` directory, in particular in the [solid torus notebook](examples/Solid torus.ipynb), which uses [`GLVisualize.gl`](https://github.com/JuliaGL/GLVisualize.jl) to provide an interactive visualization that may be rotated and zoomed. The output for the solid torus looks like this:
+There are sample 3D calculations in the [IntervalConstraintProgrammingNotebooks](https://github.com/JuliaIntervals/IntervalConstraintProgrammingNotebooks) repository, in particular in the [solid torus notebook](https://github.com/JuliaIntervals/IntervalConstraintProgrammingNotebooks/blob/master/3D/Solid%20torus.ipynb), which uses [`GLVisualize.gl`](https://github.com/JuliaGL/GLVisualize.jl) to provide an interactive visualization that may be rotated and zoomed. The output for the solid torus looks like this:
 
 ![Coloured solid torus](solid_torus.png)
 
@@ -121,5 +121,5 @@ more complicated sets; see the [notebook](examples/Set inversion.ipynb) for seve
 - *Applied Interval Analysis*, Luc Jaulin, Michel Kieffer, Olivier Didrit, Eric Walter (2001)
 - Introduction to the Algebra of Separators with Application to Path Planning, Luc Jaulin and Benoît Desrochers, *Engineering Applications of Artificial Intelligence* **33**, 141–147 (2014)
 
-## Acknowledements
+## Acknowledgements
 Financial support is acknowledged from DGAPA-UNAM PAPIME grants PE-105911 and PE-107114, and DGAPA-UNAM PAPIIT grant IN-117214, and from a CONACYT-Mexico sabbatical fellowship. The author thanks Alan Edelman and the Julia group for hospitality during his sabbatical visit. He also thanks Luc Jaulin and Jordan Ninin for the [IAMOOC](http://iamooc.ensta-bretagne.fr/) online course, which introduced him to this subject.
