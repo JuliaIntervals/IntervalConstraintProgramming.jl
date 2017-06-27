@@ -20,7 +20,7 @@ function add_child!{T}(tree::Tree{T}, parent::Int, child::T)
     # add node:
     push!(tree.data, child)
     push!(tree.parent, parent)
-    push!(tree.children, Int[])
+    push!(tree.children, Int[])  # child has no children
 
     which = length(tree.data)
     push!(tree.children[parent], which)
@@ -51,27 +51,6 @@ function extract_sets{T}(tree::Tree{Separation{2,T}})
     outer = vcat((setdiff(s.outer, s.inner) for s in tree.data if !isempty(s.outer))...)
 
     boundary = [s.outer ∩ s.inner for (i,s) in enumerate(tree.data) if isleaf(tree, i)]
-    # leaves = [paving.data[i] for i in 1:length(paving.children) if isempty(paving.children[i])];
-    #boundary = [s.outer ∩ s.inner for s in leaves];
-    # S = typeof(tree.data[1].inner)
-    #
-    # inner_list = S[]
-    # outer_list = S[]
-    # boundary_list = S[]
-    #
-    # for i in 1:length(tree.data)
-    #
-    #     if isleaf(tree, i)
-    #
-    #         inner, outer = tree.data[i].inner, tree.data[i].outer
-    #
-    #         push!(boundary_list, inner ∩ outer)
-    #         push!(inner_list, setdiff(inner, outer)...)
-    #         push!(outer_list, setdiff(outer, inner)...)
-    #     end
-    # end
-    #
-    # return inner_list, outer_list, boundary_list
 
     return inner, outer, boundary
 
@@ -88,6 +67,14 @@ end
             inner[i]
         end
     end
+
+    for i in 1:length(boundary)
+        @series begin
+            c := :green
+            boundary[i]
+        end
+    end
+
 
 end
 
@@ -191,6 +178,7 @@ function newpave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ=0.1)
         separation = tree.data[parent]
 
         if isempty(separation.inner) || isempty(separation.outer)
+            println("Found an empty")
             continue
         end
 
@@ -217,6 +205,29 @@ function newpave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ=0.1)
 end
 
 
+boundary(s::Separation) = s.inner ∩ s.outer
+
+"""
+Check if a node is "minimal" (Jaulin-Desrochers, separators paper)
+"""
+function isminimal(tree, i)
+
+    current = tree.data[i]
+
+    (isempty(current.inner) || isempty(current.outer)) && return false
+
+    isempty(tree.children[i]) && return true
+
+    parent = tree.parent[i]
+    child1, child2 = tree.children[parent]
+
+    (boundary(tree.data[parent]) == boundary(tree.data[child1]) ∪ boundary(tree.data[child2])) && return true
+
+    return false
+end
+
+
+
 #  Repeatedly contract:
 
 
@@ -241,3 +252,32 @@ end
         # if diam(X) < ϵ || isempty(X)
         #     continue
         # end
+
+inside(X::Separation) = setdiff(X.inner, X.outer)
+outside(X::IntervalConstraintProgramming.Separation) = setdiff(X.outer, X.inner)
+boundary(X::IntervalConstraintProgramming.Separation) = X.inner ∩ X.outer
+
+
+"""
+Reunite i, the sibling of i and the parent of i
+"""
+function reunite(tree, i)
+    parent_index = tree.parent[i]
+    child1_index = tree.children[parent_index][1]
+    child2_index = tree.children[parent_index][1]
+
+    parent = tree.data[parent_index]
+    child1 = tree.data[child1_index]
+    child2 = tree.data[child2_index]
+
+    new_inside = reduce(union, vcat(inside(parent), inside(child1), inside(child2)))
+    new_outside = reduce(union, vcat(outside(parent), outside(child1), outside(child2)))
+
+    parent_full = union(parent.inner, parent.outer)
+
+    new_inner = setdiff(parent_full, new_outside)
+    new_outer = setdiff(parent_full, new_inside)
+
+    new_parent = Separation(new_inner, new_outer)
+
+end
