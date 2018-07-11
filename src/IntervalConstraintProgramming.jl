@@ -20,9 +20,12 @@ export
     SubPaving, Paving,
     pave, refine!,
     Vol,
-    show_code
+    show_code, icp!
 
 const reverse_operations = IntervalContractors.reverse_operations
+const ARRAY_TYPES = (:AbstractArray, :AbstractVector, :AbstractMatrix, :Array, :Vector, :Matrix)
+const REAL_TYPES = (:Bool, :Integer, :(Irrational{:e}), :(Irrational{:π}), :Rational, :BigFloat, :BigInt, :AbstractFloat, :Real)
+const FUNCTIONS = ((:Base, :+, 2), (:Base, :/, 2), (:Base, :^, 2), (:Base, :asin, 1), (:Base, :cos, 1), (:Base, :exp, 1), (:Base, :*, 2), (:Base, :abs, 1), (:Base, :log, 1), (:Base, :-, 2), (:Base, :sqrt, 1), (:Base, :tan, 1), (:Base, :sin, 1), )
 
 include("ast.jl")
 include("code_generation.jl")
@@ -32,5 +35,9 @@ include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
+
+include("tape.jl")
+include("tracked.jl")
+include("icp.jl")
 
 end # module
