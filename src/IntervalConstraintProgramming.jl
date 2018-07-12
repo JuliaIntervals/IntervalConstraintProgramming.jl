@@ -20,7 +20,7 @@ export
     SubPaving, Paving,
     pave, refine!,
     Vol,
-    show_code, icp!
+    show_code, icp, icp!
 
 const reverse_operations = IntervalContractors.reverse_operations
 const ARRAY_TYPES = (:AbstractArray, :AbstractVector, :AbstractMatrix, :Array, :Vector, :Matrix)
@@ -36,8 +36,10 @@ include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
 
-include("tape.jl")
-include("tracked.jl")
-include("icp.jl")
+include("tape/tape.jl")
+include("tape/Config.jl")
+include("tape/tracked.jl")
+include("tape/operations.jl")
+include("tape/icp.jl")
 
 end # module
