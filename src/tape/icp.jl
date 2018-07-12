@@ -3,7 +3,7 @@
 # [2] Applied Interval Analysis - Luc Jaulin, Michel Kieffer, Olivier Didrit and Eric Walter
 
 """
-Function to apply the forward-reverse contractor on `input` for `function` f.
+Function to apply the forward-reverse contractor on `input` for `function` f. Returns the contracted array, not modifying `input`.
 
 `function` should currently be a `n to 1` function.
 
@@ -34,6 +34,50 @@ julia> icp(f, X, constraint)
 ```
 
 """
+function icp(f, input, constraint)
+    tape = Tape(f, input, constraint)
+    reverse_pass!(tape.tape, tape.input.value)
+    return tape.input.value
+end
+
+function icp(f, input, constraint, tape)
+    reverse_pass!(tape.tape, tape.input.value)
+    return tape.input.value
+end
+
+"""
+Function to apply the forward-reverse contractor on `input` for `function` f. Modifies `input` to contain the contracted array of `Interval`s.
+
+`function` should currently be a `n to 1` function.
+
+`input` must be a `AbstractVector` of `Interval`s.
+
+`contraint` must be an `Interval`.
+
+`tape` is an optional argument, and should be a `Tape` of `ScalarInstruction`s, which can be pre-recorded to avoid recording redundantly. To record -
+
+`tape = IntervalConstraintProgramming.Tape(f, X, constraint)`
+
+Usage:
+```
+julia> f(X) = X[1]^2 + X[2]^2
+f (generic function with 1 method)
+
+julia> X = [-100..100, -100..100]
+2-element Array{IntervalArithmetic.Interval{Float64},1}:
+ [-100, 100]
+ [-100, 100]
+
+julia> constraint = -∞..1
+[-∞, 1]
+
+julia> icp!(f, X, constraint)
+2-element Array{IntervalArithmetic.Interval{Float64},1}:
+ [-1, 1] [-1, 1]
+```
+
+"""
+
 function icp!(f, input, constraint)
     tape = Tape(f, input, constraint)
     reverse_pass!(tape.tape, input)
