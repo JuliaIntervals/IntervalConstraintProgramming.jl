@@ -34,15 +34,26 @@ julia> icp(f, X, constraint)
 ```
 
 """
-function icp(f, input, constraint)
+function icp(f::Function, input::AbstractArray, constraint::Interval)
     tape = Tape(f, input, constraint)
     reverse_pass!(tape.tape, tape.input.value)
     return tape.input.value
 end
 
-function icp(f, input, constraint, tape)
+function icp(f::Function, input::AbstractArray, constraint::Interval, tape::AbstractTape)
     reverse_pass!(tape.tape, tape.input.value)
     return tape.input.value
+end
+
+function icp(f::Function, input::IntervalBox, constraint::Interval)
+    tape = Tape(f, input.v, constraint)
+    reverse_pass!(tape.tape, tape.input.value)
+    return IntervalBox(tape.input.value)
+end
+
+function icp(f::Function, input::IntervalBox, constraint::Interval, tape::AbstractTape)
+    reverse_pass!(tape.tape, tape.input.value)
+    return IntervalBox(tape.input.value)
 end
 
 """
@@ -78,13 +89,13 @@ julia> icp!(f, X, constraint)
 
 """
 
-function icp!(f, input, constraint)
+function icp!(f::Function, input::AbstractArray, constraint::Interval)
     tape = Tape(f, input, constraint)
     reverse_pass!(tape.tape, input)
     return input
 end
 
-function icp!(f, input, constraint, tape)
+function icp!(f::Function, input::AbstractArray, constraint::Interval, tape::AbstractTape)
     reverse_pass!(tape.tape, input)
     return input
 end
@@ -118,8 +129,15 @@ function reverse_pass!(tape::InstructionTape, input::AbstractArray)
     return nothing
 end
 
-function Tape(f, input, interval_init, cfg::Config = Config(input))
+function Tape(f::Function, input::AbstractArray, interval_init::Interval, cfg::Config = Config(input))
     track!(cfg.input, input)
+    tracked_ouput = f(cfg.input)
+    cfg.tape[length(cfg.tape)] = ScalarInstruction(cfg.tape[length(cfg.tape)].func, cfg.tape[length(cfg.tape)].input, cfg.tape[length(cfg.tape)].output, interval_init)
+    return _Tape(f, cfg.input, tracked_ouput, cfg.tape)
+end
+
+function Tape(f::Function, input::IntervalBox, interval_init::Interval, cfg::Config = Config(input.v))
+    track!(cfg.input, input.v)
     tracked_ouput = f(cfg.input)
     cfg.tape[length(cfg.tape)] = ScalarInstruction(cfg.tape[length(cfg.tape)].func, cfg.tape[length(cfg.tape)].input, cfg.tape[length(cfg.tape)].output, interval_init)
     return _Tape(f, cfg.input, tracked_ouput, cfg.tape)
