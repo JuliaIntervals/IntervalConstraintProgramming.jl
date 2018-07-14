@@ -56,3 +56,7 @@ end
     record!(tp, ScalarInstruction, self.f, (t, x), out, cache)
     return out
 end
+
+mul_rev_1(b, c, x) = mul_rev_IEEE1788(c, b, x)
+
+mul_rev_2(b, c, x) = mul_rev_1(b, x, c)

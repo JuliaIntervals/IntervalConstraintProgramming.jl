@@ -20,7 +20,8 @@ export
     SubPaving, Paving,
     pave, refine!,
     Vol,
-    show_code, icp, icp!
+    show_code,
+    icp, icp!
 
 const reverse_operations = IntervalContractors.reverse_operations
 const ARRAY_TYPES = (:AbstractArray, :AbstractVector, :AbstractMatrix, :Array, :Vector, :Matrix)

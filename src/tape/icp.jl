@@ -106,16 +106,47 @@ function reverse_pass!(tape::InstructionTape, input::AbstractArray)
         t = tape
         t[i].output.value = t[i].output.value ∩ t[i].cache
         op = IntervalContractors.reverse_operations[Symbol(t[i].func)]
+        if op == :mul_rev
+            if istracked(t[i].input[1]) && istracked(t[i].input[2])
+                rev_result = mul_rev_1(value(t[i].output), value.(t[i].input)...), mul_rev_2(value(t[i].output), value.(t[i].input)...)
+                t[i].input[1].value = rev_result[2]
+                if 0 < t[i].input[1].index <= n
+                    input[t[i].input[1].index] = rev_result[2]
+                end
+                t[i].input[2].value = rev_result[1]
+                if 0 < t[i].input[2].index <= n
+                    input[t[i].input[2].index] = rev_result[1]
+                end
+            elseif istracked(t[i].input[1])
+                rev_result = mul_rev_2(value(t[i].output), value.(t[i].input)...)
+                t[i].input[1].value = rev_result
+                if 0 < t[i].input[1].index <= n
+                    input[t[i].input[1].index] = rev_result
+                end
+            elseif istracked(t[i].input[2])
+                rev_result = mul_rev_1(value(t[i].output), value.(t[i].input)...)
+                t[i].input[2].value = rev_result
+                if 0 < t[i].input[2].index <= n
+                    input[t[i].input[2].index] = rev_result
+                end
+            end
+
+            continue
+        end
         rev_result = getfield(IntervalContractors, op)(value(t[i].output), value.(t[i].input)...)
         if length(rev_result) == 2
-            t[i].input.value = rev_result[2]
-            if 0 < t[i].input.index <= n
-                input[t[i].input.index] = rev_result[2]
+            if istracked(t[i].input)
+                t[i].input.value = rev_result[2]
+                if 0 < t[i].input.index <= n
+                    input[t[i].input.index] = rev_result[2]
+                end
             end
         else
-            t[i].input[1].value = rev_result[2]
-            if 0 < t[i].input[1].index <= n
-                input[t[i].input[1].index] = rev_result[2]
+            if istracked(t[i].input[1])
+                t[i].input[1].value = rev_result[2]
+                if 0 < t[i].input[1].index <= n
+                    input[t[i].input[1].index] = rev_result[2]
+                end
             end
             if istracked(t[i].input[2])
                 t[i].input[2].value = rev_result[3]
