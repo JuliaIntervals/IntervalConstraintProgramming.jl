@@ -1,7 +1,7 @@
 const NULL_INDEX = typemin(Int)
 const NULL_TAPE = InstructionTape()
 
- type TrackedReal{V<:Real,O} <: Real
+type TrackedReal{V<:Real,O} <: Real
     value::V
     tape::InstructionTape
     index::Int
@@ -15,7 +15,7 @@ TrackedReal{V,O}(v::V, tp::InstructionTape, i::Int, o::O) = TrackedReal{V,O}(v, 
 
 TrackedReal{V}(v::V, tp::InstructionTape = NULL_TAPE) = TrackedReal{V,Void}(v, tp)
 
- immutable TrackedArray{V,N,VA} <: AbstractArray{TrackedReal{V,TrackedArray{V,N,VA}},N}
+immutable TrackedArray{V,N,VA} <: AbstractArray{TrackedReal{V,TrackedArray{V,N,VA}},N}
     value::VA
     tape::InstructionTape
     function (::Type{TrackedArray{V,N,VA}}){V,N,VA}(value::AbstractArray{V,N},
