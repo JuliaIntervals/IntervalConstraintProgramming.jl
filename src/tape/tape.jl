@@ -17,7 +17,7 @@ end
 @inline capture(state) = state
 @inline capture(state::Tuple) = map(capture, state)
 
-immutable ScalarInstruction{F,I,O,C} <: AbstractInstruction
+immutable ScalarInstruction{F,I,O,C} <: AbstractInstruction #Instruction struct to record every intermediate fundamental step
     func::F
     input::I
     output::O
@@ -58,7 +58,7 @@ abstract type AbstractTape end
 
 Base.show(io::IO, t::AbstractTape) = print(io, typeof(t).name, "(", t.func, ")")
 
-immutable Tape{F,I,O} <: AbstractTape
+immutable Tape{F,I,O} <: AbstractTape #Tape type to hold the Instruction Tape
     func::F
     input::I
     output::O

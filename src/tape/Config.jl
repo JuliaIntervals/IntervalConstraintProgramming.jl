@@ -1,3 +1,4 @@
+# Framework to initialize the tracked input array and the Tape of Instructions
 abstract type AbstractConfig end
 
 immutable Config{I} <: AbstractConfig

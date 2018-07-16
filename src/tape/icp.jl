@@ -100,30 +100,24 @@ function icp!(f::Function, input::AbstractArray, constraint::Interval, tape::Abs
     return input
 end
 
+"""
+Function to apply the reverse pass on the Tape to propagate the constraints up
+"""
 function reverse_pass!(tape::InstructionTape, input::AbstractArray)
     n = length(input)
     for i in length(tape):-1:1
         t = tape
-        t[i].output.value = t[i].output.value ∩ t[i].cache
-        op = IntervalContractors.reverse_operations[Symbol(t[i].func)]
-        if op == :mul_rev
-            if istracked(t[i].input[1]) && istracked(t[i].input[2])
-                rev_result = mul_rev_1(value(t[i].output), value.(t[i].input)...), mul_rev_2(value(t[i].output), value.(t[i].input)...)
-                t[i].input[1].value = rev_result[2]
-                if 0 < t[i].input[1].index <= n
-                    input[t[i].input[1].index] = rev_result[2]
-                end
-                t[i].input[2].value = rev_result[1]
-                if 0 < t[i].input[2].index <= n
-                    input[t[i].input[2].index] = rev_result[1]
-                end
-            elseif istracked(t[i].input[1])
+        t[i].output.value = t[i].output.value ∩ t[i].cache #Propogation of constraints up
+        op = IntervalContractors.reverse_operations[Symbol(t[i].func)] #Looking up the reverse function in IntervalContractors
+        if op == :mul_rev #Special behavior to deal with constants
+            if istracked(t[i].input[1])
                 rev_result = mul_rev_2(value(t[i].output), value.(t[i].input)...)
                 t[i].input[1].value = rev_result
                 if 0 < t[i].input[1].index <= n
                     input[t[i].input[1].index] = rev_result
                 end
-            elseif istracked(t[i].input[2])
+            end
+            if istracked(t[i].input[2])
                 rev_result = mul_rev_1(value(t[i].output), value.(t[i].input)...)
                 t[i].input[2].value = rev_result
                 if 0 < t[i].input[2].index <= n
@@ -133,7 +127,7 @@ function reverse_pass!(tape::InstructionTape, input::AbstractArray)
 
             continue
         end
-        rev_result = getfield(IntervalContractors, op)(value(t[i].output), value.(t[i].input)...)
+        rev_result = getfield(IntervalContractors, op)(value(t[i].output), value.(t[i].input)...) #Apply reverse method on the Instructions
         if length(rev_result) == 2
             if istracked(t[i].input)
                 t[i].input.value = rev_result[2]
