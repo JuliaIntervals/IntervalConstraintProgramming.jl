@@ -1,7 +1,7 @@
 const NULL_INDEX = typemin(Int)
 const NULL_TAPE = InstructionTape()
 
-type TrackedReal{V<:Real,O} <: Real
+mutable struct TrackedReal{V<:Real,O} <: Real #Mutable type to track the input and other variables
     value::V
     tape::InstructionTape
     index::Int
@@ -34,6 +34,7 @@ istracked(::TrackedReal) = true
 istracked(::TrackedArray) = true
 istracked{T}(::AbstractArray{T}) = T <: TrackedReal || !(isleaftype(T))
 
+#Getters and setters
 @inline value(x) = x
 @inline value(x::AbstractArray) = istracked(x) ? map(value, x) : x
 @inline value(t::TrackedReal) = t.value
