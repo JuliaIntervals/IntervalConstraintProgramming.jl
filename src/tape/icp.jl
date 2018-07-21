@@ -36,23 +36,51 @@ julia> icp(f, X, constraint)
 """
 function icp(f::Function, input::AbstractArray, constraint::Interval)
     tape = Tape(f, input, constraint)
-    reverse_pass!(tape.tape, tape.input.value)
+    if !isempty(tape.tape)
+        reverse_pass!(tape.tape, tape.input.value)
+    else
+        if istracked(tape.output)
+            i = tape.output.index
+            tape.input.value[i] = tape.input.value[i] ∩ constraint
+        end
+    end
     return tape.input.value
 end
 
 function icp(f::Function, input::AbstractArray, constraint::Interval, tape::AbstractTape)
-    reverse_pass!(tape.tape, tape.input.value)
+    if !isempty(tape.tape)
+        reverse_pass!(tape.tape, tape.input.value)
+    else
+        if istracked(tape.output)
+            i = tape.output.index
+            tape.input.value[i] = tape.input.value[i] ∩ constraint
+        end
+    end
     return tape.input.value
 end
 
 function icp(f::Function, input::IntervalBox, constraint::Interval)
     tape = Tape(f, input.v, constraint)
-    reverse_pass!(tape.tape, tape.input.value)
+    if !isempty(tape.tape)
+        reverse_pass!(tape.tape, tape.input.value)
+    else
+        if istracked(tape.output)
+            i = tape.output.index
+            tape.input.value[i] = tape.input.value[i] ∩ constraint
+        end
+    end
     return IntervalBox(tape.input.value)
 end
 
 function icp(f::Function, input::IntervalBox, constraint::Interval, tape::AbstractTape)
-    reverse_pass!(tape.tape, tape.input.value)
+    if !isempty(tape.tape)
+        reverse_pass!(tape.tape, tape.input.value)
+    else
+        if istracked(tape.output)
+            i = tape.output.index
+            tape.input.value[i] = tape.input.value[i] ∩ constraint
+        end
+    end
     return IntervalBox(tape.input.value)
 end
 
@@ -91,12 +119,26 @@ julia> icp!(f, X, constraint)
 
 function icp!(f::Function, input::AbstractArray, constraint::Interval)
     tape = Tape(f, input, constraint)
-    reverse_pass!(tape.tape, input)
+    if !isempty(tape.tape)
+        reverse_pass!(tape.tape, input)
+    else
+        if istracked(tape.output)
+            i = tape.output.index
+            input[i] = input[i] ∩ constraint
+        end
+    end
     return input
 end
 
 function icp!(f::Function, input::AbstractArray, constraint::Interval, tape::AbstractTape)
-    reverse_pass!(tape.tape, input)
+    if !isempty(tape.tape)
+        reverse_pass!(tape.tape, input)
+    else
+        if istracked(tape.output)
+            i = tape.output.index
+            input[i] = input[i] ∩ constraint
+        end
+    end
     return input
 end
 
@@ -157,13 +199,17 @@ end
 function Tape(f::Function, input::AbstractArray, interval_init::Interval, cfg::Config = Config(input))
     track!(cfg.input, input)
     tracked_ouput = f(cfg.input)
-    cfg.tape[length(cfg.tape)] = ScalarInstruction(cfg.tape[length(cfg.tape)].func, cfg.tape[length(cfg.tape)].input, cfg.tape[length(cfg.tape)].output, interval_init)
+    if !isempty(cfg.tape)
+        cfg.tape[length(cfg.tape)] = ScalarInstruction(cfg.tape[length(cfg.tape)].func, cfg.tape[length(cfg.tape)].input, cfg.tape[length(cfg.tape)].output, interval_init)
+    end
     return _Tape(f, cfg.input, tracked_ouput, cfg.tape)
 end
 
 function Tape(f::Function, input::IntervalBox, interval_init::Interval, cfg::Config = Config(input.v))
     track!(cfg.input, input.v)
     tracked_ouput = f(cfg.input)
-    cfg.tape[length(cfg.tape)] = ScalarInstruction(cfg.tape[length(cfg.tape)].func, cfg.tape[length(cfg.tape)].input, cfg.tape[length(cfg.tape)].output, interval_init)
+    if !isempty(cfg.tape)
+        cfg.tape[length(cfg.tape)] = ScalarInstruction(cfg.tape[length(cfg.tape)].func, cfg.tape[length(cfg.tape)].input, cfg.tape[length(cfg.tape)].output, interval_init)
+    end
     return _Tape(f, cfg.input, tracked_ouput, cfg.tape)
 end
