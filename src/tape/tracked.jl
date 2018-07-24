@@ -117,7 +117,14 @@ Base.promote_array_type{F<:AbstractFloat, T<:TrackedReal, S}(_, ::Type{F}, ::Typ
 Base.r_promote{T<:TrackedReal}(::typeof(+), t::T) = t
 Base.r_promote{T<:TrackedReal}(::typeof(*), t::T) = t
 
-Base.getindex(t::TrackedArray, i::Int) = TrackedReal(value(t)[i], tape(t), i, t)
+import Base.getindex
+function getindex(t::TrackedArray, i::Int)
+    tp = tape(t)
+    out = TrackedReal(value(t)[i], tape(t), i, t)
+    cache = IntervalArithmetic.entireinterval()
+    record!(tp, ScalarInstruction, getfield(Base, :getindex), t, out, cache)
+    return out
+end
 
 colon2range(s, i) = i
 colon2range(s, ::Colon) = s
