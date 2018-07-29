@@ -121,8 +121,10 @@ import Base.getindex
 function getindex(t::TrackedArray, i::Int)
     tp = tape(t)
     out = TrackedReal(value(t)[i], tape(t), i, t)
+    # out = value(t)[i]
     cache = IntervalArithmetic.entireinterval()
-    record!(tp, ScalarInstruction, getfield(Base, :getindex), t, out, cache)
+    record!(tp, ScalarInstruction, getfield(Base, :getindex), t, value(t)[i], cache)
+    # println("Recorded getindex")
     return out
 end
 
@@ -219,3 +221,21 @@ function Base.show(io::IO, t::TrackedReal)
     id = idstr(t)
     print(io, "TrackedReal<$(id)>($(value(t)), $(tape_id), $(origin_id))")
 end
+
+function Base.show(io::IO, t::TrackedArray)
+    print(t.value)
+end
+
+# function getindex(A::TrackedArray, I...)
+#     Base.@_propagate_inbounds_meta
+#     Base.error_if_canonical_indexing(Base.IndexStyle(A), A, I...)
+#     out = Base._getindex(Base.IndexStyle(A), A, Base.to_indices(A, I)...)
+#     cache = IntervalArithmetic.entireinterval()
+#     tp = tape(A[1])
+#     record!(tp, ScalarInstruction, getfield(Base, :getindex), A, out, cache)
+#
+# end
+
+@inline Base.broadcast(f, X::TrackedArray) = TrackedArray(f.(X.value), X[1].tape)
+@inline Base.broadcast(f, X::TrackedArray, Y::TrackedArray) = TrackedArray(f.(X.value, Y.value), X[1].tape)
+@inline Base.broadcast(f, X::TrackedArray, y) = TrackedArray(f.(X.value, y), X[1].tape)

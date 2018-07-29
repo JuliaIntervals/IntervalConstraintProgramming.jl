@@ -43,16 +43,16 @@ function Base.show(io::IO, instruction::AbstractInstruction, pad = "")
     print(io,   pad, "  cache:  ", compactrepr(instruction.cache))
 end
 
-function Base.show(io::IO, tp::InstructionTape)
-    println("$(length(tp))-element InstructionTape:")
-    i = 1
-    for instruction in tp
-        print(io, "$i => ")
-        show(io, instruction)
-        println(io)
-        i += 1
-    end
-end
+# function Base.show(io::IO, tp::InstructionTape)
+#     println("$(length(tp))-element InstructionTape:")
+#     i = 1
+#     for instruction in tp
+#         print(io, "$i => ")
+#         show(io, instruction)
+#         println(io)
+#         i += 1
+#     end
+# end
 
 abstract type AbstractTape end
 
@@ -70,5 +70,5 @@ end
 _Tape{F,I,O}(func::F, input::I, output::O, tape::InstructionTape) = Tape{F,I,O}(func, input, output, tape)
 
 compactrepr(x::Tuple) = "("*join(map(compactrepr, x), ",\n           ")*")"
-compactrepr(x::AbstractArray) = length(x) < 5 ? match(r"\[.*?\]", repr(x)).match : summary(x)
+# compactrepr(x::AbstractArray) = length(x) < 5 ? match(r"\[.*?\]", repr(x)).match : summary(x)
 compactrepr(x) = repr(x)

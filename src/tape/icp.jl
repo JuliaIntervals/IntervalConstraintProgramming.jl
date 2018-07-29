@@ -47,6 +47,20 @@ function icp(f::Function, input::AbstractArray, constraint::Interval)
     return tape.input.value
 end
 
+function icp_grad(f::Function, input::AbstractArray, constraint::Interval)
+    tape = TapeGrad(f, input, constraint)
+    if !isempty(tape.tape)
+        reverse_pass!(tape.tape, tape.input.value)
+    else
+        if istracked(tape.output)
+            i = tape.output.index
+            tape.input.value[i] = tape.input.value[i] ∩ constraint
+        end
+    end
+    return tape.input.value
+end
+
+
 function icp(f::Function, input::AbstractArray, constraint::Interval, tape::AbstractTape)
     if !isempty(tape.tape)
         reverse_pass!(tape.tape, tape.input.value)
@@ -149,7 +163,12 @@ function reverse_pass!(tape::InstructionTape, input::AbstractArray)
     n = length(input)
     for i in length(tape):-1:1
         t = tape
-        t[i].output.value = t[i].output.value ∩ t[i].cache #Propogation of constraints up
+        if istracked(t[i].output)
+            t[i].output.value = t[i].output.value ∩ t[i].cache #Propogation of constraints up
+        end
+        if Symbol(t[i].func) == :getindex
+            continue
+        end
         op = IntervalContractors.reverse_operations[Symbol(t[i].func)] #Looking up the reverse function in IntervalContractors
         if op == :mul_rev #Special behavior to deal with constants
             if istracked(t[i].input[1])
@@ -208,6 +227,15 @@ end
 function Tape(f::Function, input::IntervalBox, interval_init::Interval, cfg::Config = Config(input.v))
     track!(cfg.input, input.v)
     tracked_ouput = f(cfg.input)
+    if !isempty(cfg.tape)
+        cfg.tape[length(cfg.tape)] = ScalarInstruction(cfg.tape[length(cfg.tape)].func, cfg.tape[length(cfg.tape)].input, cfg.tape[length(cfg.tape)].output, interval_init)
+    end
+    return _Tape(f, cfg.input, tracked_ouput, cfg.tape)
+end
+
+function TapeGrad(f::Function, input::AbstractArray, interval_init::Interval, cfg::Config = Config(input))
+    track!(cfg.input, input)
+    tracked_ouput = f(cfg)
     if !isempty(cfg.tape)
         cfg.tape[length(cfg.tape)] = ScalarInstruction(cfg.tape[length(cfg.tape)].func, cfg.tape[length(cfg.tape)].input, cfg.tape[length(cfg.tape)].output, interval_init)
     end
