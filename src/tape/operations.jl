@@ -17,6 +17,15 @@ for (M, f, arity) in FUNCTIONS
         end
     end
 end
+import Base.-
+@inline function -{T}(t::TrackedReal{T})
+    result = -(value(t))
+    tp = tape(t)
+    out = track(result, T, tp)
+    cache = IntervalArithmetic.entireinterval()
+    record!(tp, ScalarInstruction, *, (-1, t), out, cache)
+    return out
+end
 
 @inline function (self::ForwardOptimize{F}){F,T}(t::TrackedReal{T}) #Define tracked operations for unary functions
     result = self.f(value(t))
