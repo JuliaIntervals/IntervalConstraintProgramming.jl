@@ -36,7 +36,7 @@ julia> icp(f, X, constraint)
 """
 function icp(f::Function, input::AbstractArray, constraint::Interval)
     tape = Tape(f, input, constraint)
-    if !isempty(tape.tape)
+    if length(tape.tape) > 1
         reverse_pass!(tape.tape, tape.input.value)
     else
         if istracked(tape.output)
@@ -49,7 +49,7 @@ end
 
 function icp_grad(f::Function, input::AbstractArray, constraint::Interval)
     tape = TapeGrad(f, input, constraint)
-    if !isempty(tape.tape)
+    if length(tape.tape) > 1
         reverse_pass!(tape.tape, tape.input.value)
     else
         if istracked(tape.output)
@@ -62,7 +62,7 @@ end
 
 
 function icp(f::Function, input::AbstractArray, constraint::Interval, tape::AbstractTape)
-    if !isempty(tape.tape)
+    if length(tape.tape) > 1
         reverse_pass!(tape.tape, tape.input.value)
     else
         if istracked(tape.output)
@@ -75,7 +75,7 @@ end
 
 function icp(f::Function, input::IntervalBox, constraint::Interval)
     tape = Tape(f, input.v, constraint)
-    if !isempty(tape.tape)
+    if length(tape.tape) > 1
         reverse_pass!(tape.tape, tape.input.value)
     else
         if istracked(tape.output)
@@ -87,7 +87,7 @@ function icp(f::Function, input::IntervalBox, constraint::Interval)
 end
 
 function icp(f::Function, input::IntervalBox, constraint::Interval, tape::AbstractTape)
-    if !isempty(tape.tape)
+    if length(tape.tape) > 1
         reverse_pass!(tape.tape, tape.input.value)
     else
         if istracked(tape.output)
@@ -133,7 +133,7 @@ julia> icp!(f, X, constraint)
 
 function icp!(f::Function, input::AbstractArray, constraint::Interval)
     tape = Tape(f, input, constraint)
-    if !isempty(tape.tape)
+    if length(tape.tape) > 1
         reverse_pass!(tape.tape, input)
     else
         if istracked(tape.output)
@@ -145,7 +145,7 @@ function icp!(f::Function, input::AbstractArray, constraint::Interval)
 end
 
 function icp!(f::Function, input::AbstractArray, constraint::Interval, tape::AbstractTape)
-    if !isempty(tape.tape)
+    if length(tape.tape) > 1
         reverse_pass!(tape.tape, input)
     else
         if istracked(tape.output)
