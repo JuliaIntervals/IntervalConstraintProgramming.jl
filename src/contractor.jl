@@ -3,7 +3,7 @@ doc"""
 `Contractor` represents a `Contractor` from $\mathbb{R}^N$ to $\mathbb{R}^N$.
 Nout is the output dimension of the forward part.
 """
-immutable Contractor{N, Nout, F1<:Function, F2<:Function}
+struct Contractor{N, Nout, F1<:Function, F2<:Function}
     variables::Vector{Symbol}  # input variables
     forward::GeneratedFunction{F1}
     backward::GeneratedFunction{F2}
@@ -32,7 +32,7 @@ function Contractor(variables::Vector{Symbol}, top, forward, backward, expressio
     Contractor{N, Nout, typeof(forward.f), typeof(backward.f)}(variables, forward, backward, expression)
 end
 
-function Base.show{N,Nout,F1,F2}(io::IO, C::Contractor{N,Nout,F1,F2})
+function Base.show(io::IO, C::Contractor{N,Nout,F1,F2}) where {N,Nout,F1,F2}
     println(io, "Contractor in $(N) dimensions:")
     println(io, "  - forward pass contracts to $(Nout) dimensions")
     println(io, "  - variables: $(C.variables)")
@@ -41,8 +41,8 @@ end
 
 
 
-function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(
-    A::IntervalBox{Nout,T}, X::IntervalBox{N,T})
+function (C::Contractor{N,Nout,F1,F2})(
+    A::IntervalBox{Nout,T}, X::IntervalBox{N,T}) where {N,Nout,F1,F2,T}
 
     output, intermediate = C.forward(X)
 
@@ -67,7 +67,7 @@ function (C::Contractor{N,Nout,F1,F2}){N,Nout,F1,F2,T}(
 end
 
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
-(C::Contractor{N,1,F1,F2}){N,F1,F2,T}(A::Interval{T}, X::IntervalBox{N,T}) = C(IntervalBox(A), X)
+(C::Contractor{N,1,F1,F2})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,T} = C(IntervalBox(A), X)
 
 function make_contractor(expr::Expr)
     # println("Entering Contractor(ex) with ex=$ex")

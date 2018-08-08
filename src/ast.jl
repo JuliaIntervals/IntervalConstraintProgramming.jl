@@ -46,13 +46,13 @@ end
 
 # Combine Assignment and FunctionAssignment ?
 
-immutable Assignment
+struct Assignment
     lhs
     op
     args
 end
 
-immutable FunctionAssignment
+struct FunctionAssignment
     f  # function name
     args  # input arguments
     return_arguments
@@ -60,7 +60,7 @@ immutable FunctionAssignment
 end
 
 # Close to single assignment form
-type FlatAST
+mutable struct FlatAST
     top  # topmost variable(s)
     input_variables::Set{Symbol}
     intermediate::Vector{Symbol}  # generated vars

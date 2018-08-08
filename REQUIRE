@@ -1,4 +1,4 @@
-julia 0.5
+julia 0.7-alpha
 IntervalArithmetic 0.9
 IntervalRootFinding 0.1
 IntervalContractors 0.1

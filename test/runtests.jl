@@ -1,5 +1,5 @@
 
-using Base.Test
+using Test
 
 using IntervalConstraintProgramming
 using IntervalArithmetic #, IntervalArithmetic.RootFinding

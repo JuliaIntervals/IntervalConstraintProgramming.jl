@@ -1,11 +1,14 @@
-abstract Separator
+abstract type Separator 
+
+
+end
 
 
 doc"""
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
-immutable ConstraintSeparator{C, II} <: Separator
+struct ConstraintSeparator{C, II} <: Separator
     variables::Vector{Symbol}
     constraint::II  # Interval or IntervalBox
     contractor::C
@@ -17,7 +20,7 @@ ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(co
 doc"""CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
-immutable CombinationSeparator{F} <: Separator
+struct CombinationSeparator{F} <: Separator
     variables::Vector{Symbol}
     separator::F
     expression::Expr
