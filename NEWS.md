@@ -1,5 +1,9 @@
 # IntervalConstraintProgramming.jl
 
+# v0.8
+## Minimum Julia version
+- The minimum Julia version required has been bumped to 0.6; this will be the last release to support 0.6.
+
 # v0.7
 
 ## New dependency: `IntervalContractors.jl`
