@@ -1,8 +1,5 @@
 
 """
-`Contractor` represents a `Contractor` from $\mathbb{R}^N$ to $\mathbb{R}^N$.
-Nout is the output dimension of the forward part.
-"""
 `Contractor` represents a contractor from ``\\mathbb{R}^N`` to ``\\mathbb{R}^N``.
 `Nout` is the output dimension of the forward part.
 """
