@@ -4,7 +4,7 @@
 A `ConstraintFunction` contains the created forward and backward
 code
 """
-type ConstraintFunction{F <: Function, G <: Function}
+mutable struct ConstraintFunction{F<:Function, G<:Function}
     input::Vector{Symbol}  # input arguments for forward function
     output::Vector{Symbol} # output arguments for forward function
     forward::F
@@ -14,7 +14,7 @@ type ConstraintFunction{F <: Function, G <: Function}
     expression::Expr
 end
 
-function Base.show{F,G}(io::IO, f::ConstraintFunction{F,G})
+function Base.show(io::IO, f::ConstraintFunction{F,G}) where {F,G}
     println(io, "ConstraintFunction:")
     println(io, "  - input arguments: $(f.input)")
     println(io, "  - output arguments: $(f.output)")
@@ -32,13 +32,12 @@ end
 
 const registered_functions = Dict{Symbol, FunctionArguments}()
 
-
-@doc """
-`@function` registers a function to be used in forwards and backwards mode.
-
-Example: `@function f(x, y) = x^2 + y^2`
-"""  # this docstring does not work!
-
+# TODO: This docstring doesn't work
+# """
+# `@function` registers a function to be used in forwards and backwards mode.
+#
+# Example: `@function f(x, y) = x^2 + y^2`
+# """
 @eval macro ($(:function))(ex)   # workaround to define macro @function
 
     (f, args, code) = match_function(ex)
@@ -56,8 +55,6 @@ Example: `@function f(x, y) = x^2 + y^2`
 
     # println("HERE")
     # flatAST.intermediate = [return_arguments; flatAST.intermediate]
-
-
 
 
     forward, backward = forward_backward(flatAST)

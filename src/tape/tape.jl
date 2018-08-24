@@ -2,7 +2,7 @@ abstract type AbstractInstruction end
 
 const InstructionTape = Vector{AbstractInstruction}
 
-function record!{InstructionType}(tp::InstructionTape, ::Type{InstructionType}, args...)
+function record!(tp::InstructionTape, ::Type{InstructionType}, args...) where {InstructionType}
     tp !== NULL_TAPE && push!(tp, InstructionType(args...))
     return nothing
 end
@@ -22,12 +22,13 @@ struct ScalarInstruction{F,I,O,C} <: AbstractInstruction #Instruction struct to 
     input::I
     output::O
     cache::C
-    function (::Type{ScalarInstruction{F,I,O,C}}){F,I,O,C}(func, input, output, cache)
+
+    function (::Type{ScalarInstruction{F,I,O,C}})(func, input, output, cache) where {F,I,O,C}
         return new{F,I,O,C}(func, input, output, cache)
     end
 end
 
-@inline function _ScalarInstruction{F,I,O,C}(func::F, input::I, output::O, cache::C)
+@inline function _ScalarInstruction(func::F, input::I, output::O, cache::C) where {F,I,O,C}
     return ScalarInstruction{F,I,O,C}(func, input, output, cache)
 end
 
@@ -64,10 +65,11 @@ struct Tape{F,I,O} <: AbstractTape #Tape type to hold the Instruction Tape
     output::O
     tape::InstructionTape
     # disable default outer constructor
-    (::Type{Tape{F,I,O}}){F,I,O}(func, input, output, tape) = new{F,I,O}(func, input, output, tape)
+
+    (::Type{Tape{F,I,O}})(func, input, output, tape) where {F,I,O} = new{F,I,O}(func, input, output, tape)
 end
 
-_Tape{F,I,O}(func::F, input::I, output::O, tape::InstructionTape) = Tape{F,I,O}(func, input, output, tape)
+_Tape(func::F, input::I, output::O, tape::InstructionTape) where {F,I,O} = Tape{F,I,O}(func, input, output, tape)
 
 compactrepr(x::Tuple) = "("*join(map(compactrepr, x), ",\n           ")*")"
 # compactrepr(x::AbstractArray) = length(x) < 5 ? match(r"\[.*?\]", repr(x)).match : summary(x)
