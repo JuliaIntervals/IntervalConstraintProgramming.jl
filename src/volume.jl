@@ -1,7 +1,7 @@
 import Base:
     +, show, *
 
-doc"""N-dimensional Volume with lower and upper bounds"""
+"""N-dimensional Volume with lower and upper bounds"""
 immutable Vol{N,T}
     bounds::Interval{T}
 end

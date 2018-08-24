@@ -1,5 +1,5 @@
 
-doc"""
+"""
 `Contractor` represents a `Contractor` from $\mathbb{R}^N$ to $\mathbb{R}^N$.
 Nout is the output dimension of the forward part.
 """
@@ -109,7 +109,7 @@ function make_contractor(expr::Expr)
 end
 
 
-doc"""Usage:
+"""Usage:
 ```
 C = @contractor(x^2 + y^2)
 A = -∞..1  # the constraint interval

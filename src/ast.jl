@@ -1,7 +1,7 @@
 const symbol_numbers = Dict{Symbol, Int}()
 
 
-doc"""Return a new, unique symbol like _z3_"""
+"""Return a new, unique symbol like _z3_"""
 function make_symbol(s::Symbol)  # default is :z
 
     i = get(symbol_numbers, s, 0)
@@ -36,7 +36,7 @@ function make_symbols(n::Integer)
 end
 
 # The following function is not used
-doc"""Check if a symbol like `:a` has been uniqued to `:_a_1_`"""
+"""Check if a symbol like `:a` has been uniqued to `:_a_1_`"""
 function isuniqued(s::Symbol)
     ss = string(s)
     contains(ss, "_") && isdigit(ss[end-1])
@@ -103,7 +103,7 @@ function flatten(ex)
 end
 
 
-doc"""`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
+"""`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
 structure, stored in a FlatAST object. This is close to SSA (single-assignment form,
 https://en.wikipedia.org/wiki/Static_single_assignment_form).
 
