@@ -18,7 +18,7 @@ for (M, f, arity) in FUNCTIONS
     end
 end
 
-@inline function (self::ForwardOptimize{F}){F,T}(t::TrackedReal{T}) #Define tracked operations for unary functions
+@inline function (self::ForwardOptimize{F})(t::TrackedReal{T}) where {F,T} #Define tracked operations for unary functions
     result = self.f(value(t))
     tp = tape(t)
     out = track(result, T, tp)
@@ -27,7 +27,7 @@ end
     return out
 end
 
-@inline function (self::ForwardOptimize{F}){F,V1,V2}(a::TrackedReal{V1}, b::TrackedReal{V2}) #Define tracked operations for binary functions
+@inline function (self::ForwardOptimize{F})(a::TrackedReal{V1}, b::TrackedReal{V2}) where {F,V1,V2} #Define tracked operations for binary functions
     T = promote_type(V1, V2)
     result = self.f(value(a), value(b))
     tp = tape(a, b)
@@ -37,7 +37,7 @@ end
     return out
 end
 
-@inline function (self::ForwardOptimize{F}){F,V}(x::Real, t::TrackedReal{V}) #Define tracked operations for binary functions
+@inline function (self::ForwardOptimize{F})(x::Real, t::TrackedReal{V}) where {F,V} #Define tracked operations for binary functions
     T = promote_type(typeof(x), V)
     result = self.f(x, value(t))
     tp = tape(t)
@@ -47,7 +47,7 @@ end
     return out
 end
 
-@inline function (self::ForwardOptimize{F}){F,V}(t::TrackedReal{V}, x::Real) #Define tracked operations for binary functions
+@inline function (self::ForwardOptimize{F})(t::TrackedReal{V}, x::Real) where {F,V} #Define tracked operations for binary functions
     T = promote_type(typeof(x), V)
     result = self.f(value(t), x)
     tp = tape(t)

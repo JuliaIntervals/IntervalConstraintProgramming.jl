@@ -13,6 +13,7 @@ function setdiff(x::IntervalBox{N,T}, subpaving::SubPaving{N,T}) where {N,T}
     new_working = IntervalBox{N,T}[]
 
     local have_split
+    local final_x
 
     for y in subpaving
         for x in working
@@ -24,9 +25,11 @@ function setdiff(x::IntervalBox{N,T}, subpaving::SubPaving{N,T}) where {N,T}
                 have_split = true
                 append!(new_working, diff)
             end
+
+            final_x = x
         end
 
-        !have_split && push!(new_working, x)
+        !have_split && push!(new_working, final_x)
 
         working = new_working
         new_working = IntervalBox{N,T}[]

@@ -130,7 +130,6 @@ julia> icp!(f, X, constraint)
 ```
 
 """
-
 function icp!(f::Function, input::AbstractArray, constraint::Interval)
     tape = Tape(f, input, constraint)
     if length(tape.tape) > 1

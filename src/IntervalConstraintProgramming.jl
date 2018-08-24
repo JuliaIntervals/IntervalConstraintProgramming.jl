@@ -6,6 +6,8 @@ using IntervalArithmetic,
       IntervalRootFinding,
       IntervalContractors
 
+using Random
+
 using MacroTools
 
 import Base:

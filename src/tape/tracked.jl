@@ -111,13 +111,13 @@ end
 Base.promote_rule(::Type{R}, ::Type{TrackedReal{V,O}}) where {R<:Real,V,O} = TrackedReal{promote_type(R,V),O}
 Base.promote_rule(::Type{TrackedReal{V1,O1}}, ::Type{TrackedReal{V2,O2}}) where {V1,V2,O1,O2} = TrackedReal{promote_type(V1,V2),Void}
 
-Base.promote_array_type(_, ::Type{T}, ::Type{F}) where {T<:TrackedReal, F<:AbstractFloat} = promote_type(T, F)
-Base.promote_array_type(_, ::Type{T}, ::Type{F}, ::Type{S}) where {T<:TrackedReal, F<:AbstractFloat, S} = S
-Base.promote_array_type(_, ::Type{F}, ::Type{T}) where {F<:AbstractFloat, T<:TrackedReal} = promote_type(T, F)
-Base.promote_array_type(_, ::Type{F}, ::Type{T}, ::Type{S}) where {F<:AbstractFloat, T<:TrackedReal, S} = S
+# Base.promote_array_type(_, ::Type{T}, ::Type{F}) where {T<:TrackedReal, F<:AbstractFloat} = promote_type(T, F)
+# Base.promote_array_type(_, ::Type{T}, ::Type{F}, ::Type{S}) where {T<:TrackedReal, F<:AbstractFloat, S} = S
+# Base.promote_array_type(_, ::Type{F}, ::Type{T}) where {F<:AbstractFloat, T<:TrackedReal} = promote_type(T, F)
+# Base.promote_array_type(_, ::Type{F}, ::Type{T}, ::Type{S}) where {F<:AbstractFloat, T<:TrackedReal, S} = S
 
-Base.r_promote(::typeof(+), t::T) where {T<:TrackedReal} = t
-Base.r_promote(::typeof(*), t::T) where {T<:TrackedReal} = t
+# Base.r_promote(::typeof(+), t::T) where {T<:TrackedReal} = t
+# Base.r_promote(::typeof(*), t::T) where {T<:TrackedReal} = t
 
 import Base.getindex
 function getindex(t::TrackedArray, i::Int)
@@ -208,7 +208,7 @@ track!(t::TrackedArray, x::AbstractArray) = (value!(t, x); t)
 
 track!(t::TrackedReal, x::Real) = (value!(t, x); t)
 
-function track!(t::AbstractArray{TrackedReal{D,Void}}, x::AbstractArray, tp::InstructionTape) where {D}
+function track!(t::AbstractArray{TrackedReal{D,Nothing}}, x::AbstractArray, tp::InstructionTape) where {D}
     for i in eachindex(t)
         t[i] = track(x[i], D, tp)
     end
