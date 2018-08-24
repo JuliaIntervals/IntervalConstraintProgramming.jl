@@ -1,5 +1,8 @@
 
 """
+`Contractor` represents a `Contractor` from $\mathbb{R}^N$ to $\mathbb{R}^N$.
+Nout is the output dimension of the forward part.
+"""
 `Contractor` represents a contractor from ``\\mathbb{R}^N`` to ``\\mathbb{R}^N``.
 `Nout` is the output dimension of the forward part.
 """
@@ -67,7 +70,7 @@ function (C::Contractor{N,Nout,F1,F2})(
 end
 
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
-(C::Contractor{N,1,F1,F2})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,T} = C(IntervalBox(A), X) 
+(C::Contractor{N,1,F1,F2})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,T} = C(IntervalBox(A), X)
 
 function make_contractor(expr::Expr)
     # println("Entering Contractor(ex) with ex=$ex")
