@@ -1,6 +1,6 @@
-typealias SubPaving{N,T} Vector{IntervalBox{N,T}}
+const SubPaving{N,T} = Vector{IntervalBox{N,T}}
 
-type Paving{N,T}
+mutable struct Paving{N,T}
     separator::Separator   # parametrize!
     inner::SubPaving{N,T}
     boundary::SubPaving{N,T}
