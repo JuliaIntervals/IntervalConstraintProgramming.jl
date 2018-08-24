@@ -2,7 +2,7 @@ import Base:
     +, show, *
 
 """N-dimensional Volume with lower and upper bounds"""
-immutable Vol{N,T}
+struct Vol{N,T}
     bounds::Interval{T}
 end
 

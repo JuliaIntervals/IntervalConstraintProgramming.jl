@@ -3,7 +3,7 @@
 `Contractor` represents a `Contractor` from $\mathbb{R}^N$ to $\mathbb{R}^N$.
 Nout is the output dimension of the forward part.
 """
-immutable Contractor{N, Nout, F1<:Function, F2<:Function}
+struct Contractor{N, Nout, F1<:Function, F2<:Function}
     variables::Vector{Symbol}  # input variables
     forward::GeneratedFunction{F1}
     backward::GeneratedFunction{F2}

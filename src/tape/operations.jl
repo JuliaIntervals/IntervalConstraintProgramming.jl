@@ -1,4 +1,4 @@
-immutable ForwardOptimize{F}
+struct ForwardOptimize{F}
     f::F
 end
 

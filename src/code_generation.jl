@@ -1,7 +1,7 @@
 """
 A generated function, with the code that generated it
 """
-immutable GeneratedFunction{F}
+struct GeneratedFunction{F}
     f::F
     code::Expr
 end
