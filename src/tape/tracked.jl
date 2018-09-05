@@ -14,7 +14,7 @@ end
 
 TrackedReal(v::V, tp::InstructionTape, i::Int, o::O) where {V,O} = TrackedReal{V,O}(v, tp, i, o)
 
-TrackedReal(v::V, tp::InstructionTape = NULL_TAPE) where {V} = TrackedReal{V,Void}(v, tp)
+TrackedReal(v::V, tp::InstructionTape = NULL_TAPE) where {V} = TrackedReal{V,Nothing}(v, tp)
 
 struct TrackedArray{V,N,VA} <: AbstractArray{TrackedReal{V,TrackedArray{V,N,VA}},N}
     value::VA
@@ -79,7 +79,7 @@ function tape(ts...)
 end
 
 @inline value!(t::TrackedReal, v::Real) = (t.value = v; nothing)
-@inline value!(t::TrackedArray, v::AbstractArray) = (copy!(value(t), v); nothing)
+@inline value!(t::TrackedArray, v::AbstractArray) = (copyto!(value(t), v); nothing)
 
 function value!(t::NTuple{N,Any}, v::NTuple{N,Any}) where {N}
     for i in eachindex(t)
@@ -109,7 +109,7 @@ for R in REAL_TYPES
 end
 
 Base.promote_rule(::Type{R}, ::Type{TrackedReal{V,O}}) where {R<:Real,V,O} = TrackedReal{promote_type(R,V),O}
-Base.promote_rule(::Type{TrackedReal{V1,O1}}, ::Type{TrackedReal{V2,O2}}) where {V1,V2,O1,O2} = TrackedReal{promote_type(V1,V2),Void}
+Base.promote_rule(::Type{TrackedReal{V1,O1}}, ::Type{TrackedReal{V2,O2}}) where {V1,V2,O1,O2} = TrackedReal{promote_type(V1,V2), Nothing}
 
 # Base.promote_array_type(_, ::Type{T}, ::Type{F}) where {T<:TrackedReal, F<:AbstractFloat} = promote_type(T, F)
 # Base.promote_array_type(_, ::Type{T}, ::Type{F}, ::Type{S}) where {T<:TrackedReal, F<:AbstractFloat, S} = S
@@ -151,9 +151,9 @@ Base.size(t::TrackedArray) = size(value(t))
 
 Base.copy(t::T) where {T<:TrackedArray} = t
 
-Base.ones(t::TrackedArray{V}) where {V} = ones(TrackedReal{V,Void}, size(t))
+Base.ones(t::TrackedArray{V}) where {V} = ones(TrackedReal{V,Nothing}, size(t))
 
-Base.zeros(t::TrackedArray{V}) where {V} = zeros(TrackedReal{V,Void}, size(t))
+Base.zeros(t::TrackedArray{V}) where {V} = zeros(TrackedReal{V,Nothing}, size(t))
 
 reshape_body = :(TrackedArray(reshape(value(t), dims), dims), tape(t))
 @eval Base.reshape(t::TrackedArray, dims::Type{Val{N}}) where {N} = $reshape_body

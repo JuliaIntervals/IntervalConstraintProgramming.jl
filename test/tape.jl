@@ -1,3 +1,8 @@
+using Test
+
+using IntervalConstraintProgramming
+using IntervalArithmetic #, IntervalArithmetic.RootFinding
+
 
 struct TapeTester{T}
     f::Function

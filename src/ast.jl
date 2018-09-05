@@ -126,6 +126,7 @@ end
 
 
 function flatten!(flatAST::FlatAST, ex::Expr)
+    @show ex
     local top
 
     if ex.head == :$    # constants written as $a
