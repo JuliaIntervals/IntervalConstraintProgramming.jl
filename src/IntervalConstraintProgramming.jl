@@ -23,7 +23,8 @@ export
     pave, refine!,
     Vol,
     show_code,
-    icp, icp!
+    icp, icp!,
+    Constraint
 
 const reverse_operations = IntervalContractors.reverse_operations
 const ARRAY_TYPES = (:AbstractArray, :AbstractVector, :AbstractMatrix, :Array, :Vector, :Matrix)
