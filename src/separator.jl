@@ -85,7 +85,7 @@ function parse_comparison(ex)
 
    a, b = limits
 
-   # @show expr, limits
+   @show expr, limits
 
    return (expr, a..b)   # expr ∈ [a,b]
 
