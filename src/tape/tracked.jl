@@ -215,7 +215,7 @@ function track!(t::AbstractArray{TrackedReal{D,Nothing}}, x::AbstractArray, tp::
     return t
 end
 
-idstr(x) = string(base(62, object_id(x)))[1:3]
+idstr(x) = string(objectid(x), base=62)[1:3]
 
 function Base.show(io::IO, t::TrackedReal)
     tape_id = hastape(t) ? idstr(t.tape) : "---"
