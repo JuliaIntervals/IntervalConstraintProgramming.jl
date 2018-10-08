@@ -137,6 +137,13 @@ end
 
 end
 
+@function f(x) = 2x
+@function g(x) = ( a = f(x); a^2 )
+@function g2(x) = ( a = f(f(x)); a^2 )
+
+C = @contractor g(x)
+C2 = @contractor g2(x)
+
 
 
 @testset "Nested functions" begin
@@ -153,8 +160,6 @@ end
     x = IntervalBox(0..1)
 
     @test C(A, x) == IntervalBox(sqrt(A[1] / 4))
-
-
 
     @test C2(A, x) == IntervalBox(sqrt(A[1] / 16))
 
