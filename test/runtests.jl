@@ -1,8 +1,9 @@
+using IntervalArithmetic
+using IntervalConstraintProgramming
 
 using Test
 
-using IntervalConstraintProgramming
-using IntervalArithmetic #, IntervalArithmetic.RootFinding
+ #, IntervalArithmetic.RootFinding
 
 include("tape.jl")
 
@@ -108,16 +109,23 @@ end
 
 end
 
+@function f(x) = 4x
+C1 = @contractor f(x)
+C2 = @constraint f(x) ∈ [0.5, 0.6]
+C3 = @constraint f(f(x)) ∈ [0.4, 0.8]
+
+
+@show f
+
 @testset "Functions" begin
-    @function f(x) = 4x;
-    C1 = @contractor f(x);
-    A = IntervalBox(0.5..1);
-    x = IntervalBox(0..1);
+
+    global f
+
+    A = IntervalBox(0.5..1)
+    x = IntervalBox(0..1)
 
     @test C1(A, x) == IntervalBox(0.125..0.25)   # x such that 4x ∈ A=[0.5, 1]
 
-
-    C2 = @constraint f(x) ∈ [0.5, 0.6]
     X = IntervalBox(0..1)
 
     paving = pave(C2, X)
@@ -125,26 +133,28 @@ end
     @test length(paving.boundary) == 2
 
 
-    C3 = @constraint f(f(x)) ∈ [0.4, 0.8]
     @test length(paving.inner) == 2
     @test length(paving.boundary) == 2
 
 end
 
+@function f(x) = 2x
+@function g(x) = ( a = f(x); a^2 )
+@function g2(x) = ( a = f(f(x)); a^2 )
+
+C = @contractor g(x)
+C2 = @contractor g2(x)
+
 
 @testset "Nested functions" begin
-    @function f(x) = 2x
-    @function g(x) = ( a = f(x); a^2 )
 
-    C = @contractor g(x)
 
     A = IntervalBox(0.5..1)
     x = IntervalBox(0..1)
 
     @test C(A, x) == IntervalBox(sqrt(A / 4))
 
-    @function g2(x) = ( a = f(f(x)); a^2 )
-    C2 = @contractor g2(x)
+
 
     @test C2(A, x) == IntervalBox(sqrt(A / 16))
 
