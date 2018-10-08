@@ -109,17 +109,16 @@ end
 
 end
 
-@function f(x) = 4x
-C1 = @contractor f(x)
-C2 = @constraint f(x) ∈ [0.5, 0.6]
-C3 = @constraint f(f(x)) ∈ [0.4, 0.8]
 
-
-@show f
 
 @testset "Functions" begin
 
     global f
+
+    @function f(x) = 4x
+    C1 = @contractor f(x)
+    C2 = @constraint f(x) ∈ [0.5, 0.6]
+    C3 = @constraint f(f(x)) ∈ [0.4, 0.8]
 
     A = IntervalBox(0.5..1)
     x = IntervalBox(0..1)
@@ -138,25 +137,26 @@ C3 = @constraint f(f(x)) ∈ [0.4, 0.8]
 
 end
 
-@function f(x) = 2x
-@function g(x) = ( a = f(x); a^2 )
-@function g2(x) = ( a = f(f(x)); a^2 )
-
-C = @contractor g(x)
-C2 = @contractor g2(x)
 
 
 @testset "Nested functions" begin
 
 
+    @function f(x) = 2x
+    @function g(x) = ( a = f(x); a^2 )
+    @function g2(x) = ( a = f(f(x)); a^2 )
+
+    C = @contractor g(x)
+    C2 = @contractor g2(x)
+
     A = IntervalBox(0.5..1)
     x = IntervalBox(0..1)
 
-    @test C(A, x) == IntervalBox(sqrt(A / 4))
+    @test C(A, x) == IntervalBox(sqrt(A[1] / 4))
 
 
 
-    @test C2(A, x) == IntervalBox(sqrt(A / 16))
+    @test C2(A, x) == IntervalBox(sqrt(A[1] / 16))
 
 end
 
@@ -170,5 +170,5 @@ end
     @function g3(x) = ( a = (f↑2)(x); a^2 )
     C3 = @contractor g3(x)
 
-    @test C3(A, x) == IntervalBox(sqrt(A / 16))
+    @test C3(A, x) == IntervalBox(sqrt(A[1] / 16))
 end
