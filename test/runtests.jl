@@ -5,8 +5,6 @@ using Test
 
  #, IntervalArithmetic.RootFinding
 
-include("tape.jl")
-
 @testset "Utilities" begin
     @test IntervalConstraintProgramming.unify_variables([:a, :c], [:c, :b]) == ([:a,:b,:c], [1,3], [3,2], [1,0,2], [0,2,1])
 end

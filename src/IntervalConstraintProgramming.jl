@@ -41,10 +41,5 @@ include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
 
-include("tape/tape.jl")
-include("tape/Config.jl")
-include("tape/tracked.jl")
-include("tape/operations.jl")
-include("tape/icp.jl")
 
 end # module
