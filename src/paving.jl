@@ -1,6 +1,6 @@
-typealias SubPaving{N,T} Vector{IntervalBox{N,T}}
+const SubPaving{N,T} = Vector{IntervalBox{N,T}}
 
-type Paving{N,T}
+mutable struct Paving{N,T}
     separator::Separator   # parametrize!
     inner::SubPaving{N,T}
     boundary::SubPaving{N,T}
@@ -8,11 +8,12 @@ type Paving{N,T}
 end
 
 
-function setdiff{N,T}(x::IntervalBox{N,T}, subpaving::SubPaving{N,T})
+function setdiff(x::IntervalBox{N,T}, subpaving::SubPaving{N,T}) where {N,T}
     working = [x]
     new_working = IntervalBox{N,T}[]
 
     local have_split
+    local final_x
 
     for y in subpaving
         for x in working
@@ -24,9 +25,11 @@ function setdiff{N,T}(x::IntervalBox{N,T}, subpaving::SubPaving{N,T})
                 have_split = true
                 append!(new_working, diff)
             end
+
+            final_x = x
         end
 
-        !have_split && push!(new_working, x)
+        !have_split && push!(new_working, final_x)
 
         working = new_working
         new_working = IntervalBox{N,T}[]
@@ -37,16 +40,16 @@ function setdiff{N,T}(x::IntervalBox{N,T}, subpaving::SubPaving{N,T})
 
 end
 
-setdiff{N,T}(X::SubPaving{N,T}, Y::SubPaving{N,T}) = vcat([setdiff(x, Y) for x in X]...)
+setdiff(X::SubPaving{N,T}, Y::SubPaving{N,T}) where {N,T} = vcat([setdiff(x, Y) for x in X]...)
 
-function setdiff{N,T}(x::IntervalBox{N,T}, paving::Paving{N,T})
+function setdiff(x::IntervalBox{N,T}, paving::Paving{N,T}) where {N,T}
     Y = setdiff(x, paving.inner)
     Z = setdiff(Y, paving.boundary)
     return Z
 end
 
 
-function show{N,T}(io::IO, p::Paving{N,T})
+function show(io::IO, p::Paving{N,T}) where {N,T}
     print(io, """Paving:
                  - tolerance ϵ = $(p.ϵ)
                  - inner approx. of length $(length(p.inner))

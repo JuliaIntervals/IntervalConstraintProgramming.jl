@@ -1,7 +1,7 @@
 const symbol_numbers = Dict{Symbol, Int}()
 
 
-doc"""Return a new, unique symbol like _z3_"""
+"""Return a new, unique symbol like _z3_"""
 function make_symbol(s::Symbol)  # default is :z
 
     i = get(symbol_numbers, s, 0)
@@ -17,7 +17,7 @@ end
 make_symbol(c::Char) = make_symbol(Symbol(c))
 
 let current_symbol = 'a'
-    function make_symbol()
+    global function make_symbol()
         current_sym = current_symbol
 
         if current_sym < 'z'
@@ -36,7 +36,7 @@ function make_symbols(n::Integer)
 end
 
 # The following function is not used
-doc"""Check if a symbol like `:a` has been uniqued to `:_a_1_`"""
+"""Check if a symbol like `:a` has been uniqued to `:_a_1_`"""
 function isuniqued(s::Symbol)
     ss = string(s)
     contains(ss, "_") && isdigit(ss[end-1])
@@ -46,13 +46,13 @@ end
 
 # Combine Assignment and FunctionAssignment ?
 
-immutable Assignment
+struct Assignment
     lhs
     op
     args
 end
 
-immutable FunctionAssignment
+struct FunctionAssignment
     f  # function name
     args  # input arguments
     return_arguments
@@ -60,7 +60,7 @@ immutable FunctionAssignment
 end
 
 # Close to single assignment form
-type FlatAST
+mutable struct FlatAST
     top  # topmost variable(s)
     input_variables::Set{Symbol}
     intermediate::Vector{Symbol}  # generated vars
@@ -103,7 +103,10 @@ function flatten(ex)
 end
 
 
-doc"""`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
+# TODO: Parameters
+# numbers:
+
+"""`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
 structure, stored in a FlatAST object. This is close to SSA (single-assignment form,
 https://en.wikipedia.org/wiki/Static_single_assignment_form).
 
@@ -111,10 +114,6 @@ Variables that are found are considered `input_variables`.
 Generated variables introduced at intermediate nodes are stored in
 `intermediate`.
 Returns the variable at the top of the current piece of the tree."""
-
-# TODO: Parameters
-
-# numbers:
 function flatten!(flatAST::FlatAST, ex)
     return ex  # nothing to do to the AST; return the number
 end
@@ -127,6 +126,7 @@ end
 
 
 function flatten!(flatAST::FlatAST, ex::Expr)
+    #@show ex
     local top
 
     if ex.head == :$    # constants written as $a
@@ -163,7 +163,6 @@ end
 """A block represents a linear sequence of Julia statements.
 They are processed in order.
 """
-
 function process_block!(flatAST::FlatAST, ex)
     local top
 
