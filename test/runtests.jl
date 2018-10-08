@@ -41,20 +41,20 @@ end
     S1b = @constraint y > 0
 
     S1 = S1a ∩ S1b
-    paving = pave(S1, IntervalBox(-3..3, -3..3), 0.1)
+    paving = pave(S1, IntervalBox(-3..3, -3..3), 2.0, 0.5)
 
-    @test paving.inner == [IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 0..3)]
-    @test isempty(paving.boundary) == true
+    @test paving.inner == [IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 1.5..3)]
+    @test isempty(paving.boundary) == false
 
     S2 = S1a ∪ S1b
-    paving = pave(S2, IntervalBox(-3..3, -3..3), 0.1)
+    paving = pave(S2, IntervalBox(-3..3, -3..3), 0.1, 0.5)
     @test paving.inner == [IntervalBox(-3..0, 0..3), IntervalBox(0..3, -3..3)]
-    @test isempty(paving.boundary) == true
+    @test isempty(paving.boundary) == false
 
 
     S3 = @constraint x^2 + y^2 <= 1
     X = IntervalBox(-∞..∞, -∞..∞)
-    paving = pave(S3, X, 1.0)
+    paving = pave(S3, X, 1.0, 0.5)
 
     @test paving.inner == [IntervalBox(Interval(0.0, 0.5), Interval(0.0, 0.8660254037844386)),
                     IntervalBox(Interval(0.0, 0.5), Interval(-0.8660254037844386, 0.0)),
@@ -73,19 +73,19 @@ end
 
 
 
-@testset "Constants" begin
-    x = y = -∞..∞
-    X = IntervalBox(x, y)
-
-    a = 3
-    S4 = @constraint x^2 + y^2 - $a <= 0
-    paving = pave(S4, X)
-
-    @test paving.ϵ == 0.01
-    @test length(paving.inner) == 1532
-    length(paving.boundary) == 1536
-
-end
+# @testset "Constants" begin
+#     x = y = -∞..∞
+#     X = IntervalBox(x, y)
+#
+#     a = 3
+#     S4 = @constraint x^2 + y^2 - $a <= 0
+#     paving = pave(S4, X)
+#
+#     @test paving.ϵ == 0.01
+#     @test length(paving.inner) == 1532
+#     length(paving.boundary) == 1536
+#
+# end
 
 @testset "Paving a 3D torus" begin
     S5 = @constraint (3 - sqrt(x^2 + y^2))^2 + z^2 <= 1

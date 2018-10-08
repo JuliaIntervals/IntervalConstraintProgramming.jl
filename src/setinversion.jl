@@ -3,7 +3,7 @@
 `pave` takes the given working list of boxes and splits them into inner and boundary
 lists with the given separator
 """
-function pave(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ) where {N,T}
+function pave(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ, bisection_point=nothing) where {N,T}
 
     inner_list = SubPaving{N,T}()
     boundary_list = SubPaving{N,T}()
@@ -33,7 +33,13 @@ function pave(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ) where {N,T}
             push!(boundary_list, boundary)
 
         else
-            push!(working, bisect(boundary)...)
+            if bisection_point == nothing
+
+                push!(working, bisect(boundary)...)
+
+            else
+                push!(working, bisect(boundary, bisection_point)...)
+            end
         end
 
     end
@@ -49,9 +55,9 @@ end
 Find the subset of `domain` defined by the constraints specified by the separator `S`.
 Returns (sub)pavings `inner` and `boundary`, i.e. lists of `IntervalBox`.
 """
-function pave(S::Separator, X::IntervalBox{N,T}, ϵ = 1e-2) where {N,T}
+function pave(S::Separator, X::IntervalBox{N,T}, ϵ = 1e-2, bisection_point=nothing) where {N,T}
 
-    inner_list, boundary_list = pave(S, [X], ϵ)
+    inner_list, boundary_list = pave(S, [X], ϵ, bisection_point)
 
     return Paving(S, inner_list, boundary_list, ϵ)
 
