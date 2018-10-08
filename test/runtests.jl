@@ -137,12 +137,6 @@ end
 
 end
 
-@function f(x) = 2x
-@function g(x) = ( a = f(x); a^2 )
-@function g2(x) = ( a = f(f(x)); a^2 )
-
-C = @contractor g(x)
-C2 = @contractor g2(x)
 
 
 
