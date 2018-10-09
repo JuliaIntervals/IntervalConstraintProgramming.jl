@@ -22,7 +22,7 @@ function Base.show{F,G}(io::IO, f::ConstraintFunction{F,G})
 end
 
 
-immutable FunctionArguments
+struct FunctionArguments
     input
     return_arguments
     intermediate
