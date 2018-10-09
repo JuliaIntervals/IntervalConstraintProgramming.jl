@@ -1,4 +1,4 @@
-abstract Separator
+abstract type Separator end
 
 
 """
@@ -139,11 +139,11 @@ standard Julia code.
 e.g. `C = @constraint x^2 + y^2 <= 1`
 
 The variables (`x` and `y`, in this case) are automatically inferred.
-External constants can be used as e.g. `$a`:
+External constants can be used as e.g. `\$a`:
 
 ```
 a = 3
-C = @constraint x^2 + y^2 <= $a
+C = @constraint x^2 + y^2 <= \$a
 ```
 """
 macro constraint(ex::Expr)
@@ -165,7 +165,7 @@ end
 (S::CombinationSeparator)(X) = S.separator(X)
 
 
-doc"Unify the variables of two separators"
+"Unify the variables of two separators"
 function unify_variables(vars1, vars2)
 
     variables = unique(sort(vcat(vars1, vars2)))
