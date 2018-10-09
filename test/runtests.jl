@@ -41,20 +41,20 @@ end
     S1b = @constraint y > 0
 
     S1 = S1a ∩ S1b
-    paving = pave(S1, IntervalBox(-3..3, -3..3), 0.1)
+    paving = pave(S1, IntervalBox(-3..3, -3..3), 2.0, 0.5)
 
-    @test paving.inner == [IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 0..3)]
-    @test isempty(paving.boundary) == true
+    @test paving.inner == [IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 1.5..3)]
+    @test isempty(paving.boundary) == false
 
     S2 = S1a ∪ S1b
     paving = pave(S2, IntervalBox(-3..3, -3..3), 0.1)
     @test paving.inner == [IntervalBox(-3..0, 0..3), IntervalBox(0..3, -3..3)]
-    @test isempty(paving.boundary) == true
+    @test isempty(paving.boundary) == false
 
 
     S3 = @constraint x^2 + y^2 <= 1
     X = IntervalBox(-∞..∞, -∞..∞)
-    paving = pave(S3, X, 1.0)
+    paving = pave(S3, X, 1.0, 0.5)
 
     @test paving.inner == [IntervalBox(Interval(0.0, 0.5), Interval(0.0, 0.8660254037844386)),
                     IntervalBox(Interval(0.0, 0.5), Interval(-0.8660254037844386, 0.0)),
@@ -158,5 +158,5 @@ end
     @function g3(x) = ( a = (f↑2)(x); a^2 )
     C3 = @contractor g3(x)
 
-    @test C3(A, x) == IntervalBox(sqrt(A / 16))
+    @test C3(A, x) == IntervalBox(sqrt(A[1] / 16))
 end

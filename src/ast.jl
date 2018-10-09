@@ -16,7 +16,7 @@ end
 make_symbol(c::Char) = make_symbol(Symbol(c))
 
 let current_symbol = 'a'
-    function make_symbol()
+    global function make_symbol()
         current_sym = current_symbol
 
         if current_sym < 'z'

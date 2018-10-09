@@ -122,13 +122,12 @@ function make_constraint(expr, constraint)
 
     full_expr = Meta.quot(:($expr ∈ $constraint))
 
+    contractor_code = make_contractor(expr)
+
     code = quote end
-    push!(code.args, :($(esc(contractor_name)) = @contractor($(esc(expr)))))
-    # push!(code.args, :(ConstraintSeparator($(esc(contractor_name)).variables[2:end], $constraint, $(esc(contractor_name)), $full_expr)))
+    push!(code.args, :($(esc(contractor_name)) = $(contractor_code)))
 
     push!(code.args, :(ConstraintSeparator($constraint, $(esc(contractor_name)), $full_expr)))
-
-    # @show code
 
     code
 end
