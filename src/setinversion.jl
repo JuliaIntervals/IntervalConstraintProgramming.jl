@@ -1,5 +1,5 @@
 
-doc"""
+"""
 `pave` takes the given working list of boxes and splits them into inner and boundary
 lists with the given separator
 """
@@ -43,7 +43,7 @@ function pave{N,T}(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ)
 end
 
 
-doc"""
+"""
     pave(S::Separator, domain::IntervalBox, eps)`
 
 Find the subset of `domain` defined by the constraints specified by the separator `S`.
@@ -58,7 +58,7 @@ function pave{N,T}(S::Separator, X::IntervalBox{N,T}, ϵ = 1e-2)
 end
 
 
-doc"""Refine a paving to tolerance ϵ"""
+"""Refine a paving to tolerance ϵ"""
 function refine!(P::Paving, ϵ = 1e-2)
     if P.ϵ <= ϵ  # already refined
         return

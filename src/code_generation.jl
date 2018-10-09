@@ -1,4 +1,4 @@
-doc"""
+"""
 A generated function, with the code that generated it
 """
 immutable GeneratedFunction{F}
@@ -179,7 +179,7 @@ function forward_backward(flatAST::FlatAST)
 end
 
 
-doc"""
+"""
 Generate code for an anonymous function with given
 input arguments, output arguments, and code block.
 """

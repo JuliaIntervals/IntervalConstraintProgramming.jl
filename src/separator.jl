@@ -1,7 +1,7 @@
 abstract Separator
 
 
-doc"""
+"""
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
@@ -14,7 +14,7 @@ end
 
 ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables, constraint, contractor, expression)
 
-doc"""CombinationSeparator is a separator that is a combination (union, intersection,
+"""CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
 immutable CombinationSeparator{F} <: Separator
@@ -50,7 +50,7 @@ end
 
 
 
-doc"""`parse_comparison` parses comparisons like `x >= 10`
+"""`parse_comparison` parses comparisons like `x >= 10`
 into the corresponding interval, expressed as `x ∈ [10,∞]`
 
 Returns the expression and the constraint interval
@@ -133,7 +133,7 @@ function make_constraint(expr, constraint)
     code
 end
 
-doc"""Create a separator from a given constraint expression, written as
+"""Create a separator from a given constraint expression, written as
 standard Julia code.
 
 e.g. `C = @constraint x^2 + y^2 <= 1`
@@ -192,7 +192,7 @@ end
 
 # TODO: when S1 and S2 have different variables -- amalgamate!
 
-doc"""
+"""
     ∩(S1::Separator, S2::Separator)
 
 Separator for the intersection of two sets given by the separators `S1` and `S2`.
