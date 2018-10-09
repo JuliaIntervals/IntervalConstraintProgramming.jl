@@ -1,5 +1,13 @@
 # IntervalConstraintProgramming.jl
 
+# v0.9
+## Minimum Julia version
+- The minimum Julia version supported is now Julia 0.7. The package is fully compatible with Julia 1.0.
+
+## Functionality removed
+- Pavings are now immutable, so `refine!` no longer works.
+
+
 # v0.8
 ## Minimum Julia version
 - The minimum Julia version required has been bumped to 0.6; this will be the last release to support 0.6.
@@ -18,7 +26,7 @@ The reverse functions used for constraint propagation have been factored out int
 - Objects such as `Contractor` have been simplified by putting functions and the code that generated them inside a `GeneratedFunction` type
 
 ## Dependency change
-- The dependency on `ValidatedNumerics.jl` has been replaced by `IntervalArithmetic.jl` and `IntervalRootFinding.jl` 
+- The dependency on `ValidatedNumerics.jl` has been replaced by `IntervalArithmetic.jl` and `IntervalRootFinding.jl`
 
 # v0.5
 - API change: Contractors now have their dimension as a type parameter
