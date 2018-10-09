@@ -33,12 +33,11 @@ end
 const registered_functions = Dict{Symbol, FunctionArguments}()
 
 
-"""
-`@function` registers a function to be used in forwards and backwards mode.
-
-Example: `@function f(x, y) = x^2 + y^2`
-"""  # this docstring does not work!
-
+# """
+# `@function` registers a function to be used in forwards and backwards mode.
+#
+# Example: `@function f(x, y) = x^2 + y^2`
+# """  # this docstring does not work!
 @eval macro ($(:function))(ex)   # workaround to define macro @function
 
     (f, args, code) = match_function(ex)
