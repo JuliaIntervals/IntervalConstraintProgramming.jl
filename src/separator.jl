@@ -1,11 +1,11 @@
-abstract Separator
+abstract type Separator end
 
 
-doc"""
+"""
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
-immutable ConstraintSeparator{C, II} <: Separator
+struct ConstraintSeparator{C, II} <: Separator
     variables::Vector{Symbol}
     constraint::II  # Interval or IntervalBox
     contractor::C
@@ -14,10 +14,10 @@ end
 
 ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables, constraint, contractor, expression)
 
-doc"""CombinationSeparator is a separator that is a combination (union, intersection,
+"""CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
-immutable CombinationSeparator{F} <: Separator
+struct CombinationSeparator{F} <: Separator
     variables::Vector{Symbol}
     separator::F
     expression::Expr
@@ -50,7 +50,7 @@ end
 
 
 
-doc"""`parse_comparison` parses comparisons like `x >= 10`
+"""`parse_comparison` parses comparisons like `x >= 10`
 into the corresponding interval, expressed as `x ∈ [10,∞]`
 
 Returns the expression and the constraint interval
@@ -122,28 +122,27 @@ function make_constraint(expr, constraint)
 
     full_expr = Meta.quot(:($expr ∈ $constraint))
 
+    contractor_code = make_contractor(expr)
+
     code = quote end
-    push!(code.args, :($(esc(contractor_name)) = @contractor($(esc(expr)))))
-    # push!(code.args, :(ConstraintSeparator($(esc(contractor_name)).variables[2:end], $constraint, $(esc(contractor_name)), $full_expr)))
+    push!(code.args, :($(esc(contractor_name)) = $(contractor_code)))
 
     push!(code.args, :(ConstraintSeparator($constraint, $(esc(contractor_name)), $full_expr)))
-
-    # @show code
 
     code
 end
 
-doc"""Create a separator from a given constraint expression, written as
+"""Create a separator from a given constraint expression, written as
 standard Julia code.
 
 e.g. `C = @constraint x^2 + y^2 <= 1`
 
 The variables (`x` and `y`, in this case) are automatically inferred.
-External constants can be used as e.g. `$a`:
+External constants can be used as e.g. `\$a`:
 
 ```
 a = 3
-C = @constraint x^2 + y^2 <= $a
+C = @constraint x^2 + y^2 <= \$a
 ```
 """
 macro constraint(ex::Expr)
@@ -165,7 +164,7 @@ end
 (S::CombinationSeparator)(X) = S.separator(X)
 
 
-doc"Unify the variables of two separators"
+"Unify the variables of two separators"
 function unify_variables(vars1, vars2)
 
     variables = unique(sort(vcat(vars1, vars2)))
@@ -192,7 +191,7 @@ end
 
 # TODO: when S1 and S2 have different variables -- amalgamate!
 
-doc"""
+"""
     ∩(S1::Separator, S2::Separator)
 
 Separator for the intersection of two sets given by the separators `S1` and `S2`.

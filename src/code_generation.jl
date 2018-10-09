@@ -1,7 +1,7 @@
-doc"""
+"""
 A generated function, with the code that generated it
 """
-immutable GeneratedFunction{F}
+struct GeneratedFunction{F}
     f::F
     code::Expr
 end
@@ -10,7 +10,7 @@ end
 
 # GeneratedFunction(code::Expr) = GeneratedFunction(eval(code), code)
 
-(f::GeneratedFunction{F}){F}(x...) = f.f(x...)
+(f::GeneratedFunction{F})(x...) where {F} = f.f(x...)
 
 
 function make_tuple(args)
@@ -179,7 +179,7 @@ function forward_backward(flatAST::FlatAST)
 end
 
 
-doc"""
+"""
 Generate code for an anonymous function with given
 input arguments, output arguments, and code block.
 """
