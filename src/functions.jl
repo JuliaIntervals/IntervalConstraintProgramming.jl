@@ -14,6 +14,10 @@ mutable struct ConstraintFunction{F <: Function, G <: Function}
     expression::Expr
 end
 
+function (C::ConstraintFunction)(args...)
+    return C.forward(args)[1]
+end
+
 function Base.show(io::IO, f::ConstraintFunction{F,G}) where {F,G}
     println(io, "ConstraintFunction:")
     println(io, "  - input arguments: $(f.input)")

@@ -30,9 +30,10 @@ let current_symbol = 'a'
     end
 end
 
-function make_symbols(n::Integer)
-    [make_symbol() for i in 1:n]
-end
+make_symbols(n::Integer) = [make_symbol() for i in 1:n]
+
+make_symbols(v::Vector{Symbol}) = make_symbols(length(v))
+
 
 # The following function is not used
 """Check if a symbol like `:a` has been uniqued to `:_a_1_`"""
@@ -320,10 +321,12 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
     else
         if haskey(registered_functions, op)
 
-            # make enough new variables for all the returned arguments:
-            return_args = make_symbols(length(registered_functions[op].return_arguments))
+            f = registered_functions[op]
 
-            intermediate = registered_functions[op].intermediate  # make_symbol(:z_tuple)
+            # make enough new variables for all the returned arguments:
+            return_args = make_symbols(f.return_arguments)
+
+            intermediate = make_symbols(f.intermediate) #registered_functions[op].intermediate  # make_symbol(:z_tuple)
 
             add_intermediate!(flatAST, return_args)
             add_intermediate!(flatAST, intermediate)
