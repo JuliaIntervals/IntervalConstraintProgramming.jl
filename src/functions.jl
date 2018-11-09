@@ -71,7 +71,7 @@ const registered_functions = Dict{Symbol, FunctionArguments}()
 
     return quote
 
-        $(esc(f)) =
+        const $(esc(f)) =
             ConstraintFunction($(flatAST.variables),
                                 $(flatAST.intermediate),
                                 $(forward),
