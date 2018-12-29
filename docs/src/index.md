@@ -108,7 +108,7 @@ There are sample 3D calculations in the `examples` directory, in particular in t
 
 ## Set operations
 Separators may be combined using the operators `!` (complement), `∩` and `∪` to make
-more complicated sets; see the [notebook](examples/Set inversion.ipynb) for several examples.
+more complicated sets; see the [notebook](https://github.com/JuliaIntervals/IntervalConstraintProgrammingNotebooks/blob/master/Basic%20examples%20of%20separators.ipynb) for several examples. Further examples can be found in the repository [IntervalConstraintProgrammingNotebooks](https://github.com/JuliaIntervals/IntervalConstraintProgrammingNotebooks).
 
 ## Author
 
