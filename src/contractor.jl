@@ -115,7 +115,7 @@ end
 C = @contractor(x^2 + y^2)
 A = -∞..1  # the constraint interval
 x = y = @interval(0.5, 1.5)
-C(A, x, y)
+C(A, IntervalBOx(x,2))
 
 `@contractor` makes a function that takes as arguments the variables contained in the expression, in lexicographic order
 ```

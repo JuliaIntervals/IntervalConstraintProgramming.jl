@@ -7,9 +7,9 @@ function make_symbol(s::Symbol)  # default is :z
     symbol_numbers[s] = i + 1
 
     if i == 0
-        return Symbol("_", s)
+        return gensym(s)
     else
-        return Symbol("_", s, i)
+        return gensym(string(s, i))
     end
 end
 
