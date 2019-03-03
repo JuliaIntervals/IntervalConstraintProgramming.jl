@@ -1,18 +1,7 @@
-const symbol_numbers = Dict{Symbol, Int}()
 
-"""Return a new, unique symbol like _z3_"""
-function make_symbol(s::Symbol)  # default is :z
+"""Return a new symbol"""
 
-    i = get(symbol_numbers, s, 0)
-    symbol_numbers[s] = i + 1
-
-    if i == 0
-        return gensym(s)
-    else
-        return gensym(string(s, i))
-    end
-end
-
+make_symbol(s::Symbol)= gensym(s)
 make_symbol(c::Char) = make_symbol(Symbol(c))
 
 let current_symbol = 'a'
