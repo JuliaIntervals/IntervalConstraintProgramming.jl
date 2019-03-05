@@ -120,13 +120,13 @@ function flatten!(flatAST::FlatAST, ex)
 end
 
 # symbols:
-function flatten!(flatAST::FlatAST, ex::Symbol)  # symbols are leaves
+function flatten!(flatAST::FlatAST, ex::Variable)  # symbols are leaves
     add_variable!(flatAST, ex)  # add the discovered symbol as an input variable
     return ex
 end
 
 
-function flatten!(flatAST::FlatAST, ex::Expr)
+function flatten!(flatAST::FlatAST, ex:: Operation)
     local top
 
     if ex.head == :$    # constants written as $a
@@ -270,10 +270,10 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
     #@show flatAST
     #@show new_var
 
-    op = ex.args[1]
+    op = ex.op
     #@show op
 
-    if isa(op, Expr)
+    //if isa(op, Expr)
         if op.head == :line
             return
 
@@ -281,17 +281,17 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
             return process_iterated_function!(flatAST, ex)
         end
 
-    end
+    //end
 
     # rewrite +(a,b,c) as +(a,+(b,c)) by recursive splitting
     # TODO: Use @match here!
 
-    if op in (:+, :*) && length(ex.args) > 3
-        return flatten!(flatAST, :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
+    if op in (+, *) && length(ex.args) > 2
+        return flatten!(flatAST, Expression( ($op)($(ex.args[1]), ($op)($(ex.args[2:end]...) )) ))
     end
 
     top_args = []
-    for arg in ex.args[2:end]
+    for arg in ex.args[1:end]
 
         isa(arg, LineNumberNode) && continue
 
@@ -309,7 +309,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
 
     #@show op
 
-    if op ∈ keys(reverse_operations)  # standard operator
+    if op ∈ reverse_operations  # standard operator
         if new_var == nothing
             new_var = make_symbol()
         end
