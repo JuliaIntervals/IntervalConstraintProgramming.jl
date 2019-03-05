@@ -1,18 +1,7 @@
-const symbol_numbers = Dict{Symbol, Int}()
 
-"""Return a new, unique symbol like _z3_"""
-function make_symbol(s::Symbol)  # default is :z
+"""Return a new symbol"""
 
-    i = get(symbol_numbers, s, 0)
-    symbol_numbers[s] = i + 1
-
-    if i == 0
-        return Symbol("_", s)
-    else
-        return Symbol("_", s, i)
-    end
-end
-
+make_symbol(s::Symbol)= Symbol(s)
 make_symbol(c::Char) = make_symbol(Symbol(c))
 
 let current_symbol = 'a'
@@ -116,17 +105,17 @@ Returns the variable at the top of the current piece of the tree."""
 
 # numbers:
 function flatten!(flatAST::FlatAST, ex)
-    return ex  # nothing to do to the AST; return the number
+    return ex.value  # nothing to do to the AST; return the number
 end
 
 # symbols:
 function flatten!(flatAST::FlatAST, ex::Variable)  # symbols are leaves
-    add_variable!(flatAST, ex)  # add the discovered symbol as an input variable
-    return ex
+    add_variable!(flatAST, Symbol(ex))  # add the discovered symbol as an input variable
+    return Symbol(ex)
 end
 
 
-function flatten!(flatAST::FlatAST, ex:: Operation)
+function flatten!(flatAST::FlatAST, ex::Expr)
     local top
 
     if ex.head == :$    # constants written as $a
@@ -154,6 +143,12 @@ function flatten!(flatAST::FlatAST, ex:: Operation)
 
     set_top!(flatAST, top)
 end
+
+function flatten!(flatAST::FlatAST, ex::Operation)
+    top=process_call!(flatAST, ex)
+    set_top!(flatAST, top)
+end
+
 
 function process_constant!(flatAST::FlatAST, ex)
     return esc(ex.args[1])  # interpolate the value of the external constant
@@ -273,7 +268,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
     op = ex.op
     #@show op
 
-    //if isa(op, Expr)
+    """if isa(op, Expr)
         if op.head == :line
             return
 
@@ -281,13 +276,13 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
             return process_iterated_function!(flatAST, ex)
         end
 
-    //end
+    end"""
 
     # rewrite +(a,b,c) as +(a,+(b,c)) by recursive splitting
     # TODO: Use @match here!
 
     if op in (+, *) && length(ex.args) > 2
-        return flatten!(flatAST, Expression( ($op)($(ex.args[1]), ($op)($(ex.args[2:end]...) )) ))
+        return flatten!(flatAST, Expression( (op)((ex.args[1]), (op)((ex.args[2:end]...) )) ))
     end
 
     top_args = []
@@ -309,19 +304,19 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
 
     #@show op
 
-    if op ∈ reverse_operations  # standard operator
+    if Symbol(op) ∈ keys(reverse_operations)  # standard operator
         if new_var == nothing
             new_var = make_symbol()
         end
 
         add_intermediate!(flatAST, new_var)
 
-        top_level_code = Assignment(new_var, op, top_args)
+        top_level_code = Assignment(new_var, Symbol(op), top_args)
 
     else
-        if haskey(registered_functions, op)
+        if haskey(registered_functions, Symbol(op))
 
-            f = registered_functions[op]
+            f = registered_functions[Symbol(op)]
 
             # make enough new variables for all the returned arguments:
             return_args = make_symbols(f.return_arguments)
@@ -331,7 +326,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
             add_intermediate!(flatAST, return_args)
             add_intermediate!(flatAST, intermediate)
 
-            top_level_code = FunctionAssignment(op, top_args, return_args, intermediate)
+            top_level_code = FunctionAssignment(symbol(op), top_args, return_args, intermediate)
 
             new_var = return_args
 
