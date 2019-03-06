@@ -104,8 +104,12 @@ Returns the variable at the top of the current piece of the tree."""
 # TODO: Parameters
 
 # numbers:
+function flatten!(flatAST::FlatAST, ex::ModelingToolkit.Constant)
+    return ex.value  # nothing to do the AST; return the number
+end
+
 function flatten!(flatAST::FlatAST, ex)
-    return ex.value  # nothing to do to the AST; return the number
+    return ex  # nothing to do to the AST; return the number
 end
 
 # symbols:
@@ -114,6 +118,10 @@ function flatten!(flatAST::FlatAST, ex::Variable)  # symbols are leaves
     return Symbol(ex)
 end
 
+function flatten!(flatAST::FlatAST, ex::Symbol)
+   add_variable!(flatAST, ex)  # add the discovered symbol as an input variable
+   return ex
+end
 
 function flatten!(flatAST::FlatAST, ex::Expr)
     local top
@@ -145,7 +153,7 @@ function flatten!(flatAST::FlatAST, ex::Expr)
 end
 
 function flatten!(flatAST::FlatAST, ex::Operation)
-    top=process_call!(flatAST, ex)
+    top=process_operation!(flatAST, ex)
     set_top!(flatAST, top)
 end
 
@@ -265,10 +273,10 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
     #@show flatAST
     #@show new_var
 
-    op = ex.op
+    op = ex.args[1]
     #@show op
 
-    """if isa(op, Operation)
+    if isa(op, Expr)
         if op.head == :line
             return
 
@@ -276,10 +284,79 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
             return process_iterated_function!(flatAST, ex)
         end
 
-    end"""
+    end
 
     # rewrite +(a,b,c) as +(a,+(b,c)) by recursive splitting
     # TODO: Use @match here!
+
+    if op in (:+, :*) && length(ex.args) > 3
+        return flatten!(flatAST, :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
+    end
+
+    top_args = []
+    for arg in ex.args[2:end]
+
+        isa(arg, LineNumberNode) && continue
+
+        top = flatten!(flatAST, arg)
+
+        if isa(top, Vector)  # TODO: make top always a Vector?
+            append!(top_args, top)
+
+        else
+            push!(top_args, top)
+        end
+    end
+
+    top_level_code = quote end
+
+    #@show op
+
+    if op ∈ keys(reverse_operations)  # standard operator
+        if new_var == nothing
+            new_var = make_symbol()
+        end
+
+        add_intermediate!(flatAST, new_var)
+
+        top_level_code = Assignment(new_var, op, top_args)
+
+    else
+        if haskey(registered_functions, op)
+
+            f = registered_functions[op]
+
+            # make enough new variables for all the returned arguments:
+            return_args = make_symbols(f.return_arguments)
+
+            intermediate = make_symbols(f.intermediate) #registered_functions[op].intermediate  # make_symbol(:z_tuple)
+
+            add_intermediate!(flatAST, return_args)
+            add_intermediate!(flatAST, intermediate)
+
+            top_level_code = FunctionAssignment(op, top_args, return_args, intermediate)
+
+            new_var = return_args
+
+
+        else
+
+            throw(ArgumentError("Function $op not available. Use @function to define it."))
+        end
+    end
+
+
+    add_code!(flatAST, top_level_code)
+
+    return new_var
+
+end
+
+
+function process_operation!(flatAST::FlatAST, ex, new_var=nothing)
+
+    op = ex.op
+
 
     if op in (+, *) && length(ex.args) > 2
         return flatten!(flatAST, Expression( (op)((ex.args[1]), (op)((ex.args[2:end]...) )) ))
@@ -292,7 +369,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
 
         top = flatten!(flatAST, arg)
 
-        if isa(top, Vector)  # TODO: make top always a Vector?
+        if isa(top, Vector)
             append!(top_args, top)
 
         else
@@ -337,9 +414,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
         end
     end
 
-
     add_code!(flatAST, top_level_code)
-
     return new_var
 
 end

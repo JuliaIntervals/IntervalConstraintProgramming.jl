@@ -3,11 +3,11 @@
 `Contractor` represents a `Contractor` from ``\\mathbb{R}^N`` to ``\\mathbb{R}^N``.
 Nout is the output dimension of the forward part.
 """
-struct Contractor{N, Nout, F1<:Function, F2<:Function}
+struct Contractor{N, Nout, F1<:Function, F2<:Function, ex<:Union{Operation,Expr}}
     variables::Vector{Symbol}  # input variables
-    forward::F1
-    backward::F2
-    expression::Operation
+    forward::GeneratedFunction{F1}
+    backward::GeneratedFunction{F2}
+    expression::ex
 end
 
 function Contractor(variables::Vector{Symbol}, top, forward, backward, expression)
@@ -29,10 +29,10 @@ function Contractor(variables::Vector{Symbol}, top, forward, backward, expressio
         Nout = length(top)
     end
 
-    Contractor{N, Nout, typeof(forward), typeof(backward)}(variables, forward, backward, expression)
+    Contractor{N, Nout, typeof(forward.f), typeof(backward.f), typeof(expression)}(variables, forward, backward, expression)
 end
 
-function Base.show(io::IO, C::Contractor{N,Nout,F1,F2}) where {N,Nout,F1,F2}
+function Base.show(io::IO, C::Contractor{N,Nout,F1,F2,ex}) where {N,Nout,F1,F2,ex}
     println(io, "Contractor in $(N) dimensions:")
     println(io, "  - forward pass contracts to $(Nout) dimensions")
     println(io, "  - variables: $(C.variables)")
@@ -41,8 +41,8 @@ end
 
 
 
-function (C::Contractor{N,Nout,F1,F2})(
-    A::IntervalBox{Nout,T}, X::IntervalBox{N,T}) where {N,Nout,F1,F2,T}
+function (C::Contractor{N,Nout,F1,F2,ex})(
+    A::IntervalBox{Nout,T}, X::IntervalBox{N,T}) where {N,Nout,F1,F2,ex,T}
 
     output, intermediate = C.forward(X)
 
@@ -70,7 +70,35 @@ end
 
 (C::Contractor{N,1,F1,F2})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,T} = C(IntervalBox(A), X)
 
-function contractor(expr)
+function Contractor(expr::Operation)
+
+
+    top, linear_AST = flatten(expr)
+
+
+    forward_code, backward_code  = forward_backward(linear_AST)
+
+
+    # @show top
+
+    if isa(top, Symbol)
+        top = [top]
+    end
+
+    forward = eval(forward_code)
+    backward = eval(backward_code)
+
+    Contractor(linear_AST.variables,
+                    top,
+                    GeneratedFunction(forward, forward_code),
+                    GeneratedFunction(backward, backward_code),
+                    expr)
+
+end
+
+
+
+function make_contractor(expr::Expr)
     # println("Entering Contractor(ex) with ex=$ex")
     # expr, constraint_interval = parse_comparison(ex)
 
@@ -97,20 +125,18 @@ function contractor(expr)
         top = top.args
 
     end
+
     # @show forward_code
     # @show backward_code
-    forward = eval(forward_code)
-    backward = eval(backward_code)
 
-    Contractor(linear_AST.variables,
-                    top,
-                    forward,
-                    backward,
-                    expr)
-
-
+    :(Contractor($(linear_AST.variables),
+                    $top,
+                    GeneratedFunction($forward_code, $(Meta.quot(forward_code))),
+                    GeneratedFunction($backward_code, $(Meta.quot(backward_code))),
+                    $(Meta.quot(expr))))
 
 end
+
 
 
 """Usage:
@@ -125,7 +151,6 @@ C(A, x, y)
 
 TODO: Hygiene for global variables, or pass in parameters
 """
-#macro contractor(ex)
-#    dump(ex)
-#    make_contractor(ex)
-#end"""
+macro contractor(ex)
+    make_contractor(ex)
+end
