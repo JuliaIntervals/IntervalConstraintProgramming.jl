@@ -10,7 +10,7 @@ end
 
 # GeneratedFunction(code::Expr) = GeneratedFunction(eval(code), code)
 
-(f::GeneratedFunction{F})(x...) where {F} = f.f(x...)
+#(f::GeneratedFunction{F})(x...) where {F} = f.f(x...)
 
 
 function make_tuple(args)

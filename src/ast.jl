@@ -268,7 +268,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
     op = ex.op
     #@show op
 
-    """if isa(op, Expr)
+    """if isa(op, Operation)
         if op.head == :line
             return
 

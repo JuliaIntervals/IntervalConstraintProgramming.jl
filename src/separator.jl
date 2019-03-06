@@ -58,8 +58,9 @@ Returns the expression and the constraint interval
 TODO: Allow something like [3,4]' for the complement of [3,4]
 """
 
-function parse_comparison(ex)
-    expr, limits =
+function parse_comparison(ex::Operation)
+    expr = ex.args[1]
+
     @match ex begin
        ((a_ <= b_) | (a_ < b_) | (a_ ≤ b_))   => (a, (-∞, b))
        ((a_ >= b_) | (a_ > b_) | (a_ ≥ b_))   => (a, (b, ∞))
@@ -112,7 +113,9 @@ function new_parse_comparison(ex)
     end
 end
 
-function make_constraint(expr, constraint)
+function Constraint(expr::Operation)
+
+    expr, constraint = parse_comparison(expr)
 
     if isa(expr, Symbol)
         expr = :(1 * $expr)  # make into an expression!
@@ -122,14 +125,10 @@ function make_constraint(expr, constraint)
 
     full_expr = Meta.quot(:($expr ∈ $constraint))
 
-    contractor_code = make_contractor(expr)
+    C = make_contractor(expr)
 
-    code = quote end
-    push!(code.args, :($(esc(contractor_name)) = $(contractor_code)))
+    ConstraintSeparator(constraint, C, full_expr)
 
-    push!(code.args, :(ConstraintSeparator($constraint, $(esc(contractor_name)), $full_expr)))
-
-    code
 end
 
 """Create a separator from a given constraint expression, written as
@@ -145,10 +144,10 @@ a = 3
 C = @constraint x^2 + y^2 <= \$a
 ```
 """
-macro constraint(ex::Expr)
-    expr, constraint = parse_comparison(ex)
-    make_constraint(expr, constraint)
-end
+#macro constraint(ex::Expr)
+#    expr, constraint = parse_comparison(ex)
+#    make_constraint(expr, constraint)
+#end
 
 
 function show(io::IO, S::Separator)
