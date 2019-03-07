@@ -1,7 +1,18 @@
+const symbol_numbers = Dict{Symbol, Int}()
 
-"""Return a new symbol"""
+"""Return a new, unique symbol like _z3_"""
+function make_symbol(s::Symbol)  # default is :z
 
-make_symbol(s::Symbol)= gensym(s)
+    i = get(symbol_numbers, s, 0)
+    symbol_numbers[s] = i + 1
+
+    if i == 0
+        return Symbol("_", s)
+    else
+        return Symbol("_", s, i)
+    end
+end
+
 make_symbol(c::Char) = make_symbol(Symbol(c))
 
 let current_symbol = 'a'
@@ -95,7 +106,6 @@ end
 """`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
 structure, stored in a FlatAST object. This is close to SSA (single-assignment form,
 https://en.wikipedia.org/wiki/Static_single_assignment_form).
-
 Variables that are found are considered `input_variables`.
 Generated variables introduced at intermediate nodes are stored in
 `intermediate`.
