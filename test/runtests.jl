@@ -109,14 +109,20 @@ end
 end
 
 @testset "Functions" begin
+    @function t(x) = 2x;
+     A = IntervalBox(0.5..1);
+     X = IntervalBox(0..1);
+
+     t(X) = (1..3,())
+     t(A,X) = IntervalBox(0.5..0.5)
+
+
     @function f(x) = 4x;
     C1 = @contractor f(x);
     A = IntervalBox(0.5..1);
     x = IntervalBox(0..1);
 
     @test C1(A, x) == IntervalBox(0.125..0.25)   # x such that 4x ∈ A=[0.5, 1]
-
-
     C2 = @constraint f(x) ∈ [0.5, 0.6]
     X = IntervalBox(0..1)
 
@@ -130,6 +136,15 @@ end
     @test length(paving.boundary) == 2
 
 end
+
+
+
+
+
+
+
+
+
 
 
 @testset "Nested functions" begin
