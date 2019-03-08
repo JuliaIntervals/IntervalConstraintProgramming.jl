@@ -1,7 +1,7 @@
 
 """Return a new symbol"""
 
-make_symbol(s::Symbol)= Symbol(s)
+make_symbol(s::Symbol)= gensym(s)
 make_symbol(c::Char) = make_symbol(Symbol(c))
 
 let current_symbol = 'a'

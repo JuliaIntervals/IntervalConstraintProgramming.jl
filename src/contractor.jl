@@ -68,7 +68,7 @@ end
 
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
 
-(C::Contractor{N,1,F1,F2})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,T} = C(IntervalBox(A), X)
+(C::Contractor{N,1,F1,F2,ex})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,ex,T} = C(IntervalBox(A), X)
 
 function Contractor(expr::Operation)
 

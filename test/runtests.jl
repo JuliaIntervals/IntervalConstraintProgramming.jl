@@ -1,6 +1,3 @@
-
-
-
 using IntervalArithmetic
 using IntervalConstraintProgramming
 
@@ -17,6 +14,7 @@ end
     C = @contractor x^2 + y^2
 
     @test C(-∞..1, X) == IntervalBox(-1..1, -1..1)
+    
 end
 
 @testset "Separators" begin

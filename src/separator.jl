@@ -52,15 +52,12 @@ end
 
 """`parse_comparison` parses comparisons like `x >= 10`
 into the corresponding interval, expressed as `x ∈ [10,∞]`
-
 Returns the expression and the constraint interval
-
 TODO: Allow something like [3,4]' for the complement of [3,4]
 """
 
-function parse_comparison(ex::Operation)
-    expr = ex.args[1]
-
+function parse_comparison(ex)
+    expr, limits =
     @match ex begin
        ((a_ <= b_) | (a_ < b_) | (a_ ≤ b_))   => (a, (-∞, b))
        ((a_ >= b_) | (a_ > b_) | (a_ ≥ b_))   => (a, (b, ∞))
@@ -113,9 +110,7 @@ function new_parse_comparison(ex)
     end
 end
 
-function Constraint(expr::Operation)
-
-    expr, constraint = parse_comparison(expr)
+function make_constraint(expr, constraint)
 
     if isa(expr, Symbol)
         expr = :(1 * $expr)  # make into an expression!
@@ -125,29 +120,30 @@ function Constraint(expr::Operation)
 
     full_expr = Meta.quot(:($expr ∈ $constraint))
 
-    C = make_contractor(expr)
+    contractor_code = make_contractor(expr)
 
-    ConstraintSeparator(constraint, C, full_expr)
+    code = quote end
+    push!(code.args, :($(esc(contractor_name)) = $(contractor_code)))
 
+    push!(code.args, :(ConstraintSeparator($constraint, $(esc(contractor_name)), $full_expr)))
+
+    code
 end
 
 """Create a separator from a given constraint expression, written as
 standard Julia code.
-
 e.g. `C = @constraint x^2 + y^2 <= 1`
-
 The variables (`x` and `y`, in this case) are automatically inferred.
 External constants can be used as e.g. `\$a`:
-
 ```
 a = 3
 C = @constraint x^2 + y^2 <= \$a
 ```
 """
-#macro constraint(ex::Expr)
-#    expr, constraint = parse_comparison(ex)
-#    make_constraint(expr, constraint)
-#end
+macro constraint(ex::Expr)
+    expr, constraint = parse_comparison(ex)
+    make_constraint(expr, constraint)
+end
 
 
 function show(io::IO, S::Separator)
@@ -192,7 +188,6 @@ end
 
 """
     ∩(S1::Separator, S2::Separator)
-
 Separator for the intersection of two sets given by the separators `S1` and `S2`.
 Takes an iterator of intervals (`IntervalBox`, tuple, array, etc.), of length
 equal to the total number of variables in `S1` and `S2`;
