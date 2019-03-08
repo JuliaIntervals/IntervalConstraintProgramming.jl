@@ -14,33 +14,25 @@ mutable struct ConstraintFunction{F <: Function, G <: Function}
     expression::Expr
 end
 
-function (C::ConstraintFunction)(args...) #To access forward function call f(X) and for backward function call f(A,X)
-                                          #where A is constraint
 
-    if length(args)==1
-        X=args[1]
-        return C.forward(X)
-    else
-        A=args[1]
-        X=args[2]
+function (C::ConstraintFunction)(X::IntervalBox)
+    return C.forward(X)
+end
 
-        if isa(A,Interval)
-            A=IntervalBox(A)
-        end
+function (C::ConstraintFunction)(A::IntervalBox, X::IntervalBox)
+    output, intermediate = C.forward(X)
 
-        output, intermediate = C.forward(X)
+    output_box = IntervalBox(output)
+    constrained = output_box ∩ A
 
-        output_box = IntervalBox(output)
-        constrained = output_box ∩ A
-
-        if isempty(constrained)
-            return emptyinterval(X)
-        end
-
-        return IntervalBox(C.backward(X, constrained, intermediate) )
+    if isempty(constrained)
+        return emptyinterval(X)
     end
 
+    return IntervalBox(C.backward(X, constrained, intermediate) )
 end
+
+(C::ConstraintFunction)(A::Interval, X::IntervalBox) = C(IntervalBox(A), X)
 
 function Base.show(io::IO, f::ConstraintFunction{F,G}) where {F,G}
     println(io, "ConstraintFunction:")

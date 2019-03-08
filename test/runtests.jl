@@ -1,6 +1,3 @@
-
-
-
 using IntervalArithmetic
 using IntervalConstraintProgramming
 
@@ -116,7 +113,6 @@ end
      t(X) = (1..3,())
      t(A,X) = IntervalBox(0.5..0.5)
 
-
     @function f(x) = 4x;
     C1 = @contractor f(x);
     A = IntervalBox(0.5..1);
@@ -136,16 +132,6 @@ end
     @test length(paving.boundary) == 2
 
 end
-
-
-
-
-
-
-
-
-
-
 
 @testset "Nested functions" begin
     @function f(x) = 2x
