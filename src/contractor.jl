@@ -70,6 +70,8 @@ end
 
 (C::Contractor{N,1,F1,F2,ex})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,ex,T} = C(IntervalBox(A), X)
 
+(C::Contractor)(X::IntervalBox{T}) where {T} = C.forward(X)
+
 function Contractor(expr::Operation)
 
 

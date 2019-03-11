@@ -5,14 +5,18 @@ abstract type Separator end
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
-struct ConstraintSeparator{C, II} <: Separator
+struct ConstraintSeparator{C, II, ExprType} <: Separator
     variables::Vector{Symbol}
     constraint::II  # Interval or IntervalBox
     contractor::C
-    expression::Expr
+    expression::ExprType
 end
 
 ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables, constraint, contractor, expression)
+
+ConstraintSeparator(constraint, contractor) = ConstraintSeparator(constraint, contractor, contractor.expression)
+
+Separator(constraint, contractor) = ConstraintSeparator(constraint, contractor)
 
 """CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
@@ -109,6 +113,8 @@ function new_parse_comparison(ex)
 
     end
 end
+
+
 
 function make_constraint(expr, constraint)
 
