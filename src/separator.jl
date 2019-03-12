@@ -14,7 +14,7 @@ end
 
 ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables, constraint, contractor, expression)
 
-ConstraintSeparator(constraint, contractor) = ConstraintSeparator(constraint, contractor, contractor.expression)
+ConstraintSeparator(constraint, contractor) = ConstraintSeparator(constraint, contractor, :($(contractor.expression) ∈ $constraint))
 
 Separator(constraint, contractor) = ConstraintSeparator(constraint, contractor)
 
