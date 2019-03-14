@@ -36,15 +36,15 @@ function (S::ConstraintSeparator)(X::IntervalBox)
     local outer
 
     if a == -∞
-        outer = C(IntervalBox(Interval(b, ∞)), X)
+        outer = C(Interval(b, ∞), X)
 
     elseif b == ∞
-        outer = C(IntervalBox(Interval(-∞, a)), X)
+        outer = C(Interval(-∞, a), X)
 
     else
 
-        outer1 = C(IntervalBox(Interval(-∞, a)), X)
-        outer2 = C(IntervalBox(Interval(b, ∞)), X)
+        outer1 = C(Interval(-∞, a), X)
+        outer2 = C(Interval(b, ∞), X)
 
         outer = outer1 ∪ outer2
     end
