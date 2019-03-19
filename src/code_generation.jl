@@ -128,16 +128,15 @@ function emit_backward_code(code) #::Vector{Assignment})
     return new_code
 end
 
-
 function forward_backward(flatAST::FlatAST)
-
-    # @show flatAST.input_variables
-    # @show flatAST.intermediate
-
 
     input = sort(collect(flatAST.input_variables))
 
-    # @show flatAST.top
+    return forward_backward(input, flatAST)
+end
+
+
+function forward_backward(input, flatAST::FlatAST)
 
     if isa(flatAST.top, Symbol)
         output = [flatAST.top]

@@ -72,8 +72,9 @@ end
 
 (C::Contractor)(X::IntervalBox{T}) where {T} = C.forward(X)[1]
 
-function Contractor(expr::Operation)
 
+
+function Contractor(expr::Operation)
 
     top, linear_AST = flatten(expr)
 
@@ -91,6 +92,36 @@ function Contractor(expr::Operation)
     backward = eval(backward_code)
 
     Contractor(linear_AST.variables,
+                    top,
+                    GeneratedFunction(forward, forward_code),
+                    GeneratedFunction(backward, backward_code),
+                    expr)
+
+end
+
+
+function Contractor(vars, expr::Operation)
+
+    variables = [Symbol(var) for var in vars]
+
+    @show variables
+
+    top, linear_AST = flatten(expr)
+
+
+    forward_code, backward_code  = forward_backward(variables, linear_AST)
+
+
+    # @show top
+
+    if isa(top, Symbol)
+        top = [top]
+    end
+
+    forward = eval(forward_code)
+    backward = eval(backward_code)
+
+    Contractor(variables,
                     top,
                     GeneratedFunction(forward, forward_code),
                     GeneratedFunction(backward, backward_code),
