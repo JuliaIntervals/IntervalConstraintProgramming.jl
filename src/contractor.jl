@@ -70,7 +70,7 @@ end
 
 (C::Contractor{N,1,F1,F2})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,T} = C(IntervalBox(A), X)
 
-function make_contractor(expr::Expr)
+function make_contractor(expr::Expr, var)
     # println("Entering Contractor(ex) with ex=$ex")
     # expr, constraint_interval = parse_comparison(ex)
 
@@ -79,7 +79,7 @@ function make_contractor(expr::Expr)
     # end
 
 
-    top, linear_AST = flatten(expr)
+    top, linear_AST = flatten(expr, var)
 
     #  @show expr
     #  @show top
@@ -122,6 +122,7 @@ C(A, x, y)
 
 TODO: Hygiene for global variables, or pass in parameters
 """
-macro contractor(ex)
-    make_contractor(ex)
+macro contractor(ex, variables = [])
+    var = eval(variables)
+    make_contractor(ex, var)
 end

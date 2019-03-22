@@ -19,6 +19,19 @@ end
     @test C(-∞..1, X) == IntervalBox(-1..1, -1..1)
 end
 
+
+@testset "Contractor with specifying variables explicitly" begin
+    X =IntervalBox(0.5..1.5,3)
+    A=-Inf..1
+
+    C1 = @contractor(x+y, [:x,:y,:z])
+    @test C1(A,X) == IntervalBox(0.5..0.5, 0.5..0.5, 0.5..1.5)
+
+    C2 = @contractor(y+z, [:x,:y,:z])
+    @test C2(A,X) == IntervalBox(0.5..1.5, 0.5..0.5, 0.5..0.5)
+end
+
+
 @testset "Separators" begin
     II = -100..100
     X = IntervalBox(II, II)
