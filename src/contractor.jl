@@ -70,10 +70,10 @@ end
 
 (C::Contractor{N,1,F1,F2,ex})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,ex,T} = C(IntervalBox(A), X)
 
-function Contractor(expr::Operation)
+function Contractor(expr::Operation, var = [])
 
 
-    top, linear_AST = flatten(expr)
+    top, linear_AST = flatten(expr, var)
 
 
     forward_code, backward_code  = forward_backward(linear_AST)
@@ -98,7 +98,7 @@ end
 
 
 
-function make_contractor(expr::Expr)
+function make_contractor(expr::Expr, var)
     # println("Entering Contractor(ex) with ex=$ex")
     # expr, constraint_interval = parse_comparison(ex)
 
@@ -107,15 +107,13 @@ function make_contractor(expr::Expr)
     # end
 
 
-    top, linear_AST = flatten(expr)
+    top, linear_AST = flatten(expr, var)
 
     #  @show expr
     #  @show top
     #  @show linear_AST
 
     forward_code, backward_code  = forward_backward(linear_AST)
-
-
     # @show top
 
     if isa(top, Symbol)
@@ -125,7 +123,6 @@ function make_contractor(expr::Expr)
         top = top.args
 
     end
-
     # @show forward_code
     # @show backward_code
 
@@ -151,6 +148,7 @@ C(A, x, y)
 
 TODO: Hygiene for global variables, or pass in parameters
 """
-macro contractor(ex)
-    make_contractor(ex)
+macro contractor(ex, variables=[])
+    var = eval(variables)
+    make_contractor(ex, var)
 end
