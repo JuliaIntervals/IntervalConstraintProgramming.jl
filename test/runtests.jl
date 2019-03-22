@@ -24,10 +24,10 @@ end
     X =IntervalBox(0.5..1.5,3)
     A=-Inf..1
 
-    C1 = @contractor(x+y, [:x,:y,:z])
+    C1 = @contractor(x+y, [x,y,z])
     @test C1(A,X) == IntervalBox(0.5..0.5, 0.5..0.5, 0.5..1.5)
 
-    C2 = @contractor(y+z, [:x,:y,:z])
+    C2 = @contractor(y+z, [x,y,z])
     @test C2(A,X) == IntervalBox(0.5..1.5, 0.5..0.5, 0.5..0.5)
 end
 

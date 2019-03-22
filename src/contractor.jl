@@ -123,6 +123,10 @@ C(A, x, y)
 TODO: Hygiene for global variables, or pass in parameters
 """
 macro contractor(ex, variables = [])
-    var = eval(variables)
+    if isa(variables, Array)
+        var = []
+    else
+        var = variables.args
+    end    
     make_contractor(ex, var)
 end
