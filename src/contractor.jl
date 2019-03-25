@@ -100,6 +100,9 @@ function Contractor(expr::Operation)
 end
 
 
+
+
+
 function Contractor(vars, expr::Operation)
 
     variables = [Symbol(var) for var in vars]
@@ -129,7 +132,7 @@ function Contractor(vars, expr::Operation)
 
 end
 
-
+Contractor(vars, expr) = Contractor(vars, Operation(expr))  # for single variables
 
 function make_contractor(expr::Expr)
     # println("Entering Contractor(ex) with ex=$ex")
