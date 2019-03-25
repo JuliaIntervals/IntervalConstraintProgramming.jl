@@ -243,11 +243,17 @@ it returns inner and outer tuples of the same length
 """
 function ∩(S1::Separator, S2::Separator)
 
-    variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
-    numvars = length(variables)
-
+    #variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
+    #numvars = length(variables)
+    variables = S1.variables   # as S1 and S2 have same variables
     f = X -> begin
 
+       inner1, outer1 = S1(X)
+       inner2, outer2 = S2(X)
+       inner = IntervalBox( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
+       outer = IntervalBox( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
+       
+        """
         inner1, outer1 = S1(IntervalBox([X[i] for i in indices1]...))
         inner2, outer2 = S2(IntervalBox([X[i] for i in indices2]...))
 
@@ -280,6 +286,7 @@ function ∩(S1::Separator, S2::Separator)
 
         inner = IntervalBox( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
         outer = IntervalBox( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
+        """
 
         return (inner, outer)
 
@@ -293,10 +300,17 @@ end
 
 function ∪(S1::Separator, S2::Separator)
 
-    variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
-    numvars = length(variables)
-
+    #variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
+    #numvars = length(variables)
+    variables = S1.variables    # S1 and S2 have same variables
     f = X -> begin
+
+        inner1, outer1 = S1(X)
+        inner2, outer2 = S2(X)
+        inner = IntervalBox( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
+        outer = IntervalBox( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
+
+        """
         inner1, outer1 = S1(IntervalBox([X[i] for i in indices1]...))
         inner2, outer2 = S2(IntervalBox([X[i] for i in indices2]...))
 
@@ -327,6 +341,7 @@ function ∪(S1::Separator, S2::Separator)
 
         inner = IntervalBox( [x ∪ y for (x,y) in zip(inner1, inner2) ]... )
         outer = IntervalBox( [x ∩ y for (x,y) in zip(outer1, outer2) ]... )
+        """
 
         return (inner, outer)
     end
