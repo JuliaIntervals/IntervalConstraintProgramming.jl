@@ -140,7 +140,7 @@ function flatten!(flatAST::FlatAST, ex::Symbol, var)
    return ex
 end
 
-function flatten!(flatAST::FlatAST, ex::Expr, var)
+function flatten!(flatAST::FlatAST, ex::Expr, var = [])
     local top
 
     if ex.head == :$    # constants written as $a
@@ -283,7 +283,7 @@ A new variable is introduced for the result; its name can be specified
     using the new_var optional argument. If none is given, then a new, generated
     name is used.
 """
-function process_call!(flatAST::FlatAST, ex, var, new_var=nothing)
+function process_call!(flatAST::FlatAST, ex, var = [], new_var=nothing)
 
     #println("Entering process_call!")
     #@show ex

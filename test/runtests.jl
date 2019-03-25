@@ -1,6 +1,6 @@
 using IntervalArithmetic
 using IntervalConstraintProgramming
-
+using ModelingToolkit
 using Test
 
 @testset "Utilities" begin
@@ -17,15 +17,31 @@ end
 
 end
 
-@testset "Contractor with specifying variables explicitly" begin
+@testset "Contractor without using macro" begin
+    @variables x y
+    C = Contractor(x^2 + y^2)
+    @test  C(-∞..1, IntervalBox(-∞..∞, 2)) == IntervalBox(-1..1, -1..1)
+
+end
+
+@testset "Contractor (with macros and without macros) specifying variables explicitly" begin
     X =IntervalBox(0.5..1.5,3)
     A=-Inf..1
 
-    C1 = @contractor(x+y, [:x,:y,:z])
+    C1 = @contractor(x+y, [x,y,z])
     @test C1(A,X) == IntervalBox(0.5..0.5, 0.5..0.5, 0.5..1.5)
 
-    C2 = @contractor(y+z, [:x,:y,:z])
+    C2 = @contractor(y+z, [x,y,z])
     @test C2(A,X) == IntervalBox(0.5..1.5, 0.5..0.5, 0.5..0.5)
+
+    @variables x y z
+
+    C1 = Contractor(x+y, [:x, :y, :z])
+    @test C1(A,X) == IntervalBox(0.5..0.5, 0.5..0.5, 0.5..1.5)
+
+    C2 = Contractor(y+z, [:x, :y, :z])
+    @test C2(A,X) == IntervalBox(0.5..1.5, 0.5..0.5, 0.5..0.5)
+
 end
 
 @testset "Separators" begin
@@ -43,11 +59,30 @@ end
     inner, outer = S(X)
     @test inner == IntervalBox(-1..1, -1..1)
     @test outer == IntervalBox(-∞..∞, -∞..∞)
+
+end
+
+@testset "Separators without using macros" begin
+    II = -100..100
+    X = IntervalBox(II, II)
+    vars = @variables x y
+
+    S = Separator(vars, x^2 + y^2 < 1)
+
+    inner, outer = S(X)
+    @test inner == IntervalBox(-1..1, -1..1)
+    @test outer == IntervalBox(II, II)
+
+    X = IntervalBox(-∞..∞, -∞..∞)
+    inner, outer = S(X)
+    @test inner == IntervalBox(-1..1, -1..1)
+    @test outer == IntervalBox(-∞..∞, -∞..∞)
+
 end
 
 @testset "pave" begin
-    S1a = @constraint x > 0
-    S1b = @constraint y > 0
+    S1a = @constraint(x > 0 , [x, y])
+    S1b = @constraint(y > 0 , [x, y])
 
     S1 = S1a ∩ S1b
     paving = pave(S1, IntervalBox(-3..3, -3..3), 2.0, 0.5)
