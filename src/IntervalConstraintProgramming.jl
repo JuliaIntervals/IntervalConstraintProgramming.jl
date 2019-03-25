@@ -17,7 +17,7 @@ import IntervalArithmetic: sqr, setindex
 export
     @contractor,
     Contractor,
-    Separator, separator, @separator, @constraint, Constraint,
+    Separator, separator, @separator, @constraint,
     @function,
     SubPaving, Paving,
     pave, refine!,

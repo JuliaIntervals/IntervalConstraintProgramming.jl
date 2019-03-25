@@ -186,8 +186,15 @@ macro constraint(ex::Expr, variables = [])
     make_constraint(expr, constraint, var)
 end
 
+"""
+Create a separator without the use of macros using ModelingToolkit
 
-function Constraint(ex::Operation, variables = ())
+e.g  vars = @variables x y z
+S = Separator(vars, x^2+y^2<1)
+X= IntervalBox(-0.5..1.5, -0.5..1.5, -0.5..1.5)
+S(X)
+"""
+function Separator(variables , ex::Operation)
     expr, constraint = parse_comparison(ex)
     var = [Symbol(i) for i in variables]
     make_constraint(expr, constraint, var)
@@ -250,9 +257,9 @@ function ∩(S1::Separator, S2::Separator)
 
        inner1, outer1 = S1(X)
        inner2, outer2 = S2(X)
-       inner = IntervalBox( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
-       outer = IntervalBox( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
-       
+       inner = inner1 ∩ inner2
+       outer = outer1 ∪ outer2
+
         """
         inner1, outer1 = S1(IntervalBox([X[i] for i in indices1]...))
         inner2, outer2 = S2(IntervalBox([X[i] for i in indices2]...))
@@ -307,8 +314,8 @@ function ∪(S1::Separator, S2::Separator)
 
         inner1, outer1 = S1(X)
         inner2, outer2 = S2(X)
-        inner = IntervalBox( [x ∩ y for (x,y) in zip(inner1, inner2) ]... )
-        outer = IntervalBox( [x ∪ y for (x,y) in zip(outer1, outer2) ]... )
+        inner = inner1 ∩ inner2
+        outer = outer1 ∪ outer2
 
         """
         inner1, outer1 = S1(IntervalBox([X[i] for i in indices1]...))
