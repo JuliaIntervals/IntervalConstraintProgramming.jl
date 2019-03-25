@@ -98,7 +98,7 @@ end
 
 
 
-function make_contractor(expr::Expr, var)
+function make_contractor(expr::Expr, var = [])
     # println("Entering Contractor(ex) with ex=$ex")
     # expr, constraint_interval = parse_comparison(ex)
 
@@ -149,6 +149,6 @@ C(A, x, y)
 TODO: Hygiene for global variables, or pass in parameters
 """
 macro contractor(ex, variables=[])
-    var = eval(variables)
+    isa(variables, Array) ? var = [] : var = variables.args
     make_contractor(ex, var)
 end

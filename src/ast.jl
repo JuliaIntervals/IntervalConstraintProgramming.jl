@@ -94,7 +94,7 @@ add_code!(flatAST::FlatAST, code) = push!(flatAST.code, code)
 export flatten
 
 
-function flatten(ex, var)
+function flatten(ex, var = [])
     ex = MacroTools.striplines(ex)
     flatAST = FlatAST()
     if !isempty(var)

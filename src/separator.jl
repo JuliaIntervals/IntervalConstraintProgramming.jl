@@ -5,11 +5,11 @@ abstract type Separator end
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
-struct ConstraintSeparator{C, II} <: Separator
+struct ConstraintSeparator{C, II, ex<:Union{Operation,Expr}} <: Separator
     variables::Vector{Symbol}
     constraint::II  # Interval or IntervalBox
     contractor::C
-    expression::Expr
+    expression::ex
 end
 
 ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(contractor.variables, constraint, contractor, expression)
@@ -17,10 +17,10 @@ ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(co
 """CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
-struct CombinationSeparator{F} <: Separator
+struct CombinationSeparator{F, ex<:Union{Operation,Expr}} <: Separator
     variables::Vector{Symbol}
     separator::F
-    expression::Expr
+    expression::ex
 end
 
 function (S::ConstraintSeparator)(X::IntervalBox)
@@ -52,11 +52,13 @@ end
 
 """`parse_comparison` parses comparisons like `x >= 10`
 into the corresponding interval, expressed as `x ∈ [10,∞]`
+
 Returns the expression and the constraint interval
+
 TODO: Allow something like [3,4]' for the complement of [3,4]
 """
 
-function parse_comparison(ex)
+function parse_comparison(ex::Expr)
     expr, limits =
     @match ex begin
        ((a_ <= b_) | (a_ < b_) | (a_ ≤ b_))   => (a, (-∞, b))
@@ -89,6 +91,31 @@ function parse_comparison(ex)
 
 end
 
+function parse_comparison(ex::Operation)
+
+    if isa(ex.args[1], ModelingToolkit.Constant)
+        if ex.op == <
+            a = ex.args[1].value
+            b = Inf
+        elseif ex.op == >
+            a = -Inf
+            b = ex.args[1].value
+        end
+        return (ex.args[2], a..b)
+    elseif isa(ex.args[2], ModelingToolkit.Constant)
+        if ex.op == >
+            a = ex.args[2].value
+            b = Inf
+        elseif ex.op == <
+            a = -Inf
+            b = ex.args[2].value
+        end
+        return (ex.args[1], a..b)
+    end
+
+end
+
+
 
 function new_parse_comparison(ex)
     # @show ex
@@ -110,7 +137,7 @@ function new_parse_comparison(ex)
     end
 end
 
-function make_constraint(expr, constraint)
+function make_constraint(expr, constraint, var =[])
 
     if isa(expr, Symbol)
         expr = :(1 * $expr)  # make into an expression!
@@ -120,7 +147,7 @@ function make_constraint(expr, constraint)
 
     full_expr = Meta.quot(:($expr ∈ $constraint))
 
-    contractor_code = make_contractor(expr)
+    contractor_code = make_contractor(expr, var)
 
     code = quote end
     push!(code.args, :($(esc(contractor_name)) = $(contractor_code)))
@@ -130,21 +157,41 @@ function make_constraint(expr, constraint)
     code
 end
 
+make_constraint(expr::Variable, constraint) = make_constraint(Operation(expr), constraint)
+
+
+function make_constraint(expr::Operation, constraint, var=[])
+    C = Contractor(expr, var)
+    ex = expr ∈ constraint
+    ConstraintSeparator(constraint, C, ex)
+end
+
+
 """Create a separator from a given constraint expression, written as
 standard Julia code.
+
 e.g. `C = @constraint x^2 + y^2 <= 1`
+
 The variables (`x` and `y`, in this case) are automatically inferred.
 External constants can be used as e.g. `\$a`:
+
 ```
 a = 3
 C = @constraint x^2 + y^2 <= \$a
 ```
 """
-macro constraint(ex::Expr)
+macro constraint(ex::Expr, variables = [])
     expr, constraint = parse_comparison(ex)
-    make_constraint(expr, constraint)
+    isa(variables, Array) ? var = [] : var = variables.args
+    make_constraint(expr, constraint, var)
 end
 
+
+function Constraint(ex::Operation, variables = ())
+    expr, constraint = parse_comparison(ex)
+    var = [Symbol(i) for i in variables]
+    make_constraint(expr, constraint, var)
+end
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")
@@ -188,6 +235,7 @@ end
 
 """
     ∩(S1::Separator, S2::Separator)
+
 Separator for the intersection of two sets given by the separators `S1` and `S2`.
 Takes an iterator of intervals (`IntervalBox`, tuple, array, etc.), of length
 equal to the total number of variables in `S1` and `S2`;
