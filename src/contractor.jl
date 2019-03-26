@@ -70,9 +70,14 @@ end
 
 (C::Contractor{N,1,F1,F2,ex})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,ex,T} = C(IntervalBox(A), X)
 
-function Contractor(expr::Operation, var = [])
+""" Contractor can also be construct without the use of macros
+ vars = @variables x y z
+ C = Contractor(x + y , vars)
+ C(-Inf..1, IntervalBox(0.5..1.5,3))
+ """
+function Contractor(expr::Operation, variables = [])
 
-
+    var = [Symbol(i) for i in variables]
     top, linear_AST = flatten(expr, var)
 
 
