@@ -161,7 +161,7 @@ make_constraint(expr::Variable, constraint) = make_constraint(Operation(expr), c
 
 
 function make_constraint(expr::Operation, constraint, var=[])
-    C = Contractor(expr, var)
+    C = Contractor(var, expr)
     ex = expr ∈ constraint
     ConstraintSeparator(constraint, C, ex)
 end
@@ -194,11 +194,13 @@ S = Separator(vars, x^2+y^2<1)
 X= IntervalBox(-0.5..1.5, -0.5..1.5, -0.5..1.5)
 S(X)
 """
-function Separator(variables , ex::Operation)
+function Separator(variables, ex::Operation)
     expr, constraint = parse_comparison(ex)
     var = [Symbol(i) for i in variables]
     make_constraint(expr, constraint, var)
 end
+
+Separator(ex::Operation) = Separator([], ex)
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")

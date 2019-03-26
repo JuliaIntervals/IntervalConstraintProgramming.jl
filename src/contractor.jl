@@ -39,6 +39,9 @@ function Base.show(io::IO, C::Contractor{N,Nout,F1,F2,ex}) where {N,Nout,F1,F2,e
     print(io, "  - expression: $(C.expression)")
 end
 
+function (C::Contractor{N,Nout,F1,F2,ex})(X::IntervalBox{N,T}) where {N,Nout,F1,F2,ex,T}
+    return C.forward(X)
+end
 
 
 function (C::Contractor{N,Nout,F1,F2,ex})(
@@ -75,7 +78,8 @@ end
  C = Contractor(x + y , vars)
  C(-Inf..1, IntervalBox(0.5..1.5,3))
  """
-function Contractor(expr::Operation, variables = [])
+
+function Contractor(variables, expr::Operation)
 
     var = [Symbol(i) for i in variables]
     top, linear_AST = flatten(expr, var)
@@ -101,7 +105,7 @@ function Contractor(expr::Operation, variables = [])
 
 end
 
-
+Contractor(expr::Operation) = Contractor([], expr::Operation)
 
 function make_contractor(expr::Expr, var = [])
     # println("Entering Contractor(ex) with ex=$ex")
