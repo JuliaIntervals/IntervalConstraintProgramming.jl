@@ -40,7 +40,7 @@ function Base.show(io::IO, C::Contractor{N,Nout,F1,F2,ex}) where {N,Nout,F1,F2,e
 end
 
 function (C::Contractor{N,Nout,F1,F2,ex})(X::IntervalBox{N,T}) where {N,Nout,F1,F2,ex,T}
-    return C.forward(X)
+    return C.forward(X)[1]
 end
 
 
