@@ -94,14 +94,16 @@ add_code!(flatAST::FlatAST, code) = push!(flatAST.code, code)
 export flatten
 
 
-function flatten(ex)
+function flatten(ex, var = [])
     ex = MacroTools.striplines(ex)
     flatAST = FlatAST()
-    top = flatten!(flatAST, ex)
+    if !isempty(var)
+        for i in var push!(flatAST.input_variables, i) end
+    end
+    top = flatten!(flatAST, ex, var)
 
     return top, flatAST
 end
-
 
 """`flatten!` recursively converts a Julia expression into a "flat" (one-dimensional)
 structure, stored in a FlatAST object. This is close to SSA (single-assignment form,
@@ -114,25 +116,37 @@ Returns the variable at the top of the current piece of the tree."""
 # TODO: Parameters
 
 # numbers:
-function flatten!(flatAST::FlatAST, ex)
+function flatten!(flatAST::FlatAST, ex::ModelingToolkit.Constant, var)
+    return ex.value  # nothing to do the AST; return the number
+end
+
+function flatten!(flatAST::FlatAST, ex, var)
     return ex  # nothing to do to the AST; return the number
 end
 
 # symbols:
-function flatten!(flatAST::FlatAST, ex::Symbol)  # symbols are leaves
-    add_variable!(flatAST, ex)  # add the discovered symbol as an input variable
-    return ex
+function flatten!(flatAST::FlatAST, ex::Variable, var)  # symbols are leaves
+        if isempty(var)
+            add_variable!(flatAST, Symbol(ex))  # add the discovered symbol as an input variable
+        end
+    return Symbol(ex)
 end
 
+function flatten!(flatAST::FlatAST, ex::Symbol, var)
+    if isempty(var)
+        add_variable!(flatAST, ex)  # add the discovered symbol as an input variable
+    end
+   return ex
+end
 
-function flatten!(flatAST::FlatAST, ex::Expr)
+function flatten!(flatAST::FlatAST, ex::Expr, var = [])
     local top
 
     if ex.head == :$    # constants written as $a
         top = process_constant!(flatAST, ex)
 
     elseif ex.head == :call  # function calls
-        top = process_call!(flatAST, ex)
+        top = process_call!(flatAST, ex, var)
 
     elseif ex.head == :(=)  # assignments
         top = process_assignment!(flatAST, ex)
@@ -153,6 +167,12 @@ function flatten!(flatAST::FlatAST, ex::Expr)
 
     set_top!(flatAST, top)
 end
+
+function flatten!(flatAST::FlatAST, ex::Operation, var)
+    top = process_operation!(flatAST, ex, var)
+    set_top!(flatAST, top)
+end
+
 
 function process_constant!(flatAST::FlatAST, ex)
     return esc(ex.args[1])  # interpolate the value of the external constant
@@ -262,13 +282,12 @@ A new variable is introduced for the result; its name can be specified
     using the new_var optional argument. If none is given, then a new, generated
     name is used.
 """
-function process_call!(flatAST::FlatAST, ex, new_var=nothing)
+function process_call!(flatAST::FlatAST, ex, var = [], new_var=nothing)
 
     #println("Entering process_call!")
     #@show ex
     #@show flatAST
     #@show new_var
-
     op = ex.args[1]
     #@show op
 
@@ -286,7 +305,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
     # TODO: Use @match here!
 
     if op in (:+, :*) && length(ex.args) > 3
-        return flatten!(flatAST, :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ))
+        return flatten!(flatAST, :( ($op)($(ex.args[2]), ($op)($(ex.args[3:end]...) )) ), var)
     end
 
     top_args = []
@@ -294,7 +313,7 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
 
         isa(arg, LineNumberNode) && continue
 
-        top = flatten!(flatAST, arg)
+        top = flatten!(flatAST, arg, var)
 
         if isa(top, Vector)  # TODO: make top always a Vector?
             append!(top_args, top)
@@ -344,6 +363,71 @@ function process_call!(flatAST::FlatAST, ex, new_var=nothing)
 
     add_code!(flatAST, top_level_code)
 
+    return new_var
+
+end
+
+
+function process_operation!(flatAST::FlatAST, ex, var, new_var=nothing)
+
+    op = ex.op
+
+    if op in (+, *) && length(ex.args) > 2
+        return flatten!(flatAST, Expression( (op)((ex.args[1]), (op)((ex.args[2:end]...) )) ), var)
+    end
+
+    top_args = []
+    for arg in ex.args[1:end]
+
+        isa(arg, LineNumberNode) && continue
+        top = flatten!(flatAST, arg, var)
+
+        if isa(top, Vector)
+            append!(top_args, top)
+
+        else
+            push!(top_args, top)
+        end
+    end
+
+    top_level_code = quote end
+
+    #@show op
+
+    if Symbol(op) ∈ keys(reverse_operations)  # standard operator
+        if new_var == nothing
+            new_var = make_symbol()
+        end
+
+        add_intermediate!(flatAST, new_var)
+
+        top_level_code = Assignment(new_var, Symbol(op), top_args)
+
+    else
+        if haskey(registered_functions, Symbol(op))
+
+            f = registered_functions[Symbol(op)]
+
+            # make enough new variables for all the returned arguments:
+            return_args = make_symbols(f.return_arguments)
+
+            intermediate = make_symbols(f.intermediate) #registered_functions[op].intermediate  # make_symbol(:z_tuple)
+
+            add_intermediate!(flatAST, return_args)
+            add_intermediate!(flatAST, intermediate)
+
+            top_level_code = FunctionAssignment(symbol(op), top_args, return_args, intermediate)
+
+            new_var = return_args
+
+
+        else
+
+            throw(ArgumentError("Function $op not available. Use @function to define it."))
+        end
+    end
+
+    add_code!(flatAST, top_level_code)
     return new_var
 
 end
