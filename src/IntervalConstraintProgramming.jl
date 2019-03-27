@@ -6,6 +6,7 @@ using   IntervalArithmetic,
         IntervalRootFinding,
         IntervalContractors
 
+using ModelingToolkit
 using MacroTools
 
 import Base:
@@ -15,6 +16,7 @@ import IntervalArithmetic: sqr, setindex
 
 export
     @contractor,
+    Contractor,
     Separator, separator, @separator, @constraint,
     @function,
     SubPaving, Paving,
