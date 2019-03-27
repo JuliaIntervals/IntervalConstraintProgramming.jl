@@ -166,7 +166,7 @@ end
      A = IntervalBox(0.5..1);
      X = IntervalBox(0..1);
 
-     t(X) = (1..3,())
+     t(X) = 1..3
      t(A,X) = IntervalBox(0.5..0.5)
 
     @function f(x) = 4x;

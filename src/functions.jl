@@ -16,7 +16,7 @@ end
 
 
 function (C::ConstraintFunction)(X::IntervalBox)
-    return C.forward(X)
+    return C.forward(X)[1]
 end
 
 function (C::ConstraintFunction)(A::IntervalBox, X::IntervalBox)
