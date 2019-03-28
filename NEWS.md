@@ -1,14 +1,13 @@
 # IntervalConstraintProgramming.jl
 
-#v1.0
-##Minimum Julia version
+# v1.0
+## Minimum Julia version
 - The minimum Julia version supported is now Julia 1.0.
 
-##New Dependency added:  
-  `ModelingToolkit.jl`
+## New Dependency added:  `ModelingToolkit.jl`
 
-- By the help of `ModelingToolkit.jl` we can make contractors and separators without the use of     macros, which proved to be very important for `IntervalOptimisation.jl`.
-    
+- By the help of `ModelingToolkit.jl` we can construct contractors and separators without the use of macros.
+
 # v0.9
 ## Minimum Julia version
 - The minimum Julia version supported is now Julia 0.7. The package is fully compatible with Julia 1.0.
