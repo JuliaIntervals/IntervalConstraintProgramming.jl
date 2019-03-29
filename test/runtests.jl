@@ -53,6 +53,15 @@ end
 
 end
 
+@testset "Contractor is created by function name " begin
+  vars = @variables x y
+  g(x, y) = x + y
+  C = Contractor(vars, g)
+
+  @test C(-Inf..1, IntervalBox(0.5..1.5, 2)) == IntervalBox(0.5..0.5, 2)
+
+end
+
 @testset "Separators" begin
     II = -100..100
     X = IntervalBox(II, II)

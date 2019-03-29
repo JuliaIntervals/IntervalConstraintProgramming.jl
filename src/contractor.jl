@@ -107,6 +107,8 @@ end
 
 Contractor(expr::Operation) = Contractor([], expr::Operation)
 
+Contractor(vars, g::Function) = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
+
 function make_contractor(expr::Expr, var = [])
     # println("Entering Contractor(ex) with ex=$ex")
     # expr, constraint_interval = parse_comparison(ex)
