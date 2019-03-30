@@ -98,6 +98,15 @@ end
 
 end
 
+@testset "Separator is created by function name " begin
+  vars = @variables x y
+  g(x, y) = x + y < 1
+  S = Separator(vars, g)
+
+  @test S(IntervalBox(0.5..1.5, 2)) == (IntervalBox(0.5..0.5, 2), IntervalBox(0.5..1.5, 2))
+
+end
+
 @testset "pave" begin
     S1a = @constraint(x > 0 , [x, y])
     S1b = @constraint(y > 0 , [x, y])
