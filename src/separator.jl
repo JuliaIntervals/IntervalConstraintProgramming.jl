@@ -201,6 +201,7 @@ function Separator(variables, ex::Operation)
 end
 
 Separator(ex::Operation) = Separator([], ex)
+Separator(vars, f::Function) = Separator(vars, f(vars...))
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")
