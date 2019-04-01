@@ -107,7 +107,9 @@ end
 
 Contractor(expr::Operation) = Contractor([], expr::Operation)
 
-Contractor(vars, g::Function) = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
+Contractor(vars::Array{Variable}, g) = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
+
+Contractor(vars, f) = Contractor(vars, f([Variable(Symbol(i)) for i in vars]...))#if vars is not vector of variables
 
 function make_contractor(expr::Expr, var = [])
     # println("Entering Contractor(ex) with ex=$ex")
