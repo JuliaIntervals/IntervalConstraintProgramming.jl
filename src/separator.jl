@@ -63,7 +63,6 @@ function parse_comparison(ex::Expr)
     @match ex begin
        ((a_ <= b_) | (a_ < b_) | (a_ ≤ b_))   => (a, (-∞, b))
        ((a_ >= b_) | (a_ > b_) | (a_ ≥ b_))   => (a, (b, ∞))
-
        ((a_ == b_) | (a_ = b_))   => (a, (b, b))
 
        ((a_ <= b_ <= c_)
@@ -86,7 +85,6 @@ function parse_comparison(ex::Expr)
    end
 
    a, b = limits
-
    return (expr, a..b)   # expr ∈ [a,b]
 
 end
@@ -108,6 +106,9 @@ function parse_comparison(ex::Operation)
             b = Inf
         elseif ex.op == <
             a = -Inf
+            b = ex.args[2].value
+        else
+            a = ex.args[2].value
             b = ex.args[2].value
         end
         return (ex.args[1], a..b)
@@ -201,7 +202,10 @@ function Separator(variables, ex::Operation)
 end
 
 Separator(ex::Operation) = Separator([], ex)
-Separator(vars, f::Function) = Separator(vars, f(vars...))
+
+Separator(vars::Array{Variable}, f) = Separator(vars, f(vars...))
+
+Separator(vars, f) = Separator(vars, f([Variable(Symbol(i)) for i in vars]...))  # if vars is not vector of variables
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")
