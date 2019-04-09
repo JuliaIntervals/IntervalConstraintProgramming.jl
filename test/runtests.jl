@@ -20,6 +20,8 @@ end
     X =IntervalBox(-1..1,2)
     @test C(X) == 0..2
 
+    @test C((1,2)) == 5
+
 end
 
 @testset "Contractor without using macro" begin
