@@ -39,10 +39,7 @@ function Base.show(io::IO, C::Contractor{N,Nout,F1,F2,ex}) where {N,Nout,F1,F2,e
     print(io, "  - expression: $(C.expression)")
 end
 
-function (C::Contractor{N,Nout,F1,F2,ex})(X::IntervalBox{N,T}) where {N,Nout,F1,F2,ex,T}
-    return C.forward(X)[1]
-end
-
+    (C::Contractor)(X) = C.forward(X)[1]
 
 function (C::Contractor{N,Nout,F1,F2,ex})(
     A::IntervalBox{Nout,T}, X::IntervalBox{N,T}) where {N,Nout,F1,F2,ex,T}
