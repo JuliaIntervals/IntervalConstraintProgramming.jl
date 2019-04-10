@@ -13,8 +13,8 @@ struct Contractor{N, Nout, F1<:Function, F2<:Function, ex<:Union{Operation,Expr}
 end
 
 struct BasicContractor{F1<:Function, F2<:Function} <:AbstractContractor
-    forward::GeneratedFunction{F1}
-    backward::GeneratedFunction{F2}
+    forward::F1
+    backward::F2
 end
 
 function Contractor(variables::Vector{Symbol}, top, forward, backward, expression)
@@ -49,40 +49,10 @@ end
     (C::Contractor)(X) = C.forward(X)[1]
     (C::BasicContractor)(X) = C.forward(X)[1]
 
-function (C::Contractor{N,1,F1,F2,ex})(
-    A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,F1,F2,ex,T}
+function (C::Contractor)(
+    A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
 
-    output, intermediate = C.forward(X)
-
-    # @show output
-    # @show intermediate
-
-    output_box = IntervalBox(output)
-    constrained = output_box ∩ A
-
-    # if constrained is already empty, eliminate call to backward propagation:
-
-    if isempty(constrained)
-        return emptyinterval(X)
-    end
-
-    # @show X
-    # @show constrained
-    # @show intermediate
-    # @show C.backward(X, constrained, intermediate)
-    return IntervalBox{N,T}(C.backward(X, constrained, intermediate) )
-
-end
-
-# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
-
-(C::Contractor{N,1,F1,F2,ex})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,ex,T} = C(IntervalBox(A), X)
-
-
-function (C::BasicContractor{F1,F2})(
-    A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,F1,F2,T}
-
-    output, intermediate = C.forward(X)
+    output, intermediate = Forward(C)(X)
 
     # @show output
     # @show intermediate
@@ -100,13 +70,51 @@ function (C::BasicContractor{F1,F2})(
     # @show constrained
     # @show intermediate
     # @show C.backward(X, constrained, intermediate)
-    return IntervalBox{N,T}(C.backward(X, constrained, intermediate) )
+    return IntervalBox{N,T}(Backward(C)(X, constrained, intermediate) )
 
 end
 
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
 
-(C::BasicContractor{F1,F2})(A::Interval{T}, X::IntervalBox{N,T}) where {N,Nout,F1,F2,T} = C(IntervalBox(A), X)
+(C::Contractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,T} = C(IntervalBox(A), X)
+
+
+function Forward(C::AbstractContractor)
+        return C.forward
+end
+
+function Backward(C::AbstractContractor)
+        return C.backward
+end
+
+function (C::BasicContractor)(
+    A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
+
+    output, intermediate = Forward(C)(X)
+
+    # @show output
+    # @show intermediate
+
+    output_box = IntervalBox(output)
+    constrained = output_box ∩ A
+
+    # if constrained is already empty, eliminate call to backward propagation:
+
+    if isempty(constrained)
+        return emptyinterval(X)
+    end
+
+    # @show X
+    # @show constrained
+    # @show intermediate
+    # @show C.backward(X, constrained, intermediate)
+    return IntervalBox{N,T}(Backward(C)(X, constrained, intermediate) )
+
+end
+
+# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
+
+(C::BasicContractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,Nout,T} = C(IntervalBox(A), X)
 
 """ Contractor can also be construct without the use of macros
  vars = @variables x y z
@@ -151,7 +159,7 @@ function BasicContractor(variables, expr::Operation)
     forward = eval(forward_code)
     backward = eval(backward_code)
 
-    BasicContractor{typeof(forward), typeof(backward)}(GeneratedFunction(forward, forward_code),GeneratedFunction(backward, backward_code))
+    BasicContractor{typeof(forward), typeof(backward)}(forward, backward)
 end
 
 function Base.show(io::IO, C::BasicContractor{F1,F2}) where {F1,F2}
