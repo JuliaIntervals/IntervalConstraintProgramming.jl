@@ -49,10 +49,9 @@ end
     (C::Contractor)(X) = C.forward(X)[1]
     (C::BasicContractor)(X) = C.forward(X)[1]
 
-function (C::Contractor)(
-    A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
+function contract(C::AbstractContractor, A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
 
-    output, intermediate = Forward(C)(X)
+    output, intermediate = C.forward(X)
 
     # @show output
     # @show intermediate
@@ -70,50 +69,24 @@ function (C::Contractor)(
     # @show constrained
     # @show intermediate
     # @show C.backward(X, constrained, intermediate)
-    return IntervalBox{N,T}(Backward(C)(X, constrained, intermediate) )
+    return IntervalBox{N,T}(C.backward(X, constrained, intermediate) )
 
 end
 
-# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
 
+function (C::Contractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
+    return contract(C, A, X)
+end
+
+# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
 (C::Contractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,T} = C(IntervalBox(A), X)
 
 
-function Forward(C::AbstractContractor)
-        return C.forward
-end
-
-function Backward(C::AbstractContractor)
-        return C.backward
-end
-
-function (C::BasicContractor)(
-    A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
-
-    output, intermediate = Forward(C)(X)
-
-    # @show output
-    # @show intermediate
-
-    output_box = IntervalBox(output)
-    constrained = output_box ∩ A
-
-    # if constrained is already empty, eliminate call to backward propagation:
-
-    if isempty(constrained)
-        return emptyinterval(X)
-    end
-
-    # @show X
-    # @show constrained
-    # @show intermediate
-    # @show C.backward(X, constrained, intermediate)
-    return IntervalBox{N,T}(Backward(C)(X, constrained, intermediate) )
-
+function (C::BasicContractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
+    return contract(C, A, X)
 end
 
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
-
 (C::BasicContractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,Nout,T} = C(IntervalBox(A), X)
 
 """ Contractor can also be construct without the use of macros
