@@ -3,11 +3,18 @@
 `Contractor` represents a `Contractor` from ``\\mathbb{R}^N`` to ``\\mathbb{R}^N``.
 Nout is the output dimension of the forward part.
 """
-struct Contractor{N, Nout, F1<:Function, F2<:Function, ex<:Union{Operation,Expr}}
+abstract type AbstractContractor end
+
+struct Contractor{N, Nout, F1<:Function, F2<:Function, ex<:Union{Operation,Expr}} <:AbstractContractor
     variables::Vector{Symbol}  # input variables
     forward::GeneratedFunction{F1}
     backward::GeneratedFunction{F2}
     expression::ex
+end
+
+struct BasicContractor{F1<:Function, F2<:Function} <:AbstractContractor
+    forward::F1
+    backward::F2
 end
 
 function Contractor(variables::Vector{Symbol}, top, forward, backward, expression)
@@ -40,9 +47,9 @@ function Base.show(io::IO, C::Contractor{N,Nout,F1,F2,ex}) where {N,Nout,F1,F2,e
 end
 
     (C::Contractor)(X) = C.forward(X)[1]
+    (C::BasicContractor)(X) = C.forward(X)[1]
 
-function (C::Contractor{N,Nout,F1,F2,ex})(
-    A::IntervalBox{Nout,T}, X::IntervalBox{N,T}) where {N,Nout,F1,F2,ex,T}
+function contract(C::AbstractContractor, A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
 
     output, intermediate = C.forward(X)
 
@@ -66,9 +73,21 @@ function (C::Contractor{N,Nout,F1,F2,ex})(
 
 end
 
-# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
 
-(C::Contractor{N,1,F1,F2,ex})(A::Interval{T}, X::IntervalBox{N,T}) where {N,F1,F2,ex,T} = C(IntervalBox(A), X)
+function (C::Contractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
+    return contract(C, A, X)
+end
+
+# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
+(C::Contractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,T} = C(IntervalBox(A), X)
+
+
+function (C::BasicContractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
+    return contract(C, A, X)
+end
+
+# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
+(C::BasicContractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,Nout,T} = C(IntervalBox(A), X)
 
 """ Contractor can also be construct without the use of macros
  vars = @variables x y z
@@ -101,6 +120,31 @@ function Contractor(variables, expr::Operation)
                     expr)
 
 end
+
+
+function BasicContractor(variables, expr::Operation)
+
+    var = [Symbol(i) for i in variables]
+    top, linear_AST = flatten(expr, var)
+
+    forward_code, backward_code  = forward_backward(linear_AST)
+
+    forward = eval(forward_code)
+    backward = eval(backward_code)
+
+    BasicContractor{typeof(forward), typeof(backward)}(forward, backward)
+end
+
+function Base.show(io::IO, C::BasicContractor{F1,F2}) where {F1,F2}
+    println(io, " Basic version of Contractor")
+end
+
+BasicContractor(expr::Operation) = BasicContractor([], expr::Operation)
+
+BasicContractor(vars::Array{Variable}, g) = BasicContractor(vars, g(vars...)) #Contractor can be constructed by function name only
+
+BasicContractor(vars, f) = BasicContractor(vars, f([Variable(Symbol(i)) for i in vars]...))#if vars is not vector of variables
+
 
 Contractor(expr::Operation) = Contractor([], expr::Operation)
 

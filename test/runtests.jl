@@ -8,7 +8,17 @@ using Test
 @testset "Utilities" begin
     @test IntervalConstraintProgramming.unify_variables([:a, :c], [:c, :b]) == ([:a,:b,:c], [1,3], [3,2], [1,0,2], [0,2,1])
 end
+@testset "BasicContractor" begin
+    @variables x y
+    C = BasicContractor(x^2 + y^2)
 
+    @test C(-∞..1, IntervalBox(-∞..∞,2)) == IntervalBox(-1..1, -1..1)
+
+    X =IntervalBox(-1..1,2)
+    @test C(X) == 0..2
+
+    @test C((1,2)) == 5
+end
 @testset "Contractor" begin
     x = y = -∞..∞
     X = IntervalBox(x, y)
