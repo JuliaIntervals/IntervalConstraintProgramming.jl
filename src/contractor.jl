@@ -97,7 +97,7 @@ end
 
 function Contractor(variables, expr::Operation)
 
-    var = [Symbol(i) for i in variables]
+    var = [i.op.name for i in variables]
     top, linear_AST = flatten(expr, var)
 
 
@@ -124,7 +124,7 @@ end
 
 function BasicContractor(variables, expr::Operation)
 
-    var = [Symbol(i) for i in variables]
+    var = [i.op.name for i in variables]
     top, linear_AST = flatten(expr, var)
 
     forward_code, backward_code  = forward_backward(linear_AST)
@@ -141,16 +141,16 @@ end
 
 BasicContractor(expr::Operation) = BasicContractor([], expr::Operation)
 
-BasicContractor(vars::Array{Variable}, g) = BasicContractor(vars, g(vars...)) #Contractor can be constructed by function name only
+BasicContractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = BasicContractor(vars, g(vars...)) #Contractor can be constructed by function name only
 
-BasicContractor(vars, f) = BasicContractor(vars, f([Variable(Symbol(i)) for i in vars]...))#if vars is not vector of variables
+BasicContractor(vars, f::Function) = BasicContractor([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...))#if vars is not vector of Operation
 
 
 Contractor(expr::Operation) = Contractor([], expr::Operation)
 
-Contractor(vars::Array{Variable}, g) = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
+Contractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
 
-Contractor(vars, f) = Contractor(vars, f([Variable(Symbol(i)) for i in vars]...))#if vars is not vector of variables
+Contractor(vars, f::Function) = Contractor([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...))#if vars is not vector of Operation
 
 function make_contractor(expr::Expr, var = [])
     # println("Entering Contractor(ex) with ex=$ex")

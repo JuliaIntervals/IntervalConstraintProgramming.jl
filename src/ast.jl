@@ -170,8 +170,12 @@ function flatten!(flatAST::FlatAST, ex::Expr, var = [])
 end
 
 function flatten!(flatAST::FlatAST, ex::Operation, var)
-    top = process_operation!(flatAST, ex, var)
-    set_top!(flatAST, top)
+    if typeof(ex.op) == Variable
+        return flatten!(flatAST, ex.op, var)
+    else
+       top = process_operation!(flatAST, ex, var)
+       set_top!(flatAST, top)
+    end
 end
 
 
@@ -313,7 +317,6 @@ function process_call!(flatAST::FlatAST, ex, var = [], new_var=nothing)
     for arg in ex.args[2:end]
 
         isa(arg, LineNumberNode) && continue
-
         top = flatten!(flatAST, arg, var)
 
         if isa(top, Vector)  # TODO: make top always a Vector?
