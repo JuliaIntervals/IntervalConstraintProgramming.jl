@@ -59,6 +59,95 @@ julia> outer
 ([-100, 100],[-100, 100])
 ```
 
+### Without using Macros
+
+We can also make an object `S`, of type `Separator` or `C`, of type `Contractor` without using Macros, for that you need to define variables using `ModelingToolkit.jl`.
+Example  
+
+```julia
+julia> using IntervalConstraintProgramming, IntervalArithmetic, ModelingToolkit
+
+julia> @variables x y
+(x(), y())
+
+julia> S = Separator(x+y<1)
+Separator:
+  - variables: x, y
+  - expression: x() + y() == [-∞, 1]
+
+julia> C = Contractor(x+y)
+ Contractor in 2 dimensions:
+   - forward pass contracts to 1 dimensions
+   - variables: Symbol[:x, :y]
+   - expression: x() + y()
+```
+
+While making `Separator`or `Contractor`'s object we can also specify variables, like this
+
+```julia
+julia> vars = @variables x y z
+(x(), y(), z())
+
+julia> S = Separator(vars, x+y<1)
+Separator:
+  - variables: x, y, z
+  - expression: x() + y() == [-∞, 1]
+
+julia> C = Contractor(vars, y+z)
+Contractor in 3 dimensions:
+  - forward pass contracts to 1 dimensions
+  - variables: Symbol[:x, :y, :z]
+  - expression: y() + z()
+```
+We can make object (of type `Separator` or `Contractor`)by just using function name (Note: you have to specify variables explicitly as discussed above when you make objects by using function name). We can also use polynomial function to make objects.
+
+```julia
+julia> vars=@variables x y
+(x(), y())
+
+julia> f(a,b)= a+b
+f (generic function with 1 method)
+
+julia> C = Contractor(vars,f)
+Contractor in 2 dimensions:
+  - forward pass contracts to 1 dimensions
+  - variables: Symbol[:x, :y]
+  - expression: x() + y()
+
+julia> f(a,b) = a+b <1
+f (generic function with 1 method)
+
+julia> S=Separator(vars, f)
+Separator:
+  - variables: x, y
+  - expression: x() + y() == [-∞, 1]  
+
+julia> using DynamicPolynomials       #using polynomial functions
+
+julia> pvars = @polyvar x y
+(x, y)
+
+julia> f(a,b) = a + b < 1
+p (generic function with 1 method)
+
+julia> S=Separator(pvars, f)
+Separator:
+  - variables: x, y
+  - expression: x() + y() == [-∞, 1]
+```
+#### BasicContractor
+Object of type `Contractor` have four feilds (variables, forward, backward and expression), among them data of two feilds (forward, backward) are useful (i.e forward and backward functions) for further usage of that object, thats why it is preferred to use an object of type `BasicContractor` in place of `Contractor` which only contain these two feilds for less usage of memory by unloading all the extra stuff.(Note: Like object of `Contractor` type,`BasicContractor`'s object will also have all the properties which are discussed above).
+
+```julia
+julia> @variables x y
+(x(), y())
+
+julia> C = BasicContractor(x^2 + y^2)
+ Basic version of Contractor
+```
+
+
+
 ## Set inversion: finding the feasible set
 
 To make progress, we must recursively bisect and apply the contractors, keeping
