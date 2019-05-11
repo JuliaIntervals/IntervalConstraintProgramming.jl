@@ -99,7 +99,7 @@ Contractor in 3 dimensions:
   - variables: Symbol[:x, :y, :z]
   - expression: y() + z()
 ```
-We can make object (of type `Separator` or `Contractor`)by just using function name (Note: you have to specify variables explicitly as discussed above when you make objects by using function name). We can also use polynomial function to make objects.
+We can make objects (of type `Separator` or `Contractor`)by just using function name (Note: you have to specify variables explicitly as discussed above when you make objects by using function name). We can also use polynomial function to make objects.
 
 ```julia
 julia> vars=@variables x y
@@ -136,7 +136,7 @@ Separator:
   - expression: x() + y() == [-∞, 1]
 ```
 #### BasicContractor
-Object of type `Contractor` have four feilds (variables, forward, backward and expression), among them data of two feilds (forward, backward) are useful (i.e forward and backward functions) for further usage of that object, thats why it is preferred to use an object of type `BasicContractor` in place of `Contractor` which only contain these two feilds for less usage of memory by unloading all the extra stuff.(Note: Like object of `Contractor` type,`BasicContractor`'s object will also have all the properties which are discussed above).
+Objects of type `Contractor` have four feilds (variables, forward, backward and expression), among them data of two feilds (forward, backward) are useful (i.e forward and backward functions) for further usage of that object, thats why it is preferred to use an object of type `BasicContractor` in place of `Contractor` which only contain these two feilds for less usage of memory by unloading all the extra stuff.(Note: Like object of `Contractor` type,`BasicContractor`'s object will also have all the properties which are discussed above).
 
 ```julia
 julia> @variables x y

@@ -4,7 +4,7 @@ using IntervalConstraintProgramming, IntervalArithmetic
 makedocs(
     modules = [IntervalConstraintProgramming],
     doctest = true,
-    format = :html,
+    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     authors = "David P. Sanders",
     sitename = "IntervalConstraintProgramming.jl",
 
@@ -26,6 +26,4 @@ deploydocs(
     target = "build",
     deps = nothing,
     make = nothing,
-    julia = "release",
-    osname = "linux"
 )
