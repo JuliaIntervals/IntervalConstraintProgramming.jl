@@ -25,8 +25,8 @@ julia> using IntervalConstraintProgramming, IntervalArithmetic
 
 julia> S = @constraint x^2 + y^2 <= 1
 Separator:
-- variables: x, y
-- expression: x ^ 2 + y ^ 2 ∈ [-∞, 1]
+  - variables: x, y
+  - expression: x ^ 2 + y ^ 2 ∈ [-∞, 1]
 ```
 It works out automatically that `x` and `y` are variables.
 The macro creates a `Separator` object, in this case a `ConstraintSeparator`.

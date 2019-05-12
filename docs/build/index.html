@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · IntervalConstraintProgramming.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>IntervalConstraintProgramming.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href="index.html">Home</a><ul class="internal"><li><a class="toctext" href="#Usage-1">Usage</a></li><li><a class="toctext" href="#Set-inversion:-finding-the-feasible-set-1">Set inversion: finding the feasible set</a></li><li><a class="toctext" href="#Set-operations-1">Set operations</a></li><li><a class="toctext" href="#Author-1">Author</a></li><li><a class="toctext" href="#References:-1">References:</a></li><li><a class="toctext" href="#Acknowledements-1">Acknowledements</a></li></ul></li><li><a class="toctext" href="api.html">API</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="index.html">Home</a></li></ul><a class="edit-page" href="https://github.com/JuliaIntervals/IntervalConstraintProgramming.jl/blob/master/docs/src/index.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Home</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="IntervalConstraintProgramming.jl-1" href="#IntervalConstraintProgramming.jl-1"><code>IntervalConstraintProgramming.jl</code></a></h1><p>This Julia package allows you to specify a set of <strong>constraints</strong> on real-valued variables, given by (in)equalities, and rigorously calculate inner and outer approximations to the <em>feasible set</em>, i.e. the set that satisfies the constraints.</p><p>This uses interval arithmetic provided by the author&#39;s <a href="https://github.com/dpsanders/IntervalArithmetic.jl"><code>IntervalArithmetic.jl</code></a> package, in particular multi-dimensional <code>IntervalBox</code>es, i.e. Cartesian products of one-dimensional intervals.</p><p>To do this, <em>interval constraint programming</em> is used, in particular the so-called &quot;forward–backward contractor&quot;. This is implemented in terms of <em>separators</em>; see [Jaulin &amp; Desrochers].</p><h2><a class="nav-anchor" id="Usage-1" href="#Usage-1">Usage</a></h2><p>Let&#39;s define a constraint, using the <code>@constraint</code> macro:</p><pre><code class="language-julia-repl">julia&gt; using IntervalConstraintProgramming, IntervalArithmetic
+
+julia&gt; S = @constraint x^2 + y^2 &lt;= 1
+Separator:
+  - variables: x, y
+  - expression: x ^ 2 + y ^ 2 ∈ [-∞, 1]</code></pre><p>It works out automatically that <code>x</code> and <code>y</code> are variables. The macro creates a <code>Separator</code> object, in this case a <code>ConstraintSeparator</code>.</p><p>We now create an initial interval box in the <span>$x$</span>–<span>$y$</span> plane:</p><pre><code class="language-julia">julia&gt; x = y = -100..100   # notation for creating an interval with `IntervalArithmetic.jl`
+
+julia&gt; X = IntervalBox(x, y)</code></pre><p>The <code>@constraint</code> macro defines an object <code>S</code>, of type <code>Separator</code>. This is a function which, when applied to the box <span>$X = x \times y$</span> in the x–y plane, applies two <em>contractors</em>, an inner one and an outer one.</p><p>The inner contractor tries to shrink down, or <em>contract</em>, the box, to the smallest subbox of <span>$X$</span> that contains the part of <span>$X$</span> that satisfies the constraint; the outer contractor tries to contract <span>$X$</span> to the smallest subbox that contains the region where the constraint is not satisfied.</p><p>When <code>S</code> is applied to the box <code>X</code>, it returns the result of the inner and outer contractors:</p><pre><code class="language-julia">julia&gt; inner, outer = S(X);
+
+julia&gt; inner
+([-1, 1],[-1, 1])
+
+julia&gt; outer
+([-100, 100],[-100, 100])</code></pre><h3><a class="nav-anchor" id="Without-using-Macros-1" href="#Without-using-Macros-1">Without using Macros</a></h3><p>We can also make an object <code>S</code>, of type <code>Separator</code> or <code>C</code>, of type <code>Contractor</code> without using Macros, for that you need to define variables using <code>ModelingToolkit.jl</code>. Example  </p><pre><code class="language-julia">julia&gt; using IntervalConstraintProgramming, IntervalArithmetic, ModelingToolkit
+
+julia&gt; @variables x y
+(x(), y())
+
+julia&gt; S = Separator(x+y&lt;1)
+Separator:
+  - variables: x, y
+  - expression: x() + y() == [-∞, 1]
+
+julia&gt; C = Contractor(x+y)
+ Contractor in 2 dimensions:
+   - forward pass contracts to 1 dimensions
+   - variables: Symbol[:x, :y]
+   - expression: x() + y()</code></pre><p>While making <code>Separator</code>or <code>Contractor</code>&#39;s object we can also specify variables, like this</p><pre><code class="language-julia">julia&gt; vars = @variables x y z
+(x(), y(), z())
+
+julia&gt; S = Separator(vars, x+y&lt;1)
+Separator:
+  - variables: x, y, z
+  - expression: x() + y() == [-∞, 1]
+
+julia&gt; C = Contractor(vars, y+z)
+Contractor in 3 dimensions:
+  - forward pass contracts to 1 dimensions
+  - variables: Symbol[:x, :y, :z]
+  - expression: y() + z()</code></pre><p>We can make objects (of type <code>Separator</code> or <code>Contractor</code>)by just using function name (Note: you have to specify variables explicitly as discussed above when you make objects by using function name). We can also use polynomial function to make objects.</p><pre><code class="language-julia">julia&gt; vars=@variables x y
+(x(), y())
+
+julia&gt; f(a,b)= a+b
+f (generic function with 1 method)
+
+julia&gt; C = Contractor(vars,f)
+Contractor in 2 dimensions:
+  - forward pass contracts to 1 dimensions
+  - variables: Symbol[:x, :y]
+  - expression: x() + y()
+
+julia&gt; f(a,b) = a+b &lt;1
+f (generic function with 1 method)
+
+julia&gt; S=Separator(vars, f)
+Separator:
+  - variables: x, y
+  - expression: x() + y() == [-∞, 1]  
+
+julia&gt; using DynamicPolynomials       #using polynomial functions
+
+julia&gt; pvars = @polyvar x y
+(x, y)
+
+julia&gt; f(a,b) = a + b &lt; 1
+p (generic function with 1 method)
+
+julia&gt; S=Separator(pvars, f)
+Separator:
+  - variables: x, y
+  - expression: x() + y() == [-∞, 1]</code></pre><h4><a class="nav-anchor" id="BasicContractor-1" href="#BasicContractor-1">BasicContractor</a></h4><p>Objects of type <code>Contractor</code> have four fields (variables, forward, backward and expression), among them data of two fields (forward, backward) are useful (i.e forward and backward functions) for further usage of that object, thats why it is preferred to use an object of type <code>BasicContractor</code> in place of <code>Contractor</code> which only contain these two fields for less usage of memory by unloading all the extra stuff.(Note: Like object of <code>Contractor</code> type,<code>BasicContractor</code>&#39;s object will also have all the properties which are discussed above).</p><pre><code class="language-julia">julia&gt; @variables x y
+(x(), y())
+
+julia&gt; C = BasicContractor(x^2 + y^2)
+ Basic version of Contractor</code></pre><h2><a class="nav-anchor" id="Set-inversion:-finding-the-feasible-set-1" href="#Set-inversion:-finding-the-feasible-set-1">Set inversion: finding the feasible set</a></h2><p>To make progress, we must recursively bisect and apply the contractors, keeping track of the region proved to be inside the feasible set, and the region that is on the boundary (&quot;both inside and outside&quot;). This is done by the <code>pave</code> function, that takes a separator, a domain to search inside, and an optional tolerance:</p><pre><code class="language-julia">julia&gt; using Plots
+
+julia&gt; x = y = -100..100
+
+julia&gt; S = @constraint 1 &lt;= x^2 + y^2 &lt;= 3
+
+julia&gt; paving = pave(S, X, 0.125);</code></pre><p><code>pave</code> returns an object of type <code>Paving</code>. This contains: the separator itself; an <code>inner</code> approximation, of type <code>SubPaving</code>, which is an alias for a <code>Vector</code> of <code>IntervalBox</code>es; a <code>SubPaving</code> representing the boxes on the boundary that could not be assigned either to the inside or outside of the set; and the tolerance.</p><p>We may draw the result using a plot recipe from <code>IntervalArithmetic</code>. Either a single <code>IntervalBox</code>, or a <code>Vector</code> of <code>IntervalBox</code>es (which a <code>SubPaving</code> is) maybe be drawn using <code>plot</code> from <code>Plots.jl</code>:</p><pre><code class="language-julia">julia&gt; plot(paving.inner, c=&quot;green&quot;)
+julia&gt; plot!(paving.boundary, c=&quot;gray&quot;)</code></pre><p>The output should look something like this:</p><p><img src="ring.png" alt="Ring"/></p><p>The green boxes have been <strong>rigorously</strong> proved to be contained within the feasible set, and the white boxes to be outside the set. The grey boxes show those that lie on the boundary, whose status is unknown.</p><h3><a class="nav-anchor" id="D-1" href="#D-1">3D</a></h3><p>The package works in any number of dimensions, although it suffers from the usual exponential slowdown in higher dimensions (&quot;combinatorial explosion&quot;); in 3D, it is still relatively fast.</p><p>There are sample 3D calculations in the <code>examples</code> directory, in particular in the <a href="examples/Solid torus.ipynb">solid torus notebook</a>, which uses <a href="https://github.com/JuliaGL/GLVisualize.jl"><code>GLVisualize.gl</code></a> to provide an interactive visualization that may be rotated and zoomed. The output for the solid torus looks like this:</p><p><img src="solid_torus.png" alt="Coloured solid torus"/></p><h2><a class="nav-anchor" id="Set-operations-1" href="#Set-operations-1">Set operations</a></h2><p>Separators may be combined using the operators <code>!</code> (complement), <code>∩</code> and <code>∪</code> to make more complicated sets; see the <a href="https://github.com/JuliaIntervals/IntervalConstraintProgrammingNotebooks/blob/master/Basic%20examples%20of%20separators.ipynb">notebook</a> for several examples. Further examples can be found in the repository <a href="https://github.com/JuliaIntervals/IntervalConstraintProgrammingNotebooks">IntervalConstraintProgrammingNotebooks</a>.</p><h2><a class="nav-anchor" id="Author-1" href="#Author-1">Author</a></h2><ul><li><a href="http://sistemas.fciencias.unam.mx/~dsanders">David P. Sanders</a><ul><li><a href="http://julia.mit.edu/">Julia lab, MIT</a></li><li>Departamento de Física, Facultad de Ciencias, Universidad Nacional Autónoma de México (UNAM)</li></ul></li></ul><h2><a class="nav-anchor" id="References:-1" href="#References:-1">References:</a></h2><ul><li><em>Applied Interval Analysis</em>, Luc Jaulin, Michel Kieffer, Olivier Didrit, Eric Walter (2001)</li><li>Introduction to the Algebra of Separators with Application to Path Planning, Luc Jaulin and Benoît Desrochers, <em>Engineering Applications of Artificial Intelligence</em> <strong>33</strong>, 141–147 (2014)</li></ul><h2><a class="nav-anchor" id="Acknowledements-1" href="#Acknowledements-1">Acknowledements</a></h2><p>Financial support is acknowledged from DGAPA-UNAM PAPIME grants PE-105911 and PE-107114, and DGAPA-UNAM PAPIIT grant IN-117214, and from a CONACYT-Mexico sabbatical fellowship. The author thanks Alan Edelman and the Julia group for hospitality during his sabbatical visit. He also thanks Luc Jaulin and Jordan Ninin for the <a href="http://iamooc.ensta-bretagne.fr/">IAMOOC</a> online course, which introduced him to this subject.</p><footer><hr/><a class="next" href="api.html"><span class="direction">Next</span><span class="title">API</span></a></footer></article></body></html>
