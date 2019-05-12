@@ -136,7 +136,7 @@ Separator:
   - expression: x() + y() == [-∞, 1]
 ```
 #### BasicContractor
-Objects of type `Contractor` have four feilds (variables, forward, backward and expression), among them data of two feilds (forward, backward) are useful (i.e forward and backward functions) for further usage of that object, thats why it is preferred to use an object of type `BasicContractor` in place of `Contractor` which only contain these two feilds for less usage of memory by unloading all the extra stuff.(Note: Like object of `Contractor` type,`BasicContractor`'s object will also have all the properties which are discussed above).
+Objects of type `Contractor` have four fields (variables, forward, backward and expression), among them data of two fields (forward, backward) are useful (i.e forward and backward functions) for further usage of that object, thats why it is preferred to use an object of type `BasicContractor` in place of `Contractor` which only contain these two fields for less usage of memory by unloading all the extra stuff.(Note: Like object of `Contractor` type,`BasicContractor`'s object will also have all the properties which are discussed above).
 
 ```julia
 julia> @variables x y
