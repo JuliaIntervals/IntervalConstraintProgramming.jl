@@ -59,7 +59,7 @@ julia> outer
 ([-100, 100],[-100, 100])
 ```
 
-### Without using Macros
+### Without using macros
 
 We can also make an object `S`, of type `Separator` or `C`, of type `Contractor` without using Macros, for that you need to define variables using `ModelingToolkit.jl`.
 Example  
