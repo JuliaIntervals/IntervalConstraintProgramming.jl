@@ -159,6 +159,8 @@ function forward_backward(flatAST::FlatAST)
 
     flatAST.variables = input
 
+    input = vcat(input, sort(collect(flatAST.parameters)))
+
     forward_code = emit_forward_code(flatAST.code)
     forward = make_forward_function(input, output, intermediate, forward_code)
 

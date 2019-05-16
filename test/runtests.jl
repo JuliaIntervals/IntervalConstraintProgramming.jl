@@ -83,6 +83,16 @@ end
     @test C(-Inf..1, IntervalBox(0.5..1.5, 2)) == IntervalBox(0.5..0.5, 2)
 end
 
+@testset "Contractors for functions having parameters" begin
+
+    @parameters r
+    vars =@variables x
+    f(x) = r*x*(1-x)
+
+    C = Contractor(vars, f)
+    @test C(-Inf..1, IntervalBox(0.5..1.5), 2) == IntervalBox(0.5..1.5) #parameter r is set 2
+end
+
 @testset "Separators" begin
     II = -100..100
     X = IntervalBox(II, II)
