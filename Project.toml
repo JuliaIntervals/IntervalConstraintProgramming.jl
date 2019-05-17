@@ -1,6 +1,6 @@
 name = "IntervalConstraintProgramming"
 uuid = "138f1668-1576-5ad7-91b9-7425abbf3153"
-version = "1.1"
+version = "0.11"
 
 [compat]
 IntervalArithmetic = "≥ 0.15.0"
@@ -8,7 +8,7 @@ IntervalContractors = "≥ 0.3.0"
 IntervalRootFinding = "≥ 0.4.0"
 MacroTools = "≥ 0.4.0"
 ModelingToolkit = "≥ 0.2.0"
-julia = "≥ 1.0.0"
+julia = "≥ 1.1.0"
 
 [deps]
 IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
