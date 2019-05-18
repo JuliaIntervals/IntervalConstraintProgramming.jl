@@ -197,15 +197,14 @@ S(X)
 """
 function Separator(variables, ex::Operation)
     expr, constraint = parse_comparison(ex)
-    var = [Symbol(i) for i in variables]
-    make_constraint(expr, constraint, var)
+    make_constraint(expr, constraint, variables)
 end
 
 Separator(ex::Operation) = Separator([], ex)
 
-Separator(vars::Array{Variable}, f) = Separator(vars, f(vars...))
+Separator(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Separator(vars, g(vars...))
 
-Separator(vars, f) = Separator(vars, f([Variable(Symbol(i)) for i in vars]...))  # if vars is not vector of variables
+Separator(vars, f::Function) = Separator([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...)) # if vars is not vector of variables
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")

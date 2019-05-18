@@ -59,10 +59,10 @@ end
     C2 = Contractor(vars, y+z)
     @test C2(A,X) == IntervalBox(0.5..1.5, 0.5..0.5, 0.5..0.5)
 
-    C1 = Contractor([:x,:y,:z], x+y)
+    C1 = Contractor([x, y, z], x+y)
     @test C1(A,X) == IntervalBox(0.5..0.5, 0.5..0.5, 0.5..1.5)
 
-    C2 = Contractor([:x,:y,:z], y+z)
+    C2 = Contractor([x, y, z], y+z)
     @test C2(A,X) == IntervalBox(0.5..1.5, 0.5..0.5, 0.5..0.5)
 
 end

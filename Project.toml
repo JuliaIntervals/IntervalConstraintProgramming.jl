@@ -1,0 +1,26 @@
+name = "IntervalConstraintProgramming"
+uuid = "138f1668-1576-5ad7-91b9-7425abbf3153"
+version = "0.11"
+
+[compat]
+IntervalArithmetic = "≥ 0.15.0"
+IntervalContractors = "≥ 0.3.0"
+IntervalRootFinding = "≥ 0.4.0"
+MacroTools = "≥ 0.4.0"
+ModelingToolkit = "≥ 0.2.0"
+julia = "≥ 1.1.0"
+
+[deps]
+IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
+IntervalContractors = "15111844-de3b-5229-b4ba-526f2f385dc9"
+IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
+MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+
+[extras]
+DynamicPolynomials = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "DynamicPolynomials", "ModelingToolkit"]
