@@ -85,12 +85,13 @@ end
 
 @testset "Contractors for functions having parameters" begin
 
-    @parameters r
-    vars =@variables x
-    f(x) = r*x*(1-x)
+    para = @parameters a b
+    vars = @variables x y
+    f(x, y, a , b) = a*x + b*y
 
-    C = Contractor(vars, f)
-    @test C(-Inf..1, IntervalBox(0.5..1.5), 2) == IntervalBox(0.5..1.5) #parameter r is set 2
+    C = Contractor(vars, para, f)
+    @test C(-Inf..1, IntervalBox(-0.5..1.5, 2), 2, 1) == IntervalBox(-0.5..0.75, -0.5..1.5) #parameters a, b are set to 2, 1
+    @test C(-Inf..1, IntervalBox(-0.5..1.5, 2), 1, 2) == IntervalBox(-0.5..1.5, -0.5..0.75) #parameters a, b are set to 1, 2
 end
 
 @testset "Separators" begin

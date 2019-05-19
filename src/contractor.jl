@@ -157,7 +157,7 @@ BasicContractor(vars, f::Function) = BasicContractor([Variable(Symbol(i))() for 
 
 Contractor(expr::Operation) = Contractor([], expr::Operation)
 
-Contractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
+Contractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, para::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Contractor(vars, g(vars..., para...)) #Contractor can be constructed by function name onlyContractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
 
 Contractor(vars, f::Function) = Contractor([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...))#if vars is not vector of Operation
 
