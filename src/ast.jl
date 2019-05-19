@@ -63,6 +63,7 @@ end
 mutable struct FlatAST
     top  # topmost variable(s)
     input_variables::Set{Symbol}
+    parameters::Vector{Symbol}
     intermediate::Vector{Symbol}  # generated vars
     code # ::Vector{Assignment}
     variables::Vector{Symbol}  # cleaned version of input_variables
@@ -76,7 +77,7 @@ function Base.show(io::IO, flatAST::FlatAST)
     println(io, "code: ", flatAST.code)
 end
 
-FlatAST() = FlatAST([], Set{Symbol}(), [], [], [])
+FlatAST() = FlatAST([], Set{Symbol}(), [], [], [], [])
 
 export FlatAST
 
@@ -85,7 +86,7 @@ export FlatAST
 set_top!(flatAST::FlatAST, vars) = flatAST.top = vars  # also returns vars
 
 add_variable!(flatAST::FlatAST, var) = push!(flatAST.input_variables, var)
-
+add_parameters!(flatAST::FlatAST, var) = push!(flatAST.parameters, var)
 add_intermediate!(flatAST::FlatAST, var::Symbol) = push!(flatAST.intermediate, var)
 add_intermediate!(flatAST::FlatAST, vars::Vector{Symbol}) = append!(flatAST.intermediate, vars)
 
@@ -170,11 +171,15 @@ function flatten!(flatAST::FlatAST, ex::Expr, var = [])
 end
 
 function flatten!(flatAST::FlatAST, ex::Operation, var)
-    if typeof(ex.op) == Variable
-        return flatten!(flatAST, ex.op, var)
-    else
+
+    if !(ex.op isa Variable)
        top = process_operation!(flatAST, ex, var)
        set_top!(flatAST, top)
+    elseif !ex.op.known
+        return flatten!(flatAST, ex.op, var)
+    else
+        add_parameters!(flatAST, ex.op.name)
+        return ex.op.name
     end
 end
 

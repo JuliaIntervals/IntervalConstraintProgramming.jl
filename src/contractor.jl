@@ -7,6 +7,7 @@ abstract type AbstractContractor end
 
 struct Contractor{N, Nout, F1<:Function, F2<:Function, ex<:Union{Operation,Expr}} <:AbstractContractor
     variables::Vector{Symbol}  # input variables
+    parameters::Vector{Symbol}
     forward::GeneratedFunction{F1}
     backward::GeneratedFunction{F2}
     expression::ex
@@ -17,7 +18,7 @@ struct BasicContractor{F1<:Function, F2<:Function} <:AbstractContractor
     backward::F2
 end
 
-function Contractor(variables::Vector{Symbol}, top, forward, backward, expression)
+function Contractor(variables::Vector{Symbol}, parameters::Vector{Symbol}, top, forward, backward, expression)
 
     # @show variables
     # @show top
@@ -36,21 +37,25 @@ function Contractor(variables::Vector{Symbol}, top, forward, backward, expressio
         Nout = length(top)
     end
 
-    Contractor{N, Nout, typeof(forward.f), typeof(backward.f), typeof(expression)}(variables, forward, backward, expression)
+    Contractor{N, Nout, typeof(forward.f), typeof(backward.f), typeof(expression)}(variables, parameters, forward, backward, expression)
 end
 
 function Base.show(io::IO, C::Contractor{N,Nout,F1,F2,ex}) where {N,Nout,F1,F2,ex}
     println(io, "Contractor in $(N) dimensions:")
     println(io, "  - forward pass contracts to $(Nout) dimensions")
     println(io, "  - variables: $(C.variables)")
+    if !isempty(C.parameters) println(io, "  - parameters: $(C.parameters)") end
     print(io, "  - expression: $(C.expression)")
 end
 
     (C::Contractor)(X) = C.forward(X)[1]
     (C::BasicContractor)(X) = C.forward(X)[1]
 
-function contract(C::AbstractContractor, A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
+function contract(C::AbstractContractor, A::IntervalBox{Nout,T}, X::IntervalBox{N,T}, parameters)where {N,Nout,T}
 
+    for p in parameters
+       X = ×(X, p..p)
+    end
     output, intermediate = C.forward(X)
 
     # @show output
@@ -69,25 +74,29 @@ function contract(C::AbstractContractor, A::IntervalBox{Nout,T}, X::IntervalBox{
     # @show constrained
     # @show intermediate
     # @show C.backward(X, constrained, intermediate)
-    return IntervalBox{N,T}(C.backward(X, constrained, intermediate) )
+    return IntervalBox{N,T}(C.backward(X, constrained, intermediate)[1:N])
 
 end
 
+""" @parameters a b
+    C = Contractor(a*x^2 + b*y^2)
+    C(-Inf..1, IntervalBox(-1..1,2), 1, 2) = [-1, 1] × [-0.707107, 0.707107]  #parameter's a, b are set to 1,2
+"""
 
-function (C::Contractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
+function (C::Contractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T}, parameters...)where {N,Nout,T}
+    return contract(C, A, X, parameters)
+end
+
+# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
+(C::Contractor)(A::Interval{T}, X::IntervalBox{N,T}, parameters...) where {N,T} = contract(C,IntervalBox(A), X, parameters)
+
+
+function (C::BasicContractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T}, parameters...)where {N,Nout,T}
     return contract(C, A, X)
 end
 
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
-(C::Contractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,T} = C(IntervalBox(A), X)
-
-
-function (C::BasicContractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
-    return contract(C, A, X)
-end
-
-# allow 1D contractors to take Interval instead of IntervalBox for simplicty:
-(C::BasicContractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,Nout,T} = C(IntervalBox(A), X)
+(C::BasicContractor)(A::Interval{T}, X::IntervalBox{N,T}, parameters...) where {N,Nout,T} = contract(C,IntervalBox(A), X, parameters)
 
 """ Contractor can also be construct without the use of macros
  vars = @variables x y z
@@ -113,7 +122,7 @@ function Contractor(variables, expr::Operation)
     forward = eval(forward_code)
     backward = eval(backward_code)
 
-    Contractor(linear_AST.variables,
+    Contractor(linear_AST.variables, linear_AST.parameters,
                     top,
                     GeneratedFunction(forward, forward_code),
                     GeneratedFunction(backward, backward_code),
@@ -148,7 +157,7 @@ BasicContractor(vars, f::Function) = BasicContractor([Variable(Symbol(i))() for 
 
 Contractor(expr::Operation) = Contractor([], expr::Operation)
 
-Contractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
+Contractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, para::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Contractor(vars, g(vars..., para...)) #Contractor can be constructed by function name onlyContractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
 
 Contractor(vars, f::Function) = Contractor([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...))#if vars is not vector of Operation
 
@@ -180,7 +189,7 @@ function make_contractor(expr::Expr, var = [])
     # @show forward_code
     # @show backward_code
 
-    :(Contractor($(linear_AST.variables),
+    :(Contractor($(linear_AST.variables),$(linear_AST.parameters),
                     $top,
                     GeneratedFunction($forward_code, $(Meta.quot(forward_code))),
                     GeneratedFunction($backward_code, $(Meta.quot(backward_code))),
