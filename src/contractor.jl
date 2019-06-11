@@ -101,7 +101,7 @@ function Contractor(variables, expr::Operation)
     top, linear_AST = flatten(expr, var)
 
 
-    forward_code, backward_code  = forward_backward(linear_AST)
+    forward_code, backward_code  = forward_backward(linear_AST, var)
 
 
     # @show top
