@@ -65,6 +65,11 @@ end
     C2 = Contractor([x, y, z], y+z)
     @test C2(A,X) == IntervalBox(0.5..1.5, 0.5..0.5, 0.5..0.5)
 
+    vars = @variables x1 x3 x2
+
+    C = Contractor(vars, x1+x2)
+    @test C(A, X) == IntervalBox(0.5..0.5, 0.5..1.5, 0.5..0.5)
+
 end
 
 @testset "Contractor is created by function name " begin
