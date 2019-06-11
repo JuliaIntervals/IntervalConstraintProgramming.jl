@@ -62,7 +62,7 @@ end
 # Close to single assignment form
 mutable struct FlatAST
     top  # topmost variable(s)
-    input_variables::Set{Symbol}
+    input_variables::Vector{Symbol}
     intermediate::Vector{Symbol}  # generated vars
     code # ::Vector{Assignment}
     variables::Vector{Symbol}  # cleaned version of input_variables
@@ -76,7 +76,7 @@ function Base.show(io::IO, flatAST::FlatAST)
     println(io, "code: ", flatAST.code)
 end
 
-FlatAST() = FlatAST([], Set{Symbol}(), [], [], [])
+FlatAST() = FlatAST([], [], [], [], [])
 
 export FlatAST
 

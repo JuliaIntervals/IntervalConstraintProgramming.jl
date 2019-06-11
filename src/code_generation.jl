@@ -133,9 +133,7 @@ function forward_backward(flatAST::FlatAST)
 
     # @show flatAST.input_variables
     # @show flatAST.intermediate
-
-
-    input = sort(collect(flatAST.input_variables))
+    input = collect(flatAST.input_variables)
 
     # @show flatAST.top
 
