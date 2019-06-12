@@ -420,7 +420,7 @@ function process_operation!(flatAST::FlatAST, ex, var, new_var=nothing)
             add_intermediate!(flatAST, return_args)
             add_intermediate!(flatAST, intermediate)
 
-            top_level_code = FunctionAssignment(symbol(op), top_args, return_args, intermediate)
+            top_level_code = FunctionAssignment(Symbol(op), top_args, return_args, intermediate)
 
             new_var = return_args
 
