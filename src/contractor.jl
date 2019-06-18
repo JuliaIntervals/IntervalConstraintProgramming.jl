@@ -52,7 +52,6 @@ end
 function contract(C::AbstractContractor, A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where {N,Nout,T}
 
     output, intermediate = C.forward(X)
-
     # @show output
     # @show intermediate
 

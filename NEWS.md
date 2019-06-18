@@ -1,6 +1,15 @@
 # IntervalConstraintProgramming.jl
 
-# v1.0
+#v0.11
+## Minimum Julia version
+- The minimum Julia version supported is now Julia 1.1
+
+##Functionality's are added
+- Contractor can be make by just function name only
+- New type of Contractor named as `BasicContractor` can be construct which only contain fields of useful data.
+
+ 
+# v0.10
 ## Minimum Julia version
 - The minimum Julia version supported is now Julia 1.0.
 
