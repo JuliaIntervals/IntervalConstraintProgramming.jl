@@ -4,7 +4,7 @@ version = "0.11"
 
 [compat]
 IntervalArithmetic = "≥ 0.15.0"
-IntervalContractors = "≥ 0.3.0"
+IntervalContractors = "≥ 0.4.0"
 IntervalRootFinding = "≥ 0.4.0"
 MacroTools = "≥ 0.4.0"
 ModelingToolkit = "≥ 0.2.0"
