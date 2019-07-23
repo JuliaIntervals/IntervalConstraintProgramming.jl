@@ -16,7 +16,7 @@ import IntervalArithmetic: sqr, setindex
 
 export
     BasicContractor,
-    @contractor,
+    @contractor, @basic_contractor,
     Contractor,
     Separator, separator, @separator, @constraint,
     @function,

@@ -187,6 +187,36 @@ function make_contractor(expr::Expr, var = [])
 
 end
 
+function make_basic_contractor(expr::Expr, var = [])
+    # println("Entering Contractor(ex) with ex=$ex")
+    # expr, constraint_interval = parse_comparison(ex)
+
+    # if constraint_interval != entireinterval()
+    #     warn("Ignoring constraint; include as first argument")
+    # end
+
+
+    top, linear_AST = flatten(expr, var)
+
+    #  @show expr
+    #  @show top
+    #  @show linear_AST
+
+    forward_code, backward_code  = forward_backward(linear_AST)
+    # @show top
+
+    if isa(top, Symbol)
+        top = [top]
+
+    elseif isa(top, Expr) && top.head == :tuple
+        top = top.args
+
+    end
+    # @show forward_code
+    # @show backward_code
+
+    :(BasicContractor($forward_code, $backward_code))
+end
 
 
 """Usage:
@@ -204,4 +234,9 @@ TODO: Hygiene for global variables, or pass in parameters
 macro contractor(ex, variables=[])
     isa(variables, Array) ? var = [] : var = variables.args
     make_contractor(ex, var)
+end
+
+macro basic_contractor(ex, variables=[])
+    isa(variables, Array) ? var = [] : var = variables.args
+    make_basic_contractor(ex, var)
 end
