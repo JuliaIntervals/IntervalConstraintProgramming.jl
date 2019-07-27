@@ -14,15 +14,8 @@ makedocs(
     ]
     )
 
-# deploydocs(
-#     deps = Deps.pip("pygments", "mkdocs", "mkdocs-cinder", "python-markdown-math"),
-#     repo   = "github.com/dpsanders/IntervalConstraintProgramming.jl.git",
-#     julia = "0.5",
-#     osname = "linux"
-# )
-
 deploydocs(
-    repo = "github.com/dpsanders/IntervalConstraintProgramming.jl.git",
+    repo = "github.com/JuliaIntervals/IntervalConstraintProgramming.jl.git",
     target = "build",
     deps = nothing,
     make = nothing,
