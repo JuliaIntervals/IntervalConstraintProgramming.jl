@@ -89,7 +89,7 @@ function parse_comparison(ex::Expr)
 
 end
 
-function parse_comparison(ex::Operation)
+function parse_comparison_helper(ex::Operation)
 
     if isa(ex.args[1], ModelingToolkit.Constant)
         if ex.op == <
@@ -114,6 +114,15 @@ function parse_comparison(ex::Operation)
         return (ex.args[1], a..b)
     end
 
+end
+
+function parse_comparison(ex::Operation)
+
+    if ex.op == |
+        return parse_comparison_helper(ex.args[1])
+    else
+        return parse_comparison_helper(ex)
+    end
 end
 
 
