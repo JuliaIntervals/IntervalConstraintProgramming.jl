@@ -31,7 +31,7 @@ Separator:
 It works out automatically that `x` and `y` are variables.
 The macro creates a `Separator` object, in this case a `ConstraintSeparator`.
 
-We now create an initial interval box in the $x$--$y$ plane:
+We now create an initial interval box in the ``x``--``y`` plane:
 ```julia
 julia> x = y = -100..100   # notation for creating an interval with `IntervalArithmetic.jl`
 
@@ -40,12 +40,12 @@ julia> X = IntervalBox(x, y)
 
 The `@constraint` macro defines an object `S`, of type `Separator`.
 This is a function which,
-when applied to the box $X = x \times y$
+when applied to the box ``X = x \times y``
 in the x--y plane, applies two *contractors*, an inner one and an outer one.
 
 The inner contractor tries to shrink down, or *contract*, the box, to the smallest subbox
-of $X$ that contains the part of $X$ that satisfies the constraint; the
-outer contractor tries to contract $X$ to the smallest subbox that contains the
+of ``X`` that contains the part of ``X`` that satisfies the constraint; the
+outer contractor tries to contract ``X`` to the smallest subbox that contains the
 region where the constraint is not satisfied.
 
 When `S` is applied to the box `X`, it returns the result of the inner and outer contractors:
