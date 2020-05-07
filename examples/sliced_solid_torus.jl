@@ -1,3 +1,0 @@
-using Makie
-
-Rect
