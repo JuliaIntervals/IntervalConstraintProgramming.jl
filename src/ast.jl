@@ -170,7 +170,10 @@ function flatten!(flatAST::FlatAST, ex::Expr, var = [])
 end
 
 function flatten!(flatAST::FlatAST, ex::Operation, var)
-    if typeof(ex.op) == Variable
+    # top = process_operation!(flatAST, ex, var)
+    # set_top!(flatAST, top)
+
+    if ex.op isa Variable
         return flatten!(flatAST, ex.op, var)
     else
        top = process_operation!(flatAST, ex, var)
@@ -373,6 +376,12 @@ end
 
 
 function process_operation!(flatAST::FlatAST, ex, var, new_var=nothing)
+
+    # println("\n\n--")
+    # @show flatAST
+    # @show ex
+    # @show var
+    # @show new_var
 
     op = ex.op
 
