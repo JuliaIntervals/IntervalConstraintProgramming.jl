@@ -107,9 +107,13 @@ function parse_comparison(ex::Operation)
         elseif ex.op == <
             a = -Inf
             b = ex.args[2].value
-        else
-            a = ex.args[2].value
-            b = ex.args[2].value
+        else  # is ==
+            if isa(ex.args[2].value, Interval)
+                return (ex.args[1], ex.args[2])
+            else
+                a = ex.args[2].value
+                b = ex.args[2].value
+            end
         end
         return (ex.args[1], a..b)
     end
