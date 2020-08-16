@@ -19,29 +19,72 @@ end
 
 
 
+function forward_code(a::Assignment)
+
+    # args = isa(a.args, Vector) ? a.args : [a.args]
+
+    # lhs = make_tuple(a.lhs)
+
+    pullback = Symbol(a.lhs, "_pullback")
+    lhs = make_tuple([a.lhs, pullback])
+
+    return :($lhs = rrule($(a.op), $(a.args...) ) )
+end
+
+
+
 function adjoint_code(a::Assignment)
-    barred_args = make_tuple(barred.(a.args))
+    barred_args = barred.(a.args)
     barred_lhs = barred(a.lhs)
+    pullback =  Symbol(a.lhs, "_pullback")
+    args_tuple = make_tuple(a.args)
 
-    duplicated = (length(a.args) == 2) && (a.args[1] == a.args[2])
-        # whether there are duplicate arguments
+    result_vars = [:_]
+    code = []
 
-    if duplicated
-        return :(
-            $(barred_args) = $(barred_args) .+
-            2 .* $(barred_lhs) .* Adjoint($(a.op))($(a.args...))
-            )
-
-    else
-
-        return :(
-            $(barred_args) = $(barred_args) .+
-            $(barred_lhs) .* Adjoint($(a.op))($(a.args...))
-            )
-
+    for (i, var) in enumerate(a.args)
+        if var isa Symbol
+            result_var = Symbol("r", i)
+            push!(result_vars, result_var)
+            push!(code, :($(barred_args[i]) += $(result_var)))
+        
+        else
+            push!(result_vars, :_)
+        end
     end
 
+    result_tuple = make_tuple(result_vars)
+    pushfirst!(code, :($(result_tuple) = $(pullback)($(barred_lhs))))
+
+    return code
+
 end
+
+
+
+function forward_pass(flatAST)
+    return quote
+        $(forward_code.(flatAST.code)...)
+    end
+end
+
+function reverse_pass(flatAST)
+
+    top = flatAST.top
+    intermediates = setdiff(flatAST.intermediate, [flatAST.top])
+
+    initialization_code = [ :( $(barred(var)) = zero($var) )
+                                for var in vcat(flatAST.input_variables, intermediates) ]
+
+    push!(initialization_code, :($(barred(top)) = one($top)))    
+
+    return quote
+        $(initialization_code...)
+        $(vcat(adjoint_code.(reverse(flatAST.code))...)...) 
+    end
+end
+
+
 
 function process_AST_args(flatAST::FlatAST)
     input = collect(flatAST.input_variables)
