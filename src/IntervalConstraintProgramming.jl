@@ -35,5 +35,6 @@ include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
+include("reverse_mode_AD.jl")
 
 end # module

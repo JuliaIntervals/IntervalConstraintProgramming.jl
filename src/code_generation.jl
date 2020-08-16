@@ -116,15 +116,17 @@ function emit_backward_code(a::FunctionAssignment)
 end
 
 
-function emit_forward_code(code)  # code::Vector{Assignment})
+function emit_forward_code(code)    # code::Vector{Assignment}
     new_code = quote end
-    new_code.args = vcat([emit_forward_code(line) for line in code])
+    new_code.args = emit_forward_code.(code)
+
     return new_code
 end
 
-function emit_backward_code(code) #::Vector{Assignment})
+function emit_backward_code(code)   # code::Vector{Assignment}
     new_code = quote end
-    new_code.args = vcat([emit_backward_code(line) for line in reverse(code)])
+    new_code.args = emit_backward_code.(reverse(code))
+
     return new_code
 end
 
@@ -209,6 +211,22 @@ function make_backward_function(input1, input2, input3, output_args, code)
             $input3 = t3
             $code
             return $output
+        end
+    end
+end
+
+
+function make_function(inputs, outputs, code)
+    input_args = really_make_tuple(really_make_tuple.(inputs))
+    output_args = really_make_tuple(really_make_tuple.(outputs))
+
+    input_vars = really_make_tuple( [Symbol(:t, i) for i in 1:length(inputs)] )
+
+    quote
+        $(input_vars) -> begin
+            $(input_args) = $(input_vars)
+            $code
+            return $output_args
         end
     end
 end
