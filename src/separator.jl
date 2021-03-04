@@ -178,7 +178,7 @@ External constants can be used as e.g. `\$a`:
 
 ```
 a = 3
-C = @constraint x^2 + y^2 <= \$a
+C = @constraint x^2 + y^2 - \$a <= 0
 ```
 """
 macro constraint(ex::Expr, variables = [])
