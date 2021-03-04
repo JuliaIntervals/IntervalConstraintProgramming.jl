@@ -1,7 +1,6 @@
 using IntervalArithmetic
 using IntervalConstraintProgramming
 using ModelingToolkit
-using DynamicPolynomials
 
 using Test
 
@@ -81,13 +80,6 @@ end
 
 end
 
-@testset "Contractors for polynamial functions" begin
-    pvars = @polyvar x y
-    p(x,y) = x + y
-    C = Contractor(pvars, p)
-    @test C(-Inf..1, IntervalBox(0.5..1.5, 2)) == IntervalBox(0.5..0.5, 2)
-end
-
 @testset "Separators" begin
     II = -100..100
     X = IntervalBox(II, II)
@@ -133,14 +125,6 @@ end
 
 end
 
-@testset "Seperators for polynomial functions" begin
-  pvars = @polyvar x y
-  p(x,y) = x + y == 1
-  S = Separator(pvars, p)
-
-  @test S(IntervalBox(0.5..1.5, 2)) == (IntervalBox(0.5..0.5, 2), IntervalBox(0.5..1.5, 2))
-
-end
 @testset "pave" begin
     S1a = @constraint(x > 0 , [x, y])
     S1b = @constraint(y > 0 , [x, y])
