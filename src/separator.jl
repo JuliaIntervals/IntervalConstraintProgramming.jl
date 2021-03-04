@@ -178,7 +178,7 @@ External constants can be used as e.g. `\$a`:
 
 ```
 a = 3
-C = @constraint x^2 + y^2 <= \$a
+C = @constraint x^2 + y^2 - \$a <= 0
 ```
 """
 macro constraint(ex::Expr, variables = [])
@@ -190,10 +190,13 @@ end
 """
 Create a separator without the use of macros using ModelingToolkit
 
-e.g  vars = @variables x y z
+e.g
+```
+vars = @variables x y z
 S = Separator(vars, x^2+y^2<1)
 X= IntervalBox(-0.5..1.5, -0.5..1.5, -0.5..1.5)
 S(X)
+```
 """
 function Separator(variables, ex::Operation)
     expr, constraint = parse_comparison(ex)
