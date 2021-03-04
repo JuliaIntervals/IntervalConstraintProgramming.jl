@@ -1,6 +1,7 @@
 # IntervalConstraintProgramming.jl
 
 [![Build Status](https://travis-ci.org/JuliaIntervals/IntervalConstraintProgramming.jl.svg?branch=master)](https://travis-ci.org/dpsanders/IntervalConstraintProgramming.jl)
+[![Docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliaintervals.github.io/pages/packages/intervalconstraintprogramming/)
 
 This Julia package allows us to specify a set of constraints on real-valued variables,
 given by inequalities, and
@@ -12,9 +13,9 @@ The package is based on interval arithmetic using the
 in particular multi-dimensional `IntervalBox`es (i.e. Cartesian products of one-dimensional intervals).
 
 ## Documentation
-Documentation for the package is available [here](http://juliaintervals.github.io/IntervalConstraintProgramming.jl/latest/).
+Documentation for the package is available [here](https://juliaintervals.github.io/pages/packages/intervalconstraintprogramming/).
 
-The best way to learn how to use the package is to look at the example notebooks, available in a separate repository [here](https://github.com/JuliaIntervals/IntervalConstraintProgrammingNotebooks).
+The best way to learn how to use the package is to look at the tutorial, available in the organisation webpage [here](https://juliaintervals.github.io/pages/tutorials/tutorialConstraintProgramming/).
 
 
 ## Author
