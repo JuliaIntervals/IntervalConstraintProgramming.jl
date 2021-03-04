@@ -1,6 +1,6 @@
 name = "IntervalConstraintProgramming"
 uuid = "138f1668-1576-5ad7-91b9-7425abbf3153"
-version = "0.12.1"
+version = "0.12.2"
 
 [compat]
 IntervalArithmetic = "0.16, 0.17"
