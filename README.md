@@ -1,6 +1,6 @@
 # IntervalConstraintProgramming.jl
 
-[![Build Status](https://travis-ci.org/JuliaIntervals/IntervalConstraintProgramming.jl.svg?branch=master)](https://travis-ci.org/dpsanders/IntervalConstraintProgramming.jl)
+[![Build Status](https://github.com/JuliaIntervals/IntervalConstraintProgramming.jl/workflows/CI/badge.svg)](https://github.com/JuliaIntervals/IntervalConstraintProgramming.jl/actions/workflows/CI.yml)
 [![Docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliaintervals.github.io/pages/packages/intervalconstraintprogramming/)
 
 This Julia package allows us to specify a set of constraints on real-valued variables,
