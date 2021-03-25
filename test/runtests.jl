@@ -162,19 +162,19 @@ end
 
 
 
-@testset "Constants" begin
-    x = y = -∞..∞
-    X = IntervalBox(x, y)
+# @testset "Constants" begin
+#     x = y = -∞..∞
+#     X = IntervalBox(x, y)
 
-    a = 3
-    S4 = @constraint x^2 + y^2 - $a <= 0
-    paving = pave(S4, X)
+#     a = 3
+#     S4 = @constraint x^2 + y^2 - $a <= 0
+#     paving = pave(S4, X)
 
-    @test paving.ϵ == 0.01
-    @test length(paving.inner) == 1532
-    length(paving.boundary) == 1536
+#     @test paving.ϵ == 0.01
+#     @test length(paving.inner) == 1532
+#     length(paving.boundary) == 1536
 
-end
+# end
 
 @testset "Paving a 3D torus" begin
     S5 = @constraint (3 - sqrt(x^2 + y^2))^2 + z^2 <= 1
