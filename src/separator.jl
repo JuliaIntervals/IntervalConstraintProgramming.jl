@@ -257,7 +257,7 @@ Takes an iterator of intervals (`IntervalBox`, tuple, array, etc.), of length
 equal to the total number of variables in `S1` and `S2`;
 it returns inner and outer tuples of the same length
 """
-function ∩(S1::Separator, S2::Separator)
+function ∩(S1::AbstractSeparator, S2::AbstractSeparator)
 
     #=variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
     numvars = length(variables)=#
@@ -314,7 +314,7 @@ function ∩(S1::Separator, S2::Separator)
 
 end
 
-function ∪(S1::Separator, S2::Separator)
+function ∪(S1::AbstractSeparator, S2::AbstractSeparator)
 
     #=variables, indices1, indices2, where1, where2 = unify_variables(S1.variables, S2.variables)
     numvars = length(variables)=#
@@ -369,7 +369,7 @@ function ∪(S1::Separator, S2::Separator)
 
 end
 
-function !(S::Separator)
+function ¬(S::AbstractSeparator)
     f = X -> begin
         inner, outer = S(X)
         return (outer, inner)
@@ -379,3 +379,5 @@ function !(S::Separator)
 
     return CombinationSeparator(S.variables, f, expression)
 end
+
+Base.:!(S::AbstractSeparator) = ¬(S)
