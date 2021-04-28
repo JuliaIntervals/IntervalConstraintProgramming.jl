@@ -132,12 +132,14 @@ end
     S1 = S1a ∩ S1b
     paving = pave(S1, IntervalBox(-3..3, -3..3), 2.0, 0.5)
 
-    @test paving.inner == [IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 1.5..3)]
+    @test Set(paving.inner) == Set([IntervalBox(1.5..3, 0..3), IntervalBox(0..1.5, 1.5..3)])
+    @test length(paving.inner) == 2
     @test isempty(paving.boundary) == false
 
     S2 = S1a ∪ S1b
     paving = pave(S2, IntervalBox(-3..3, -3..3), 0.1)
-    @test paving.inner == [IntervalBox(-3..0, 0..3), IntervalBox(0..3, -3..3)]
+    @test Set(paving.inner) == Set([IntervalBox(-3..0, 0..3), IntervalBox(0..3, -3..3)])
+    @test length(paving.inner) == 2
     @test isempty(paving.boundary) == false
 
 
@@ -145,19 +147,22 @@ end
     X = IntervalBox(-∞..∞, -∞..∞)
     paving = pave(S3, X, 1.0, 0.5)
 
-    @test paving.inner == [IntervalBox(Interval(0.0, 0.5), Interval(0.0, 0.8660254037844386)),
-                    IntervalBox(Interval(0.0, 0.5), Interval(-0.8660254037844386, 0.0)),
-                    IntervalBox(Interval(-0.5, 0.0), Interval(0.0, 0.8660254037844386)),
-                    IntervalBox(Interval(-0.5, 0.0), Interval(-0.8660254037844386, 0.0))]
+    @test Set(paving.inner) == Set([IntervalBox(Interval(0.0, 0.5), Interval(0.0, 0.8660254037844386)),
+                            IntervalBox(Interval(0.0, 0.5), Interval(-0.8660254037844386, 0.0)),
+                            IntervalBox(Interval(-0.5, 0.0), Interval(0.0, 0.8660254037844386)),
+                            IntervalBox(Interval(-0.5, 0.0), Interval(-0.8660254037844386, 0.0))])
 
-    @test paving.boundary == [ IntervalBox(Interval(0.5, 1.0), Interval(0.0, 0.8660254037844387)),
-                        IntervalBox(Interval(0.0, 0.5), Interval(0.8660254037844386, 1.0)),
-                        IntervalBox(Interval(0.5, 1.0), Interval(-0.8660254037844387, 0.0)),
-                        IntervalBox(Interval(0.0, 0.5), Interval(-1.0, -0.8660254037844386)),
-                        IntervalBox(Interval(-0.5, 0.0), Interval(0.8660254037844386, 1.0)),
-                        IntervalBox(Interval(-1.0, -0.5), Interval(0.0, 0.8660254037844387)),
-                        IntervalBox(Interval(-0.5, 0.0), Interval(-1.0, -0.8660254037844386)),
-                        IntervalBox(Interval(-1.0, -0.5), Interval(-0.8660254037844387, 0.0))]
+    @test Set(paving.boundary) == Set([ IntervalBox(Interval(0.5, 1.0), Interval(0.0, 0.8660254037844387)),
+                                IntervalBox(Interval(0.0, 0.5), Interval(0.8660254037844386, 1.0)),
+                                IntervalBox(Interval(0.5, 1.0), Interval(-0.8660254037844387, 0.0)),
+                                IntervalBox(Interval(0.0, 0.5), Interval(-1.0, -0.8660254037844386)),
+                                IntervalBox(Interval(-0.5, 0.0), Interval(0.8660254037844386, 1.0)),
+                                IntervalBox(Interval(-1.0, -0.5), Interval(0.0, 0.8660254037844387)),
+                                IntervalBox(Interval(-0.5, 0.0), Interval(-1.0, -0.8660254037844386)),
+                                IntervalBox(Interval(-1.0, -0.5), Interval(-0.8660254037844387, 0.0))])
+
+    @test length(paving.inner) == 4
+    @test length(paving.boundary) == 8
 end
 
 
