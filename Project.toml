@@ -1,9 +1,9 @@
 name = "IntervalConstraintProgramming"
 uuid = "138f1668-1576-5ad7-91b9-7425abbf3153"
-version = "0.12.2"
+version = "0.12.3"
 
 [compat]
-IntervalArithmetic = "0.16, 0.17"
+IntervalArithmetic = "0.16, 0.17, 0.18"
 IntervalContractors = "0.4"
 IntervalRootFinding = "0.5"
 MacroTools = "0.4, 0.5"
