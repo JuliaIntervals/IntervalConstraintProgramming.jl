@@ -6,7 +6,7 @@ using   IntervalArithmetic,
         IntervalContractors
 
 using Symbolics
-using Symbolics: operation, value, arguments, toexpr
+using Symbolics: operation, value, arguments, toexpr, Sym
 
 using Symbolics: @register
 
@@ -15,7 +15,7 @@ using ReversePropagation
 # using MacroTools
 
 import Base:
-    show, ∩, ∪, !, ⊆, setdiff, symdiff, &, |
+    show, ∩, ∪, !, ⊆, setdiff, symdiff, &, |, ∈
 
 import IntervalArithmetic: sqr, setindex
 
@@ -23,6 +23,9 @@ import IntervalArithmetic: sqr, setindex
 @register ¬(x)
 @register x & y
 @register x | y
+@register x ∈ y::Interval
+@register x ∨ y
+@register x ∧ y
 
 export
     # BasicContractor,
@@ -31,9 +34,16 @@ export
     Separator, #, separator, @separator, @constraint,
     #@function,
     #SubPaving, Paving,
-    pave #, refine!,
+    pave, #, refine!,
     # Vol,
     # show_code
+    separator, constraint,
+    Model,
+    @constraint, 
+    add_constraint!, 
+    variables, 
+    add_variables!,
+    ConstraintProblem
 
 export ¬
 
@@ -51,8 +61,9 @@ const reverse_operations = IntervalContractors.reverse_operations
 
 include("utils.jl")
 include("new_contractor.jl")
-include("new_pave.jl")
 include("set_operations.jl")
+include("model.jl")
+include("new_pave.jl")
 
 
 end # module

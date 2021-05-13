@@ -82,3 +82,6 @@ function pave(X, S::AbstractSeparator, ϵ=0.1)
 
     return inner_paving, boundary_paving
 end
+
+pave(X, S::ConstraintProblem, ϵ=0.1) = pave(X, S.separator, ϵ)
+

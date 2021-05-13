@@ -17,6 +17,7 @@ function analyse(ex)
 	
 	op = operation(ex2)
 	lhs, rhs = arguments(ex2)
+
 	
 	if op ∈ (≤, <)
 		constraint = interval(-∞, 0)
@@ -35,3 +36,61 @@ function analyse(ex)
 	end
 		
 end
+
+
+
+
+
+function separator(ex, vars)
+	ex2 = ex 
+
+	if ex isa Num
+		ex2 = value(ex)
+	end
+	
+	op = operation(ex2)
+
+
+	if op == ¬
+		arg = arguments(ex2)[1]
+		return ¬(separator(arg, vars))
+	end
+
+	lhs, rhs = arguments(ex2)
+
+	if op == &
+		return separator(lhs, vars) ∩ separator(rhs, vars)
+
+	elseif op == |
+		return separator(lhs, vars) ∪ separator(rhs, vars)
+	
+	elseif op ∈ (≤, <)
+		constraint = interval(-∞, 0)
+		Separator(Num(lhs - rhs), vars, constraint)
+		
+	elseif op ∈ (≥, >)
+		constraint = interval(0, +∞)
+		Separator(Num(lhs - rhs), vars, constraint)
+		
+	elseif op == (==)
+		constraint = interval(0, 0)
+		Separator(Num(lhs - rhs), vars, constraint)
+	
+	else
+		return Separator(ex, vars, interval(0, 0))   # implicit "== 0"
+	end
+		
+end
+
+
+function separator(ex)
+	vars = Symbolics.get_variables(ex)
+
+
+	return separator(ex, vars)
+end
+
+
+const constraint = separator
+
+

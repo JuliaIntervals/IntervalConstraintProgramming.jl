@@ -10,7 +10,7 @@ ReversePropagation = "527681c1-8309-4d3f-8790-caf822a419ba"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
-IntervalArithmetic = "0.16, 0.17"
+IntervalArithmetic = "0.16, 0.17, 0.18"
 IntervalContractors = "0.4"
 MacroTools = "0.4, 0.5"
 ReversePropagation = "0.1"

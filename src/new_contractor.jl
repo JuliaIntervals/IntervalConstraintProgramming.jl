@@ -20,13 +20,20 @@ struct Separator{V,E,C,F,R} <: AbstractSeparator
     contractor::R
 end
 
-Base.show(io::IO, S::AbstractSeparator) = print(io, "Separator($(S.ex))")
+# Base.show(io::IO, S::Separator) = print(io, "Separator($(S.ex) ∈ $(S.constraint), vars = $(join(S.vars, ", ")))")
+
+Base.show(io::IO, S::AbstractSeparator) = print(io, "Separator($(S.ex), vars=$(join(S.vars, ", ")))")
 
 function Separator(orig_expr, vars)
     ex, constraint = analyse(orig_expr)
     
-    return Separator(vars, ex, constraint, make_function(ex, vars), Contractor(ex, vars))
+    return Separator(ex, vars, constraint)
 end
+
+Separator(ex, vars, constraint::Interval) = Separator(vars, ex ∈ constraint, constraint, make_function(ex, vars), Contractor(ex, vars))
+
+
+
 
 "Returns boundary, inner, outer" 
 function (SS::Separator)(X)
