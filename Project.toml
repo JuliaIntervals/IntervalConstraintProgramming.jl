@@ -10,12 +10,12 @@ ReversePropagation = "527681c1-8309-4d3f-8790-caf822a419ba"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
-IntervalArithmetic = "0.16, 0.17, 0.18"
+IntervalArithmetic = "0.16, 0.17, 0.18, 0.19, 0.20"
 IntervalContractors = "0.4"
 MacroTools = "0.4, 0.5"
 ReversePropagation = "0.1"
-Symbolics = "0.1"
-julia = "1.6"
+Symbolics = "1, 2, 3, 4"
+julia = "1.6, 1.7"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
