@@ -1,6 +1,6 @@
 using IntervalArithmetic
 using IntervalConstraintProgramming
-using ModelingToolkit
+using Symbolics
 
 using Test
 
