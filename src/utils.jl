@@ -1,7 +1,7 @@
 
 
 make_function(ex, vars) = eval(build_function(ex, vars))
-
+make_function(ex, vars, params) = eval(build_function(ex, vars, params))
 
 """
 Convert inequalities in an expression to interval constraints
@@ -12,7 +12,7 @@ x^2 < y^2   becomes  x^2 - y^2 ∈ [-∞, 0]
 
 Returns the new expression and constraint.
 """
-function analyse(ex)
+function normalise(ex)
 	ex2 = value(ex)
 	
 	op = operation(ex2)
@@ -41,6 +41,12 @@ end
 
 
 
+# TODO: Rewrite this to return a set (vector) of simpler constraints, e.g.
+# x ∈ 1..3 is parsed into [1 ≤ x, x ≤ 3] ?
+# Naively 1..3 is more useful, except that that will not allow us to use separators correctly?
+
+
+"Parse symbolic expressions into separators"
 function separator(ex, vars)
 	ex2 = ex 
 
