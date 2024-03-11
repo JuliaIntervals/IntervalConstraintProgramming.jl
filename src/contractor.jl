@@ -85,7 +85,7 @@ function (C::BasicContractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where 
 end
 
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
-(C::BasicContractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,Nout,T} = C(IntervalBox(A), X)
+(C::BasicContractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,T} = C(IntervalBox(A), X)
 
 
 function Base.show(io::IO, C::BasicContractor{F1,F2}) where {F1,F2}
