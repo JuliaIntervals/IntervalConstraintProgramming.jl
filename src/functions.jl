@@ -1,5 +1,3 @@
-
-
 """
 A `ConstraintFunction` contains the created forward and backward
 code
