@@ -5,7 +5,6 @@ module IntervalConstraintProgramming
 using IntervalArithmetic,
       IntervalContractors
 using Requires
-using ModelingToolkit
 using MacroTools
 
 import Base:
