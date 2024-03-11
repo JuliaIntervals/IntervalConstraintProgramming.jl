@@ -12,13 +12,5 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 IntervalArithmetic = "0.16, 0.17, 0.18, 0.19, 0.20"
 IntervalContractors = "0.4"
 MacroTools = "0.4, 0.5"
-ModelingToolkit = "3"
 Requires = "0.5, 1"
 julia = "1.3"
-
-[extras]
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test", "ModelingToolkit"]
