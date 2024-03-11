@@ -335,7 +335,7 @@ function process_call!(flatAST::FlatAST, ex, var = [], new_var=nothing)
     #@show op
 
     if op ∈ keys(reverse_operations)  # standard operator
-        if new_var == nothing
+        if isnothing(new_var)
             new_var = make_symbol()
         end
 
@@ -408,7 +408,7 @@ function process_operation!(flatAST::FlatAST, ex, var, new_var=nothing)
     #@show op
 
     if Symbol(op) ∈ keys(reverse_operations)  # standard operator
-        if new_var == nothing
+        if isnothing(new_var)
             new_var = make_symbol()
         end
 

@@ -33,7 +33,7 @@ function pave(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ, bisection_poi
             push!(boundary_list, boundary)
 
         else
-            if bisection_point == nothing
+            if isnothing(bisection_point)
                 push!(working, bisect(boundary)...)
             else
                 push!(working, bisect(boundary, bisection_point)...)
