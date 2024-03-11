@@ -3,7 +3,6 @@ __precompile__()
 module IntervalConstraintProgramming
 
 using IntervalArithmetic,
-      IntervalRootFinding,
       IntervalContractors
 
 using ModelingToolkit
