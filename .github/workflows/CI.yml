@@ -14,8 +14,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1'
-          - 'nightly'
+          - '1.3'  # oldest Julia version that works
+          - '1.8'  # newest Julia version that works
         os:
           - ubuntu-latest
           - macOS-latest
