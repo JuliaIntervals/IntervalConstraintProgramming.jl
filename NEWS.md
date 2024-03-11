@@ -1,14 +1,14 @@
 # IntervalConstraintProgramming.jl
 
-#v0.11
+# v0.11
 ## Minimum Julia version
 - The minimum Julia version supported is now Julia 1.1
 
-##Functionality's are added
+## Functionality's are added
 - Contractor can be make by just function name only
 - New type of Contractor named as `BasicContractor` can be construct which only contain fields of useful data.
 
- 
+
 # v0.10
 ## Minimum Julia version
 - The minimum Julia version supported is now Julia 1.0.
@@ -16,6 +16,7 @@
 ## New Dependency added:  `ModelingToolkit.jl`
 
 - By the help of `ModelingToolkit.jl` we can construct contractors and separators without the use of macros.
+
 
 # v0.9
 ## Minimum Julia version
@@ -29,11 +30,13 @@
 ## Minimum Julia version
 - The minimum Julia version required has been bumped to 0.6; this will be the last release to support 0.6.
 
+
 # v0.7
 
 ## New dependency: `IntervalContractors.jl`
 
 The reverse functions used for constraint propagation have been factored out into the `IntervalContractors.jl` package.
+
 
 # v0.6
 ## Minimum Julia version
@@ -45,6 +48,7 @@ The reverse functions used for constraint propagation have been factored out int
 ## Dependency change
 - The dependency on `ValidatedNumerics.jl` has been replaced by `IntervalArithmetic.jl` and `IntervalRootFinding.jl`
 
+
 # v0.5
 - API change: Contractors now have their dimension as a type parameter
 - Refactoring for type stability
@@ -52,6 +56,7 @@ The reverse functions used for constraint propagation have been factored out int
 - Removed all functions acting directly on `Interval`s and `IntervalBox`es that should belong to `IntervalArithmetic`
 - Generated code uses simpler symbols
 - Example notebooks have been split out into a separate repository: https://github.com/dpsanders/IntervalConstraintProgrammingNotebooks
+
 
 # v0.4
 - `@function f(x) = 4x` defines a function
@@ -84,6 +89,7 @@ C = @constraint (x-$a)^2 + (y-$b)^2
 The constraint will *not* change if the constants are changed, but may be
 updated (changed) by calling the same `@constraint` command again.  
 
+
 # v0.2
 - `setinverse` now returns an object of type `Paving`  [#17](https://github.com/dpsanders/IntervalConstraintProgramming.jl/pull/17)
 
@@ -95,7 +101,7 @@ updated (changed) by calling the same `@constraint` command again.
 to eliminate collisions with user-defined variables [#20](https://github.com/dpsanders/IntervalConstraintProgramming.jl/pull/20)
 
 
-## v0.1.1
+# v0.1.1
 - Add `sqrtRev` reverse-mode function
 
 - Add solid torus example, including 3D visualization with GLVisualize
