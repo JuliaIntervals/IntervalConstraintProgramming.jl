@@ -4,7 +4,7 @@ module IntervalConstraintProgramming
 
 using IntervalArithmetic,
       IntervalContractors
-
+using Requires
 using ModelingToolkit
 using MacroTools
 
@@ -33,5 +33,6 @@ include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
+include("init.jl")
 
 end # module

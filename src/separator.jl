@@ -5,7 +5,7 @@ abstract type Separator end
 ConstraintSeparator is a separator that represents a constraint defined directly
 using `@constraint`.
 """
-struct ConstraintSeparator{C, II, ex<:Union{Operation,Expr}} <: Separator
+struct ConstraintSeparator{C, II, ex} <: Separator
     variables::Vector{Symbol}
     constraint::II  # Interval or IntervalBox
     contractor::C
@@ -17,7 +17,7 @@ ConstraintSeparator(constraint, contractor, expression) = ConstraintSeparator(co
 """CombinationSeparator is a separator that is a combination (union, intersection,
 or complement) of other separators.
 """
-struct CombinationSeparator{F, ex<:Union{Operation,Expr}} <: Separator
+struct CombinationSeparator{F, ex} <: Separator
     variables::Vector{Symbol}
     separator::F
     expression::ex
@@ -89,33 +89,36 @@ function parse_comparison(ex::Expr)
 
 end
 
-function parse_comparison(ex::Operation)
+function _load_MT_parse()
+    return quote
+        function parse_comparison(ex::Operation)
 
-    if isa(ex.args[1], ModelingToolkit.Constant)
-        if ex.op == <
-            a = ex.args[1].value
-            b = Inf
-        elseif ex.op == >
-            a = -Inf
-            b = ex.args[1].value
+            if isa(ex.args[1], Constant)
+                if ex.op == <
+                    a = ex.args[1].value
+                    b = Inf
+                elseif ex.op == >
+                    a = -Inf
+                    b = ex.args[1].value
+                end
+                return (ex.args[2], a..b)
+            elseif isa(ex.args[2], Constant)
+                if ex.op == >
+                    a = ex.args[2].value
+                    b = Inf
+                elseif ex.op == <
+                    a = -Inf
+                    b = ex.args[2].value
+                else
+                    a = ex.args[2].value
+                    b = ex.args[2].value
+                end
+                return (ex.args[1], a..b)
+            end
+
         end
-        return (ex.args[2], a..b)
-    elseif isa(ex.args[2], ModelingToolkit.Constant)
-        if ex.op == >
-            a = ex.args[2].value
-            b = Inf
-        elseif ex.op == <
-            a = -Inf
-            b = ex.args[2].value
-        else
-            a = ex.args[2].value
-            b = ex.args[2].value
-        end
-        return (ex.args[1], a..b)
     end
-
 end
-
 
 
 function new_parse_comparison(ex)
@@ -158,13 +161,18 @@ function make_constraint(expr, constraint, var =[])
     code
 end
 
-make_constraint(expr::Variable, constraint) = make_constraint(Operation(expr), constraint)
+
+function _load_MT_make_constraint()
+    return quote
+        make_constraint(expr::Variable, constraint) = make_constraint(Operation(expr), constraint)
 
 
-function make_constraint(expr::Operation, constraint, var=[])
-    C = Contractor(var, expr)
-    ex = expr ∈ constraint
-    ConstraintSeparator(constraint, C, ex)
+        function make_constraint(expr::Operation, constraint, var=[])
+            C = Contractor(var, expr)
+            ex = expr ∈ constraint
+            ConstraintSeparator(constraint, C, ex)
+        end
+    end
 end
 
 
@@ -187,27 +195,33 @@ macro constraint(ex::Expr, variables = [])
     make_constraint(expr, constraint, var)
 end
 
-"""
-Create a separator without the use of macros using ModelingToolkit
 
-e.g
-```
-vars = @variables x y z
-S = Separator(vars, x^2+y^2<1)
-X= IntervalBox(-0.5..1.5, -0.5..1.5, -0.5..1.5)
-S(X)
-```
-"""
-function Separator(variables, ex::Operation)
-    expr, constraint = parse_comparison(ex)
-    make_constraint(expr, constraint, variables)
+function _load_MT_separator()
+    return quote
+        """
+        Create a separator without the use of macros using ModelingToolkit
+
+        e.g
+        ```
+        vars = @variables x y z
+        S = Separator(vars, x^2+y^2<1)
+        X= IntervalBox(-0.5..1.5, -0.5..1.5, -0.5..1.5)
+        S(X)
+        ```
+        """
+        function Separator(variables, ex::Operation)
+            expr, constraint = parse_comparison(ex)
+            make_constraint(expr, constraint, variables)
+        end
+
+        Separator(ex::Operation) = Separator([], ex)
+
+        Separator(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Separator(vars, g(vars...))
+
+        Separator(vars, f::Function) = Separator([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...)) # if vars is not vector of variables
+    end
 end
 
-Separator(ex::Operation) = Separator([], ex)
-
-Separator(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Separator(vars, g(vars...))
-
-Separator(vars, f::Function) = Separator([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...)) # if vars is not vector of variables
 
 function show(io::IO, S::Separator)
     println(io, "Separator:")
