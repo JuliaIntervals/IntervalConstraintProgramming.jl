@@ -18,6 +18,10 @@ Documentation for the package is available [here](https://juliaintervals.github.
 
 The best way to learn how to use the package is to look at the tutorial, available in the organisation webpage [here](https://juliaintervals.github.io/pages/tutorials/tutorialConstraintProgramming/).
 
+#### ℹ️ Note on ModelingToolkit
+
+ModelingToolkit can be used to conveniently define constraints, as described in the tutorial. However, that package is only compatible up to Julia version 1.9, and it needs to be installed manually and restricted to version 3. Later versions of ModelingToolkit or Julia are not compatible yet.
+
 
 ## Author
 
