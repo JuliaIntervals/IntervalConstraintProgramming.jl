@@ -1,4 +1,3 @@
-
 """
 `pave` takes the given working list of boxes and splits them into inner and boundary
 lists with the given separator
@@ -33,7 +32,7 @@ function pave(S::Separator, working::Vector{IntervalBox{N,T}}, ϵ, bisection_poi
             push!(boundary_list, boundary)
 
         else
-            if bisection_point == nothing
+            if isnothing(bisection_point)
                 push!(working, bisect(boundary)...)
             else
                 push!(working, bisect(boundary, bisection_point)...)
@@ -62,7 +61,7 @@ function pave(S::Separator, X::IntervalBox{N,T}, ϵ = 1e-2, bisection_point=noth
 
 end
 
-#
+
 # """Refine a paving to tolerance ϵ"""
 # function refine!(P::Paving, ϵ = 1e-2)
 #     if P.ϵ <= ϵ  # already refined

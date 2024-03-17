@@ -116,9 +116,32 @@ Returns the variable at the top of the current piece of the tree."""
 
 # TODO: Parameters
 
-# numbers:
-function flatten!(flatAST::FlatAST, ex::ModelingToolkit.Constant, var)
-    return ex.value  # nothing to do the AST; return the number
+function _load_MT_flatten()
+    return quote
+        # numbers:
+        function flatten!(flatAST::FlatAST, ex::Constant, var)
+            return ex.value  # nothing to do the AST; return the number
+        end
+
+        function flatten!(flatAST::FlatAST, ex::Variable, var)  # symbols are leaves
+                if isempty(var)
+                    add_variable!(flatAST, Symbol(ex))  # add the discovered symbol as an input variable
+                end
+            return Symbol(ex)
+        end
+
+        function flatten!(flatAST::FlatAST, ex::Operation, var)
+            # top = process_operation!(flatAST, ex, var)
+            # set_top!(flatAST, top)
+
+            if ex.op isa Variable
+                return flatten!(flatAST, ex.op, var)
+            else
+            top = process_operation!(flatAST, ex, var)
+            set_top!(flatAST, top)
+            end
+        end
+    end
 end
 
 function flatten!(flatAST::FlatAST, ex, var)
@@ -126,13 +149,6 @@ function flatten!(flatAST::FlatAST, ex, var)
 end
 
 # symbols:
-function flatten!(flatAST::FlatAST, ex::Variable, var)  # symbols are leaves
-        if isempty(var)
-            add_variable!(flatAST, Symbol(ex))  # add the discovered symbol as an input variable
-        end
-    return Symbol(ex)
-end
-
 function flatten!(flatAST::FlatAST, ex::Symbol, var)
     if isempty(var)
         add_variable!(flatAST, ex)  # add the discovered symbol as an input variable
@@ -167,18 +183,6 @@ function flatten!(flatAST::FlatAST, ex::Expr, var = [])
     end
 
     set_top!(flatAST, top)
-end
-
-function flatten!(flatAST::FlatAST, ex::Operation, var)
-    # top = process_operation!(flatAST, ex, var)
-    # set_top!(flatAST, top)
-
-    if ex.op isa Variable
-        return flatten!(flatAST, ex.op, var)
-    else
-       top = process_operation!(flatAST, ex, var)
-       set_top!(flatAST, top)
-    end
 end
 
 
@@ -335,7 +339,7 @@ function process_call!(flatAST::FlatAST, ex, var = [], new_var=nothing)
     #@show op
 
     if op ∈ keys(reverse_operations)  # standard operator
-        if new_var == nothing
+        if isnothing(new_var)
             new_var = make_symbol()
         end
 
@@ -408,7 +412,7 @@ function process_operation!(flatAST::FlatAST, ex, var, new_var=nothing)
     #@show op
 
     if Symbol(op) ∈ keys(reverse_operations)  # standard operator
-        if new_var == nothing
+        if isnothing(new_var)
             new_var = make_symbol()
         end
 

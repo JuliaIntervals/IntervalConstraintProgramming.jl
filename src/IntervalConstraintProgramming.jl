@@ -2,11 +2,9 @@ __precompile__()
 
 module IntervalConstraintProgramming
 
-using   IntervalArithmetic,
-        IntervalRootFinding,
-        IntervalContractors
-
-using ModelingToolkit
+using IntervalArithmetic,
+      IntervalContractors
+using Requires
 using MacroTools
 
 import Base:
@@ -18,12 +16,11 @@ export
     BasicContractor,
     @contractor,
     Contractor,
-    Separator, separator, @separator, @constraint,
+    Separator, @constraint,
     @function,
     SubPaving, Paving,
-    pave, refine!,
-    Vol,
-    show_code
+    pave,
+    Vol
 
 const reverse_operations = IntervalContractors.reverse_operations
 
@@ -35,5 +32,6 @@ include("paving.jl")
 include("setinversion.jl")
 include("volume.jl")
 include("functions.jl")
+include("init.jl")
 
 end # module

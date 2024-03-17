@@ -1,11 +1,10 @@
-
 """
 `Contractor` represents a `Contractor` from ``\\mathbb{R}^N`` to ``\\mathbb{R}^N``.
 Nout is the output dimension of the forward part.
 """
 abstract type AbstractContractor end
 
-struct Contractor{N, Nout, F1<:Function, F2<:Function, ex<:Union{Operation,Expr}} <:AbstractContractor
+struct Contractor{N, Nout, F1<:Function, F2<:Function, ex} <:AbstractContractor
     variables::Vector{Symbol}  # input variables
     forward::GeneratedFunction{F1}
     backward::GeneratedFunction{F2}
@@ -86,70 +85,73 @@ function (C::BasicContractor)(A::IntervalBox{Nout,T}, X::IntervalBox{N,T})where 
 end
 
 # allow 1D contractors to take Interval instead of IntervalBox for simplicty:
-(C::BasicContractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,Nout,T} = C(IntervalBox(A), X)
+(C::BasicContractor)(A::Interval{T}, X::IntervalBox{N,T}) where {N,T} = C(IntervalBox(A), X)
 
-""" Contractor can also be construct without the use of macros
- vars = @variables x y z
- C = Contractor(x + y , vars)
- C(-Inf..1, IntervalBox(0.5..1.5,3))
- """
-
-function Contractor(variables, expr::Operation)
-
-    var = [i.op.name for i in variables]
-    top, linear_AST = flatten(expr, var)
-
-
-    forward_code, backward_code  = forward_backward(linear_AST)
-
-
-    # @show top
-
-    if isa(top, Symbol)
-        top = [top]
-    end
-
-    forward = eval(forward_code)
-    backward = eval(backward_code)
-
-    Contractor(linear_AST.variables,
-                    top,
-                    GeneratedFunction(forward, forward_code),
-                    GeneratedFunction(backward, backward_code),
-                    expr)
-
-end
-
-
-function BasicContractor(variables, expr::Operation)
-
-    var = [i.op.name for i in variables]
-    top, linear_AST = flatten(expr, var)
-
-    forward_code, backward_code  = forward_backward(linear_AST)
-
-    forward = eval(forward_code)
-    backward = eval(backward_code)
-
-    BasicContractor{typeof(forward), typeof(backward)}(forward, backward)
-end
 
 function Base.show(io::IO, C::BasicContractor{F1,F2}) where {F1,F2}
     println(io, " Basic version of Contractor")
 end
 
-BasicContractor(expr::Operation) = BasicContractor([], expr::Operation)
+function _load_MT_contractor()
+    return quote
+        """ Contractor can also be construct without the use of macros
+        vars = @variables x y z
+        C = Contractor(x + y , vars)
+        C(-Inf..1, IntervalBox(0.5..1.5,3))
+        """
+        function Contractor(variables, expr::Operation)
 
-BasicContractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = BasicContractor(vars, g(vars...)) #Contractor can be constructed by function name only
+            var = [i.op.name for i in variables]
+            top, linear_AST = flatten(expr, var)
 
-BasicContractor(vars, f::Function) = BasicContractor([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...))#if vars is not vector of Operation
+
+            forward_code, backward_code  = forward_backward(linear_AST)
 
 
-Contractor(expr::Operation) = Contractor([], expr::Operation)
+            # @show top
 
-Contractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
+            if isa(top, Symbol)
+                top = [top]
+            end
 
-Contractor(vars, f::Function) = Contractor([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...))#if vars is not vector of Operation
+            forward = eval(forward_code)
+            backward = eval(backward_code)
+
+            Contractor(linear_AST.variables,
+                            top,
+                            GeneratedFunction(forward, forward_code),
+                            GeneratedFunction(backward, backward_code),
+                            expr)
+
+        end
+
+
+        function BasicContractor(variables, expr::Operation)
+
+            var = [i.op.name for i in variables]
+            top, linear_AST = flatten(expr, var)
+
+            forward_code, backward_code  = forward_backward(linear_AST)
+
+            forward = eval(forward_code)
+            backward = eval(backward_code)
+
+            BasicContractor{typeof(forward), typeof(backward)}(forward, backward)
+        end
+
+        BasicContractor(expr::Operation) = BasicContractor([], expr::Operation)
+
+        BasicContractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = BasicContractor(vars, g(vars...)) #Contractor can be constructed by function name only
+
+        BasicContractor(vars, f::Function) = BasicContractor([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...))#if vars is not vector of Operation
+
+        Contractor(expr::Operation) = Contractor([], expr::Operation)
+
+        Contractor(vars::Union{Vector{Operation}, Tuple{Vararg{Operation,N}}}, g::Function) where N = Contractor(vars, g(vars...)) #Contractor can be constructed by function name only
+
+        Contractor(vars, f::Function) = Contractor([Variable(Symbol(i))() for i in vars], f([Variable(Symbol(i))() for i in vars]...))#if vars is not vector of Operation
+    end
+end
 
 function make_contractor(expr::Expr, var = [])
     # println("Entering Contractor(ex) with ex=$ex")

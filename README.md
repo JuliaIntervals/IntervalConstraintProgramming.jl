@@ -2,6 +2,7 @@
 
 [![Build Status](https://github.com/JuliaIntervals/IntervalConstraintProgramming.jl/workflows/CI/badge.svg)](https://github.com/JuliaIntervals/IntervalConstraintProgramming.jl/actions/workflows/CI.yml)
 [![Docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliaintervals.github.io/pages/packages/intervalconstraintprogramming/)
+[![coverage](https://codecov.io/gh/JuliaIntervals/IntervalConstraintProgramming.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIntervals/IntervalConstraintProgramming.jl)
 
 This Julia package allows us to specify a set of constraints on real-valued variables,
 given by inequalities, and
