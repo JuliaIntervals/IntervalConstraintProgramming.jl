@@ -1,7 +1,7 @@
 
 
 struct Model
-    vars::Set{Sym{Real, Nothing}}
+    vars::Set{Sym{Real}}
     params 
     constraints 
 end
