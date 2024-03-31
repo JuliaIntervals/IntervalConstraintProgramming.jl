@@ -1,6 +1,6 @@
 name = "IntervalConstraintProgramming"
 uuid = "138f1668-1576-5ad7-91b9-7425abbf3153"
-version = "0.13.0"
+version = "0.14"
 
 [deps]
 IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
@@ -13,9 +13,9 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 IntervalArithmetic = "0.16, 0.17, 0.18, 0.19, 0.20"
 IntervalContractors = "0.4"
 MacroTools = "0.4, 0.5"
-ReversePropagation = "0.1"
-Symbolics = "1, 2, 3, 4"
-julia = "1.6, 1.7"
+ReversePropagation = "0.2"
+Symbolics = "1, 2, 3, 4, 5"
+julia = "1"
 
 [extras]
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"

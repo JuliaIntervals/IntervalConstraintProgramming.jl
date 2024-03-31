@@ -8,7 +8,7 @@ using   IntervalArithmetic,
 using Symbolics
 using Symbolics: operation, value, arguments, toexpr, Sym
 
-using Symbolics: @register
+using Symbolics: @register_symbolic
 
 using ReversePropagation
 
@@ -20,12 +20,12 @@ import Base:
 import IntervalArithmetic: sqr, setindex
 
 
-@register ¬(x)
-@register x & y
-@register x | y
-@register x ∈ y::Interval
-@register x ∨ y
-@register x ∧ y
+@register_symbolic ¬(x)
+# @register_symbolic x & y
+# @register_symbolic x | y
+@register_symbolic x ∈ y::Interval
+@register_symbolic x ∨ y
+@register_symbolic x ∧ y
 
 export
     # BasicContractor,
