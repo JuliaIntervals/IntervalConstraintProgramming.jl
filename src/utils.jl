@@ -1,6 +1,6 @@
 
 
-make_function(ex, vars) = eval(build_function(ex, vars))
+make_function(ex, vars) = eval(build_function(ex, vars, nanmath=false))
 
 
 """
