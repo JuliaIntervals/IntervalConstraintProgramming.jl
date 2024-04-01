@@ -1,7 +1,8 @@
 
 
-make_function(ex, vars) = eval(build_function(ex, vars))
-make_function(ex, vars, params) = eval(build_function(ex, vars, params))
+make_function(ex, vars) = eval(build_function(ex, vars, nanmath=false))
+make_function(ex, vars, params) = eval(build_function(ex, vars, params, nanmath=false))
+
 
 """
 Convert inequalities in an expression to interval constraints
@@ -14,27 +15,27 @@ Returns the new expression and constraint.
 """
 function normalise(ex)
 	ex2 = value(ex)
-	
+
 	op = operation(ex2)
 	lhs, rhs = arguments(ex2)
 
-	
+
 	if op ∈ (≤, <)
 		constraint = interval(-∞, 0)
 		Num(lhs - rhs), constraint
-		
+
 	elseif op ∈ (≥, >)
 		constraint = interval(0, +∞)
 		Num(lhs - rhs), constraint
-		
+
 	elseif op == (==)
 		constraint = interval(0, 0)
 		Num(lhs - rhs), constraint
-	
+
 	else
 		return ex, interval(0, 0)   # implicit 0
 	end
-		
+
 end
 
 
@@ -48,12 +49,12 @@ end
 
 "Parse symbolic expressions into separators"
 function separator(ex, vars)
-	ex2 = ex 
+	ex2 = ex
 
 	if ex isa Num
 		ex2 = value(ex)
 	end
-	
+
 	op = operation(ex2)
 
 
@@ -69,23 +70,23 @@ function separator(ex, vars)
 
 	elseif op == |
 		return separator(lhs, vars) ∪ separator(rhs, vars)
-	
+
 	elseif op ∈ (≤, <)
 		constraint = interval(-∞, 0)
 		Separator(Num(lhs - rhs), vars, constraint)
-		
+
 	elseif op ∈ (≥, >)
 		constraint = interval(0, +∞)
 		Separator(Num(lhs - rhs), vars, constraint)
-		
+
 	elseif op == (==)
 		constraint = interval(0, 0)
 		Separator(Num(lhs - rhs), vars, constraint)
-	
+
 	else
 		return Separator(ex, vars, interval(0, 0))   # implicit "== 0"
 	end
-		
+
 end
 
 
