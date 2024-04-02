@@ -45,13 +45,15 @@ function (SS::Separator)(X)
     inner = boundary   
     outer = boundary
 
-    if SS.f(lb) ⊆ SS.constraint
+    lb_image = SS.f(lb)
+    if !isempty(lb_image) && (lb_image ⊆ SS.constraint)
         inner = inner ∪ lb
     else
         outer = outer ∪ lb
     end
-    
-    if SS.f(ub) ⊆ SS.constraint
+
+    ub_image = SS.f(ub)
+    if !isempty(ub_image) && (ub_image ⊆ SS.constraint)
         inner = inner ∪ ub
     else
         outer = outer ∪ ub
