@@ -4,7 +4,7 @@ function pave(X, C::Contractor, ϵ=0.1)
 
     while !isempty(working)
         X = pop!(working)
-		
+
 		if isempty(X)
             continue
         end
@@ -17,7 +17,7 @@ function pave(X, C::Contractor, ϵ=0.1)
 
         if diam(X) < ϵ
             push!(paving, X)
-            continue 
+            continue
         end
 
         push!(working, bisect(X)...)
@@ -32,7 +32,7 @@ Find inner and outer approximations of the intersection of `X` with the
 set ``S`` specified by the separator `S`.
 
 Returns the `inner` paving (a vector of those boxes that are guaranteed to be inside ``S``) and the `boundary`
-paving (boxes which have unknown status: they have neither been excluded, nor proved to 
+paving (boxes which have unknown status: they have neither been excluded, nor proved to
 lie inside `S`).
 """
 function pave(X, S::AbstractSeparator, ϵ=0.1)
@@ -41,17 +41,17 @@ function pave(X, S::AbstractSeparator, ϵ=0.1)
     boundary_paving = typeof(X)[]
 
     while !isempty(working)
-	
+
         X = pop!(working)
-		
+
 		if isempty(X)
             continue
         end
-		
+
 		if any(any.(isnan, X))  # hack to check empty
 			continue
 		end
-		
+
 		# @show X
 
 
@@ -59,23 +59,23 @@ function pave(X, S::AbstractSeparator, ϵ=0.1)
 
 		if outer != X
 			# index = findfirst(outer .!= X)
-			
-			diff = setdiff(X, outer)  
+
+			diff = setdiff(X, outer)
 			# replace setdiff with finding the *unique* direction that shrank
-			
+
 			if !isempty(diff)
 
 				append!(inner_paving, diff)
-				
+
 			end
 		end
 
 
         if diam(boundary) < ϵ
             push!(boundary_paving, boundary)
-            continue 
+            continue
         end
-		
+
 		push!(working, bisect(boundary)...)
 
     end
