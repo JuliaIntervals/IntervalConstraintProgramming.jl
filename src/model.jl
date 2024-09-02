@@ -98,7 +98,7 @@ end
 
 function ConstraintProblem(constraint_exprs)
 
-    vars = collect(reduce(∪, Symbolics.get_variables.(constraint_exprs)))
+    vars = collect(reduce(⊔, Symbolics.get_variables.(constraint_exprs)))
 
     return ConstraintProblem(vars, constraint_exprs)
 end

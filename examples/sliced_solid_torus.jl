@@ -11,7 +11,7 @@ half_space = @constraint (x + y) + z <= 1
 x = interval(-5, 5)
 Y = IntervalBox(x, 3)
 
-@time paving = pave(solid_torus ∩ half_space, Y, 0.1);
+@time paving = pave(solid_torus ⊓ half_space, Y, 0.1);
 
 inner = paving.inner
 boundary = paving.boundary;

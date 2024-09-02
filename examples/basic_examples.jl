@@ -50,7 +50,7 @@ p1 = pave(X, S1, 0.1)
 p2 = pave(X, S2, 0.1)
 
 
-S = S1 ∩ S2
+S = S1 ⊓ S2
 
 p3 = pave(X, S, 0.1)
 
@@ -66,7 +66,7 @@ plot_paving!(p4; plot_options...)
 
 typeof(S)
 
-# SS = S1 ∩ (!S2);
+# SS = S1 ⊓ (!S2);
 
 SS = setdiff(S1, S2);
 

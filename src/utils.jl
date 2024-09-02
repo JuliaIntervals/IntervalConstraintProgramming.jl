@@ -8,7 +8,7 @@ Convert inequalities in an expression to interval constraints
 
 Moves everything to one side, e.g.
 
-x^2 < y^2   becomes  x^2 - y^2 ∈ [-∞, 0]
+x^2 < y^2   becomes  x^2 - y^2 ∈ [-Inf, 0]
 
 Returns the new expression and constraint.
 """
@@ -20,11 +20,11 @@ function analyse(ex)
 
 	
 	if op ∈ (≤, <)
-		constraint = interval(-∞, 0)
+		constraint = interval(-Inf, 0)
 		Num(lhs - rhs), constraint
 		
 	elseif op ∈ (≥, >)
-		constraint = interval(0, +∞)
+		constraint = interval(0, +Inf)
 		Num(lhs - rhs), constraint
 		
 	elseif op == (==)
@@ -65,11 +65,11 @@ function separator(ex, vars)
 		return separator(lhs, vars) ∪ separator(rhs, vars)
 	
 	elseif op ∈ (≤, <)
-		constraint = interval(-∞, 0)
+		constraint = interval(-Inf, 0)
 		Separator(Num(lhs - rhs), vars, constraint)
 		
 	elseif op ∈ (≥, >)
-		constraint = interval(0, +∞)
+		constraint = interval(0, +Inf)
 		Separator(Num(lhs - rhs), vars, constraint)
 		
 	elseif op == (==)

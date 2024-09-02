@@ -2,27 +2,30 @@ __precompile__()
 
 module IntervalConstraintProgramming
 
-using   IntervalArithmetic,
-        IntervalContractors
+using IntervalArithmetic, IntervalArithmetic.Symbols
+using IntervalContractors
+using IntervalBoxes
 
 using Symbolics
 using Symbolics: operation, value, arguments, toexpr, Sym
 
 using Symbolics: @register_symbolic
 
+using StaticArrays
+
 using ReversePropagation
 
 # using MacroTools
 
-import Base:
-    show, ∩, ∪, !, ⊆, setdiff, symdiff, &, |, ∈
+import IntervalArithmetic.Symbols: ⊓, ⊔
 
-import IntervalArithmetic: sqr, setindex
+import Base:
+    show, !, ⊆, setdiff, symdiff, &, |, ∈
+
+import IntervalArithmetic: mid, interval, emptyinterval, isinf, isinterior, hull, mince
 
 
 @register_symbolic ¬(x)
-# @register_symbolic x & y
-# @register_symbolic x | y
 @register_symbolic x ∈ y::Interval
 @register_symbolic x ∨ y
 @register_symbolic x ∧ y

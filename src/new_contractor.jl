@@ -1,4 +1,7 @@
-struct Contractor{V, E, CC}
+abstract type AbstractContractor end
+
+
+struct Contractor{V, E, CC} <: AbstractContractor
     vars::V
     ex::E
     contractor::CC
@@ -26,7 +29,7 @@ Base.show(io::IO, S::AbstractSeparator) = print(io, "Separator($(S.ex), vars=$(j
 
 function Separator(orig_expr, vars)
     ex, constraint = analyse(orig_expr)
-    
+
     return Separator(ex, vars, constraint)
 end
 
@@ -34,31 +37,30 @@ Separator(ex, vars, constraint::Interval) = Separator(vars, ex ∈ constraint, c
 
 
 
-
-"Returns boundary, inner, outer" 
+"Returns boundary, inner, outer"
 function (SS::Separator)(X)
     boundary = SS.contractor(X)  # contract with respect to 0, which is always the boundary
 
     lb = IntervalBox(inf.(X))
     ub = IntervalBox(sup.(X))
-    
-    inner = boundary   
+
+    inner = boundary
     outer = boundary
 
     lb_image = SS.f(lb)
-    if !isempty(lb_image) && (lb_image ⊆ SS.constraint)
-        inner = inner ∪ lb
+    if !isempty_interval(lb_image) && issubset_interval(lb_image, SS.constraint)
+        inner = inner ⊔ lb
     else
-        outer = outer ∪ lb
+        outer = outer ⊔ lb
     end
 
     ub_image = SS.f(ub)
-    if !isempty(ub_image) && (ub_image ⊆ SS.constraint)
-        inner = inner ∪ ub
+    if !isempty_interval(ub_image) && issubset_interval(ub_image, SS.constraint)
+        inner = inner ⊔ ub
     else
-        outer = outer ∪ ub
+        outer = outer ⊔ ub
     end
-    
 
-    return boundary, inner, outer 
+
+    return boundary, inner, outer
 end
