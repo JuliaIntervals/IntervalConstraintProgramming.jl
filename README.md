@@ -32,12 +32,20 @@ C2 = constraint(x^2 + y^2 + x * y ≤ 3, vars)
 C = C1 ⊓ C2
 
 X = IntervalBox(-5..5, 2)
-inner, boundary = pave(X, C, 0.01)
+
+tolerance = 0.05
+inner, boundary = pave(X, C, tolerance)
 
 # plot the result:
 using Plots
-plot(collect.(inner), aspectratio = 1, lw = 0)
+
+plot(collect.(inner), aspectratio=1, lw=0, label="inner");
+plot!(collect.(boundary), aspectratio=1, lw=0, label="boundary")
 ```
+
+- The inner, blue, region is guaranteed to lie *inside* the constraint set.
+- The outer, white, region is guaranteed to lie *outside* the constraint set.
+- The in-between, red, region is not known at this tolerance.
 
 ![Inner and outer ellipse](ellipses.png)
 
