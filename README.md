@@ -47,7 +47,7 @@ plot!(collect.(boundary), aspectratio=1, lw=0, label="boundary")
 - The outer, white, region is guaranteed to lie *outside* the constraint set.
 - The in-between, red, region is not known at this tolerance.
 
-![Inner and outer ellipse](ellipses.png)
+![Inner and outer ellipse](ellipses.png?)
 
 
 
