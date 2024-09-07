@@ -12,10 +12,36 @@ The package is based on interval arithmetic using the
 [`IntervalArithmetic.jl`](https://github.com/JuliaIntervals/IntervalArithmetic.jl) package (co-written by the author),
 in particular multi-dimensional `IntervalBox`es (i.e. Cartesian products of one-dimensional intervals).
 
-## Documentation
+<!-- ## Documentation
 Documentation for the package is available [here](https://juliaintervals.github.io/pages/packages/intervalconstraintprogramming/).
 
-The best way to learn how to use the package is to look at the tutorial, available in the organisation webpage [here](https://juliaintervals.github.io/pages/tutorials/tutorialConstraintProgramming/).
+The best way to learn how to use the package is to look at the tutorial, available in the organisation webpage [here](https://juliaintervals.github.io/pages/tutorials/tutorialConstraintProgramming/). -->
+
+## Basic usage
+
+```jl
+using IntervalArithmetic, IntervalArithmetic.Symbols
+using IntervalConstraintProgramming
+using IntervalBoxes
+using Symbolics
+
+vars = @variables x, y
+
+C1 = constraint(x^2 + 2y^2 ≥ 1, vars)
+C2 = constraint(x^2 + y^2 + x * y ≤ 3, vars)
+C = C1 ⊓ C2
+
+X = IntervalBox(-5..5, 2)
+inner, boundary = pave(X, C, 0.01)
+
+# plot the result:
+using Plots
+plot(collect.(inner), aspectratio = 1, lw = 0)
+```
+
+![Inner and outer ellipse](ellipses.png)
+
+
 
 
 ## Author
