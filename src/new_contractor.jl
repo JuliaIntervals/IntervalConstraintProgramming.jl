@@ -35,11 +35,48 @@ end
 
 Separator(ex, vars, constraint::Interval) = Separator(vars, ex ∈ constraint, constraint, make_function(ex, vars), Contractor(ex, vars))
 
+function separate_infinite_box(S::Separator, X::IntervalBox)
+    # for an box that extends to infinity we cannot evaluate at a corner
+    # so use the old method instead where we do inner and outer contractors separately
+
+    C = S.contractor
+    a, b = inf(S.constraint), sup(S.constraint)
+
+    inner = C(X, interval(a, b))
+
+    # to compute outer, we contract with respect to the complement of `a..b`:
+    local outer
+    if a == -Inf
+        outer = C(X, interval(b, Inf))
+
+    elseif b == Inf
+        outer = C(X, interval(-Inf, a))
+
+    else
+        # the complement is a union of two pieces
+        outer1 = C(X, interval(-Inf, a))
+        outer2 = C(X, interval(b, Inf))
+
+        outer = outer1 ⊔ outer2
+    end
+
+    boundary = inner ⊓ outer
+
+    return (boundary, inner, outer)
+end
 
 
 "Returns boundary, inner, outer"
 function (SS::Separator)(X)
+
+    if any(x -> isinf(diam(x)), X)
+        return separate_infinite_box(SS, X)
+    end
+
+    # using the contractor to compute the boundary:
     boundary = SS.contractor(X)  # contract with respect to 0, which is always the boundary
+
+    # extend the boundary by evaluating at corners of the box to determine inner and outer:
 
     lb = IntervalBox(inf.(X))
     ub = IntervalBox(sup.(X))
@@ -60,7 +97,6 @@ function (SS::Separator)(X)
     else
         outer = outer ⊔ ub
     end
-
 
     return boundary, inner, outer
 end

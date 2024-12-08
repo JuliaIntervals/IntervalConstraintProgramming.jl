@@ -88,7 +88,7 @@ Returns the `inner` paving (a vector of those boxes that are guaranteed to be in
 paving (boxes which have unknown status: they have neither been excluded, nor proved to
 lie inside `S`).
 """
-function pave(X, S::AbstractSeparator, ϵ=0.1)
+function pave(X, S::AbstractSeparator, ϵ = 0.1, bisection_point = nothing)
     working = [X]
 	inner_paving = typeof(X)[]
     boundary_paving = typeof(X)[]
@@ -120,7 +120,11 @@ function pave(X, S::AbstractSeparator, ϵ=0.1)
             continue
         end
 
-		push!(working, bisect(boundary)...)
+        if isnothing(bisection_point)
+            push!(working, bisect(boundary)...)
+        else
+            push!(working, bisect(boundary, bisection_point)...)
+        end
 
     end
 
