@@ -52,21 +52,11 @@ export ¬
 
 const reverse_operations = IntervalContractors.reverse_operations
 
-# include("ast.jl")
-# include("code_generation.jl")
-# include("contractor.jl")
-# include("separator.jl")
-# include("paving.jl")
-# include("setinversion.jl")
-# include("volume.jl")
-# include("functions.jl")
-
 
 include("utils.jl")
-include("new_contractor.jl")
+include("contractor.jl")
 include("set_operations.jl")
-include("model.jl")
-include("new_pave.jl")
+include("pave.jl")
 
 
 end # module
