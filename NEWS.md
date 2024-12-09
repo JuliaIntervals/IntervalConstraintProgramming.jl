@@ -1,10 +1,17 @@
 # IntervalConstraintProgramming.jl
 
-#v0.11
+# v0.14 
+## New API using Symbolics
+- The public API has been completely rewritten
+ - The previous macros such as `@constraint` have been removed
+ - The API now uses symbolic variables from `Symbolics.jl`
+ - See the README for usage examples 
+
+# v0.11
 ## Minimum Julia version
 - The minimum Julia version supported is now Julia 1.1
 
-##Functionality's are added
+## Functionality's are added
 - Contractor can be make by just function name only
 - New type of Contractor named as `BasicContractor` can be construct which only contain fields of useful data.
 
