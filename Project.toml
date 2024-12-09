@@ -1,16 +1,25 @@
 name = "IntervalConstraintProgramming"
 uuid = "138f1668-1576-5ad7-91b9-7425abbf3153"
-version = "0.13"
+version = "0.14.0"
 
 [deps]
 IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
+IntervalBoxes = "43d83c95-ebbb-40ec-8188-24586a1458ed"
 IntervalContractors = "15111844-de3b-5229-b4ba-526f2f385dc9"
-MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
-Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+ReversePropagation = "527681c1-8309-4d3f-8790-caf822a419ba"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
-IntervalArithmetic = "0.16, 0.17, 0.18, 0.19, 0.20"
-IntervalContractors = "0.4"
-MacroTools = "0.4, 0.5"
-Requires = "0.5, 1"
-julia = "1.3"
+IntervalArithmetic = "0.22.12"
+IntervalContractors = "0.5"
+ReversePropagation = "0.3"
+Symbolics = "5, 6"
+julia = "1"
+
+[extras]
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "Symbolics"]

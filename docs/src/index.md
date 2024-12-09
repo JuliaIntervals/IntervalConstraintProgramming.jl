@@ -26,7 +26,7 @@ julia> using IntervalConstraintProgramming, IntervalArithmetic
 julia> S = @constraint x^2 + y^2 <= 1
 Separator:
   - variables: x, y
-  - expression: x ^ 2 + y ^ 2 ∈ [-∞, 1]
+  - expression: x ^ 2 + y ^ 2 ∈ [-Inf, 1]
 ```
 It works out automatically that `x` and `y` are variables.
 The macro creates a `Separator` object, in this case a `ConstraintSeparator`.
@@ -73,7 +73,7 @@ julia> @variables x y
 julia> S = Separator(x+y<1)
 Separator:
   - variables: x, y
-  - expression: x() + y() == [-∞, 1]
+  - expression: x() + y() == [-Inf, 1]
 
 julia> C = Contractor(x+y)
  Contractor in 2 dimensions:
@@ -91,7 +91,7 @@ julia> vars = @variables x y z
 julia> S = Separator(vars, x+y<1)
 Separator:
   - variables: x, y, z
-  - expression: x() + y() == [-∞, 1]
+  - expression: x() + y() == [-Inf, 1]
 
 julia> C = Contractor(vars, y+z)
 Contractor in 3 dimensions:
@@ -120,7 +120,7 @@ f (generic function with 1 method)
 julia> S=Separator(vars, f)
 Separator:
   - variables: x, y
-  - expression: x() + y() == [-∞, 1]  
+  - expression: x() + y() == [-Inf, 1]  
 
 julia> using DynamicPolynomials       #using polynomial functions
 
@@ -133,7 +133,7 @@ p (generic function with 1 method)
 julia> S=Separator(pvars, f)
 Separator:
   - variables: x, y
-  - expression: x() + y() == [-∞, 1]
+  - expression: x() + y() == [-Inf, 1]
 ```
 #### BasicContractor
 Objects of type `Contractor` have four fields (variables, forward, backward and expression), among them data of two fields (forward, backward) are useful (i.e forward and backward functions) for further usage of that object, thats why it is preferred to use an object of type `BasicContractor` in place of `Contractor` which only contain these two fields for less usage of memory by unloading all the extra stuff.(Note: Like object of `Contractor` type,`BasicContractor`'s object will also have all the properties which are discussed above).
@@ -196,7 +196,7 @@ There are sample 3D calculations in the `examples` directory, in particular in t
 
 
 ## Set operations
-Separators may be combined using the operators `!` (complement), `∩` and `∪` to make
+Separators may be combined using the operators `!` (complement), `⊓` and `⊔` to make
 more complicated sets; see the [notebook](https://github.com/JuliaIntervals/IntervalConstraintProgrammingNotebooks/blob/master/Basic%20examples%20of%20separators.ipynb) for several examples. Further examples can be found in the repository [IntervalConstraintProgrammingNotebooks](https://github.com/JuliaIntervals/IntervalConstraintProgrammingNotebooks).
 
 ## Author

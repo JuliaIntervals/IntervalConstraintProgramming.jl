@@ -2,7 +2,6 @@
 
 [![Build Status](https://github.com/JuliaIntervals/IntervalConstraintProgramming.jl/workflows/CI/badge.svg)](https://github.com/JuliaIntervals/IntervalConstraintProgramming.jl/actions/workflows/CI.yml)
 [![Docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliaintervals.github.io/pages/packages/intervalconstraintprogramming/)
-[![coverage](https://codecov.io/gh/JuliaIntervals/IntervalConstraintProgramming.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIntervals/IntervalConstraintProgramming.jl)
 
 This Julia package allows us to specify a set of constraints on real-valued variables,
 given by inequalities, and
@@ -13,14 +12,44 @@ The package is based on interval arithmetic using the
 [`IntervalArithmetic.jl`](https://github.com/JuliaIntervals/IntervalArithmetic.jl) package (co-written by the author),
 in particular multi-dimensional `IntervalBox`es (i.e. Cartesian products of one-dimensional intervals).
 
-## Documentation
+<!-- ## Documentation
 Documentation for the package is available [here](https://juliaintervals.github.io/pages/packages/intervalconstraintprogramming/).
 
-The best way to learn how to use the package is to look at the tutorial, available in the organisation webpage [here](https://juliaintervals.github.io/pages/tutorials/tutorialConstraintProgramming/).
+The best way to learn how to use the package is to look at the tutorial, available in the organisation webpage [here](https://juliaintervals.github.io/pages/tutorials/tutorialConstraintProgramming/). -->
 
-#### ℹ️ Note on ModelingToolkit
+## Basic usage
 
-ModelingToolkit can be used to conveniently define constraints, as described in the tutorial. However, that package is only compatible up to Julia version 1.9, and it needs to be installed manually and restricted to version 3. Later versions of ModelingToolkit or Julia are not compatible yet.
+```jl
+using IntervalArithmetic, IntervalArithmetic.Symbols
+using IntervalConstraintProgramming
+using IntervalBoxes
+using Symbolics
+
+vars = @variables x, y
+
+C1 = constraint(x^2 + 2y^2 ≥ 1, vars)
+C2 = constraint(x^2 + y^2 + x * y ≤ 3, vars)
+C = C1 ⊓ C2
+
+X = IntervalBox(-5..5, 2)
+
+tolerance = 0.05
+inner, boundary = pave(X, C, tolerance)
+
+# plot the result:
+using Plots
+
+plot(collect.(inner), aspectratio=1, lw=0, label="inner");
+plot!(collect.(boundary), aspectratio=1, lw=0, label="boundary")
+```
+
+- The inner, blue, region is guaranteed to lie *inside* the constraint set.
+- The outer, white, region is guaranteed to lie *outside* the constraint set.
+- The in-between, red, region is not known at this tolerance.
+
+![Inner and outer ellipse](ellipses.svg?)
+
+
 
 
 ## Author

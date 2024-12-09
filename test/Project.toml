@@ -1,9 +1,0 @@
-[deps]
-IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[compat]
-IntervalArithmetic = "0.16, 0.17, 0.18, 0.19, 0.20"
-ModelingToolkit = "3"
-Test = "<0.0.1, 1.3"

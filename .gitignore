@@ -2,11 +2,4 @@
 *.jl.*.cov
 *.jl.mem
 docs/build/
-
-*.DS_Store
-
-coverage/
-
-.vscode
-
 Manifest.toml
