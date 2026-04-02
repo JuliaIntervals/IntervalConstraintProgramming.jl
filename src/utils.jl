@@ -22,19 +22,19 @@ function analyse(ex)
 	if op ∈ (≤, <)
 		constraint = interval(-Inf, 0)
 		Num(lhs - rhs), constraint
-		
+
 	elseif op ∈ (≥, >)
 		constraint = interval(0, +Inf)
 		Num(lhs - rhs), constraint
-		
+
 	elseif op == (==)
 		constraint = interval(0, 0)
 		Num(lhs - rhs), constraint
-	
+
 	else
 		return ex, interval(0, 0)   # implicit 0
 	end
-		
+
 end
 
 
@@ -59,23 +59,23 @@ function separator(ex, vars)
 	lhs, rhs = arguments(ex2)
 
 	if op == &
-		return separator(lhs, vars) ∩ separator(rhs, vars)
+		return separator(lhs, vars) ⊓ separator(rhs, vars)
 
 	elseif op == |
-		return separator(lhs, vars) ∪ separator(rhs, vars)
-	
+		return separator(lhs, vars) ⊔ separator(rhs, vars)
+
 	elseif op ∈ (≤, <)
 		constraint = interval(-Inf, 0)
 		Separator(Num(lhs - rhs), vars, constraint)
-		
+
 	elseif op ∈ (≥, >)
 		constraint = interval(0, +Inf)
 		Separator(Num(lhs - rhs), vars, constraint)
-		
+
 	elseif op == (==)
 		constraint = interval(0, 0)
 		Separator(Num(lhs - rhs), vars, constraint)
-	
+
 	else
 		return Separator(ex, vars, interval(0, 0))   # implicit "== 0"
 	end

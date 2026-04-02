@@ -24,11 +24,15 @@ import Base:
 
 import IntervalArithmetic: mid, interval, emptyinterval, isinf, isinterior, hull, mince
 
-
 @register_symbolic ¬(x)
-@register_symbolic x ∈ y::Interval
 @register_symbolic x ∨ y
 @register_symbolic x ∧ y
+
+# We cannot register `x ∈ y::Interval` as a symbolic operation because
+# SymbolicUtils hash-consing requires isequal/hash, which Interval deliberately
+# does not define (IEEE 1788). Instead, decompose into comparisons that the
+# package already handles.
+Base.in(x::Num, y::Interval) = (x >= Num(inf(y))) & (x <= Num(sup(y)))
 
 export
     # BasicContractor,

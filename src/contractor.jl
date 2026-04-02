@@ -25,7 +25,13 @@ end
 
 # Base.show(io::IO, S::Separator) = print(io, "Separator($(S.ex) ∈ $(S.constraint), vars = $(join(S.vars, ", ")))")
 
-Base.show(io::IO, S::AbstractSeparator) = print(io, "Separator($(S.ex), vars=$(join(S.vars, ", ")))")
+function Base.show(io::IO, S::AbstractSeparator)
+    if hasproperty(S, :constraint)
+        print(io, "Separator($(S.ex) ∈ $(S.constraint), vars=$(join(S.vars, ", ")))")
+    else
+        print(io, "Separator($(S.ex), vars=$(join(S.vars, ", ")))")
+    end
+end
 
 function Separator(orig_expr, vars)
     ex, constraint = analyse(orig_expr)
@@ -33,7 +39,7 @@ function Separator(orig_expr, vars)
     return Separator(ex, vars, constraint)
 end
 
-Separator(ex, vars, constraint::Interval) = Separator(vars, ex ∈ constraint, constraint, make_function(ex, vars), Contractor(ex, vars))
+Separator(ex, vars, constraint::Interval) = Separator(vars, ex, constraint, make_function(ex, vars), Contractor(ex, vars))
 
 function separate_infinite_box(S::Separator, X::IntervalBox)
     # for an box that extends to infinity we cannot evaluate at a corner
