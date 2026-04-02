@@ -17,7 +17,7 @@ IntervalContractors = "0.6"
 ReversePropagation = "0.4"
 StaticArrays = "1"
 Symbolics = "7"
-julia = "1.11"
+julia = "1.10"
 
 [extras]
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
