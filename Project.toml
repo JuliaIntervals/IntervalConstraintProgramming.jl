@@ -14,9 +14,9 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 IntervalArithmetic = "0.22.12 - 0.23, 1"
 IntervalBoxes = "0.2 - 0.3"
 IntervalContractors = "0.5 - 0.6"
-ReversePropagation = "0.3 - 0.4"
+ReversePropagation = "0.4.1"
 StaticArrays = "1"
-Symbolics = "5 - 7"
+Symbolics = "6 - 7"
 julia = "1.10"
 
 [extras]
