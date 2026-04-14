@@ -1,22 +1,28 @@
 using Documenter
+using DocumenterVitepress
 using IntervalConstraintProgramming, IntervalArithmetic
 
-makedocs(
+makedocs(;
     modules = [IntervalConstraintProgramming],
-    doctest = true,
-    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     authors = "David P. Sanders",
     sitename = "IntervalConstraintProgramming.jl",
-
-    pages = Any[
+    format = DocumenterVitepress.MarkdownVitepress(;
+        repo = "github.com/JuliaIntervals/IntervalConstraintProgramming.jl",
+        devbranch = "master",
+        devurl = "dev",
+    ),
+    pages = [
         "Home" => "index.md",
-        "API" => "api.md"
-    ]
-    )
+        "Contractors and Separators" => "contractors_and_separators.md",
+        "Architecture" => "architecture.md",
+        "API" => "api.md",
+    ],
+)
 
-deploydocs(
-    repo = "github.com/JuliaIntervals/IntervalConstraintProgramming.jl.git",
-    target = "build",
-    deps = nothing,
-    make = nothing,
+DocumenterVitepress.deploydocs(;
+    repo = "github.com/JuliaIntervals/IntervalConstraintProgramming.jl",
+    target = joinpath(@__DIR__, "build"),
+    branch = "gh-pages",
+    devbranch = "master",
+    push_preview = true,
 )

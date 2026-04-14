@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev build/.documenter",
+    "docs:build": "vitepress build build/.documenter",
+    "docs:preview": "vitepress preview build/.documenter"
+  },
+  "dependencies": {
+    "vitepress": "^1.6.4",
+    "@mdit/plugin-mathjax": "^0.26.1"
+  }
+}
