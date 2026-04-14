@@ -70,15 +70,19 @@ For separator boundary/complement contraction, `propagate!(dag, X, constraint)` 
 | Problem | ϵ | Codegen | DAG (persistent) | Ratio |
 |---------|---|---------|-----------------|-------|
 | Unit disk 2D | single call | 1.2 μs | 6.8 μs | 6x |
-| Unit disk 2D | 0.1 | 294 μs | 2.5 ms | 8x |
-| Unit disk 2D | 0.01 | 2.5 ms | 20 ms | 8x |
-| Annulus 2D | 0.1 | 1.7 ms | 10 ms | 6x |
-| 3D torus | 1.0 | 12 ms | 97 ms | 8x |
+| Unit disk 2D | 0.1 | 294 μs | 1.0 ms | 3.5x |
+| Unit disk 2D | 0.01 | 2.5 ms | 8.8 ms | 3.5x |
+| Annulus 2D | 0.1 | 1.6 ms | 4.4 ms | 2.8x |
+| 3D torus | 1.0 | 12 ms | 33 ms | 2.8x |
 
 Multi-constraint shared DAG: 10 nodes shared vs 15 separate (33% reduction). Joint propagation of `x²+y²≤1` and `x²-y≤0` correctly narrows `[-10,10]²` to `[-1,1]×[0,1]`.
 
-### Remaining optimizations
+### Compiled propagation schedule
 
-1. **Typed operation enum** instead of `Function` field to eliminate dynamic dispatch
-2. **Pre-allocated workspace** for child ranges
-3. **Compiled propagation schedule** — flat instruction array for tight-loop execution
+The `CompiledDAG` (`src/dag/compile.jl`) converts the SharedDAG into a flat instruction array operating on a pre-allocated workspace of intervals. This combines three optimizations:
+
+1. **Symbol-keyed operations** — `op::Symbol` (`:add`, `:mul`, etc.) instead of `op::Function`, enabling efficient `===` comparison without dynamic dispatch
+2. **Pre-allocated workspace** — flat `Vector{Interval}` indexed by slot number, no per-node allocation during traversal
+3. **Flat instruction array** — `Vector{Instruction}` in topological order; forward iterates forward, backward iterates in reverse. Each `Instruction` stores `(op, out_slot, arg1_slot, arg2_slot)`.
+
+The compiled version is ~3x faster than the uncompiled persistent DAG and ~3x slower than the code-generation approach.

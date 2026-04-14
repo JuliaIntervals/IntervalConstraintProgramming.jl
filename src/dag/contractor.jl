@@ -1,44 +1,46 @@
 """
     DAGContractor <: AbstractContractor
 
-A contractor based on persistent DAG propagation (HC4Revise).
-The DAG is built once and reused across calls. When multiple contractors
-share the same `SharedDAG`, propagating one tightens bounds that benefit
-all others via shared variable nodes and subexpressions.
+A contractor based on compiled DAG propagation (HC4Revise).
+The DAG is built once, compiled into a flat instruction schedule, and
+reused across all calls — no dynamic dispatch, no per-node allocation.
 
 Constructor forms:
-- `DAGContractor(expr, vars)` — builds its own DAG
-- `DAGContractor(dag, expr, vars)` — uses an existing SharedDAG (adds the expression to it)
+- `DAGContractor(expr, vars)` — builds and compiles its own DAG
+- `DAGContractor(dag, expr, vars)` — adds to an existing SharedDAG and compiles
 """
 struct DAGContractor{V} <: AbstractContractor
     vars::V
     dag::SharedDAG
+    compiled::CompiledDAG
     ex::Any
 end
 
 function DAGContractor(ex::Num, vars::Vector{Num})
     dag = SharedDAG(vars)
     add_expression!(dag, ex, interval(0.0))
-    return DAGContractor(vars, dag, ex)
+    cd = compile(dag)
+    return DAGContractor(vars, dag, cd, ex)
 end
 
 function DAGContractor(dag::SharedDAG, ex::Num, vars::Vector{Num})
     add_expression!(dag, ex, interval(0.0))
-    return DAGContractor(vars, dag, ex)
+    cd = compile(dag)
+    return DAGContractor(vars, dag, cd, ex)
 end
 
 function (C::DAGContractor)(X::IntervalBox, constraint::Interval=interval(0.0))
-    return propagate!(C.dag, X, constraint)
+    return propagate!(C.compiled, X, constraint)
 end
 
 """
     DAGSeparator <: AbstractSeparator
 
-A separator that uses persistent DAG-based propagation.
+A separator that uses compiled DAG-based propagation.
 Drop-in replacement for `Separator`.
 
 Constructor forms:
-- `DAGSeparator(expr, vars, constraint)` — builds its own DAG
+- `DAGSeparator(expr, vars, constraint)` — builds and compiles its own DAG
 - `DAGSeparator(dag, expr, vars, constraint)` — uses an existing SharedDAG
 - `DAGSeparator(symbolic_inequality, vars)` — parses the inequality
 """
