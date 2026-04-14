@@ -54,6 +54,9 @@ export
 
 export ¬
 
+# DAG-based propagation types
+export DAGContractor, DAGSeparator, ConstraintDAG
+
 const reverse_operations = IntervalContractors.reverse_operations
 
 
@@ -61,6 +64,12 @@ include("utils.jl")
 include("contractor.jl")
 include("set_operations.jl")
 include("pave.jl")
+
+# DAG-based alternative to code-generation approach
+include("dag/nodes.jl")
+include("dag/build.jl")
+include("dag/propagate.jl")
+include("dag/contractor.jl")
 
 
 end # module
