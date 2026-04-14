@@ -52,6 +52,10 @@ plot!(collect.(boundary), aspectratio=1, lw=0, label="boundary")
 
 
 
+## Architecture
+
+See [docs/src/architecture.md](docs/src/architecture.md) for a detailed description of the internal pipeline from symbolic expressions to contractors and separators.
+
 ## Author
 
 - [David P. Sanders](http://sistemas.fciencias.unam.mx/~dsanders),
