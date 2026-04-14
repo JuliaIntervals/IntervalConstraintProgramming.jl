@@ -55,7 +55,7 @@ export
 export ¬
 
 # DAG-based propagation types
-export DAGContractor, DAGSeparator, ConstraintDAG
+export DAGContractor, DAGSeparator, SharedDAG, add_expression!
 
 const reverse_operations = IntervalContractors.reverse_operations
 

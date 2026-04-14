@@ -21,8 +21,6 @@ end
 
 OperationNode(op, children) = OperationNode(op, children, entireinterval())
 
-# Convenience accessors
-
 is_variable(n::VariableNode) = true
 is_variable(::AbstractNode) = false
 
@@ -45,23 +43,52 @@ function Base.show(io::IO, n::OperationNode)
 end
 
 """
-    ConstraintDAG
-
-Directed acyclic graph representing an expression with a constraint on its output.
-
-- `variables`: input variable nodes (ordered to match IntervalBox)
-- `nodes`: all nodes in topological order (leaves first, root last)
-- `root`: the output node
-- `constraint`: interval the root must lie in
+A root-constraint pair: an expression root node together with the interval
+constraint that its output must satisfy.
 """
-struct ConstraintDAG
-    variables::Vector{VariableNode}
-    nodes::Vector{AbstractNode}     # topological order
+struct ConstraintEntry
     root::AbstractNode
     constraint::Interval
 end
 
-function Base.show(io::IO, dag::ConstraintDAG)
+"""
+    SharedDAG
+
+A persistent DAG that can hold multiple expressions sharing variable nodes
+and common subexpressions. Each expression is registered as a `ConstraintEntry`
+(root node + constraint interval).
+
+Built incrementally via `add_expression!`. The `nodes` vector is kept in
+topological order (leaves first), so forward propagation is a single pass
+and backward propagation is the reverse.
+"""
+mutable struct SharedDAG
+    variables::Vector{VariableNode}
+    nodes::Vector{AbstractNode}         # topological order
+    constraints::Vector{ConstraintEntry}
+    var_map::Dict{Symbol, VariableNode}
+    node_cache::Dict{UInt, AbstractNode}
+end
+
+function SharedDAG(variables::Vector{Num})
+    unwrapped = Symbolics.value.(variables)
+    var_nodes = VariableNode[]
+    var_map = Dict{Symbol, VariableNode}()
+    all_nodes = AbstractNode[]
+
+    for (i, v) in enumerate(unwrapped)
+        name = Symbolics.nameof(v)
+        vn = VariableNode(name, i, entireinterval())
+        push!(var_nodes, vn)
+        push!(all_nodes, vn)
+        var_map[name] = vn
+    end
+
+    return SharedDAG(var_nodes, all_nodes, ConstraintEntry[], var_map, Dict{UInt, AbstractNode}())
+end
+
+function Base.show(io::IO, dag::SharedDAG)
     vars = join([string(v.name) for v in dag.variables], ", ")
-    print(io, "ConstraintDAG($(length(dag.nodes)) nodes, vars=($vars), constraint=$(dag.constraint))")
+    nc = length(dag.constraints)
+    print(io, "SharedDAG($(length(dag.nodes)) nodes, vars=($vars), $nc constraints)")
 end

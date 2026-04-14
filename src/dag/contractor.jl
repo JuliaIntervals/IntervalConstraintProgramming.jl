@@ -1,30 +1,46 @@
 """
     DAGContractor <: AbstractContractor
 
-A contractor based on explicit DAG propagation (HC4Revise).
-Alternative to the code-generation approach in `Contractor`.
+A contractor based on persistent DAG propagation (HC4Revise).
+The DAG is built once and reused across calls. When multiple contractors
+share the same `SharedDAG`, propagating one tightens bounds that benefit
+all others via shared variable nodes and subexpressions.
 
-Stores the expression and variables so it can build a DAG with any constraint
-at call time. By default contracts onto `f(x) = 0` (the boundary), matching
-the behavior of the code-generation `Contractor`.
+Constructor forms:
+- `DAGContractor(expr, vars)` — builds its own DAG
+- `DAGContractor(dag, expr, vars)` — uses an existing SharedDAG (adds the expression to it)
 """
 struct DAGContractor{V} <: AbstractContractor
     vars::V
+    dag::SharedDAG
     ex::Any
 end
 
-DAGContractor(ex::Num, vars::Vector{Num}) = DAGContractor(vars, ex)
+function DAGContractor(ex::Num, vars::Vector{Num})
+    dag = SharedDAG(vars)
+    add_expression!(dag, ex, interval(0.0))
+    return DAGContractor(vars, dag, ex)
+end
+
+function DAGContractor(dag::SharedDAG, ex::Num, vars::Vector{Num})
+    add_expression!(dag, ex, interval(0.0))
+    return DAGContractor(vars, dag, ex)
+end
 
 function (C::DAGContractor)(X::IntervalBox, constraint::Interval=interval(0.0))
-    dag = build_dag(C.ex, C.vars, constraint)
-    return propagate!(dag, X)
+    return propagate!(C.dag, X, constraint)
 end
 
 """
     DAGSeparator <: AbstractSeparator
 
-A separator that uses DAG-based propagation.
-Drop-in replacement for `Separator` — same `(boundary, inner, outer)` output.
+A separator that uses persistent DAG-based propagation.
+Drop-in replacement for `Separator`.
+
+Constructor forms:
+- `DAGSeparator(expr, vars, constraint)` — builds its own DAG
+- `DAGSeparator(dag, expr, vars, constraint)` — uses an existing SharedDAG
+- `DAGSeparator(symbolic_inequality, vars)` — parses the inequality
 """
 struct DAGSeparator{V, E, C, F} <: AbstractSeparator
     vars::V
@@ -40,17 +56,21 @@ function DAGSeparator(expr::Num, vars::Vector{Num}, constraint::Interval)
     return DAGSeparator(vars, expr, constraint, f, contractor)
 end
 
+function DAGSeparator(dag::SharedDAG, expr::Num, vars::Vector{Num}, constraint::Interval)
+    contractor = DAGContractor(dag, expr, vars)
+    f = make_function(expr, vars)
+    return DAGSeparator(vars, expr, constraint, f, contractor)
+end
+
 function (SS::DAGSeparator)(X)
     if any(x -> isinf(diam(x)), X)
         return _separate_infinite_dag(SS, X)
     end
 
-    # Contract onto the boundary (f(x) = 0), same as original Separator
     boundary = SS.contractor(X)
 
     lb = IntervalBox(inf.(X))
     ub = IntervalBox(sup.(X))
-
     inner = boundary
     outer = boundary
 
@@ -74,7 +94,6 @@ end
 function _separate_infinite_dag(SS::DAGSeparator, X::IntervalBox)
     C = SS.contractor
     a, b = inf(SS.constraint), sup(SS.constraint)
-
     inner = C(X, interval(a, b))
 
     local outer
@@ -83,9 +102,7 @@ function _separate_infinite_dag(SS::DAGSeparator, X::IntervalBox)
     elseif b == Inf
         outer = C(X, interval(-Inf, a))
     else
-        outer1 = C(X, interval(-Inf, a))
-        outer2 = C(X, interval(b, Inf))
-        outer = outer1 ⊔ outer2
+        outer = C(X, interval(-Inf, a)) ⊔ C(X, interval(b, Inf))
     end
 
     boundary = inner ⊓ outer
