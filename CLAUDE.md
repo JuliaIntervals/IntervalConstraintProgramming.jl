@@ -68,3 +68,33 @@ RP 0.5+ reshapes `cse_equations`, `forward_backward_code`, `forward_backward_con
 ### Known issues
 
 - This change requires ReversePropagation `0.8.0`, which is not registered yet at the time of writing — to develop/test against it, `]dev` the local RP checkout.
+
+## Suppressing the "NG" flag via `exact=true` (2026-04-20)
+
+### Problem
+
+`IntervalArithmetic` v1 sets a "not guaranteed" (NG) flag on any interval that has ever touched a plain (non-`ExactReal`) `Real`. ICP's generated code is full of those — both the literals from the user's expression (the `1` in `x^2 + y^2 == 1`) and the integer exponents that CSE inserts (the `2` in `x^2`). So even `C.f([3..4, 5..6])` came back as `[33.0, 51.0]_com_NG`.
+
+### Why not on the symbolic side
+
+Wrapping literals in the user-facing symbolic expression (`x^2 + y^2 - exact(1)`) does not survive — `Symbolics` normalises `ExactReal` back to a plain `Int`/`Float` during its own simplification. Any fix has to happen on the generated `Expr`, after `Symbolics.build_function` / `ReversePropagation.forward_backward_expr`.
+
+### Design
+
+Added an `exactify(ex)` helper in `src/utils.jl` that walks an `Expr` and wraps every non-`Bool` `Real` literal with `IntervalArithmetic.exact(...)`. Threaded an `exact::Bool = false` keyword argument through `Contractor`, `Separator`, and `separator`/`constraint`:
+
+- `make_function(ex, vars; exact=false)` — runs `exactify` on the `build_function` output when `exact=true`, before `@RuntimeGeneratedFunction`.
+- `Contractor(ssa, ex, vars; exact=false)` — when `exact=true`, delegates to `build_fb_contractor`, which replicates RP's outer wrapper locally so it can `exactify` the body before RGF. When `exact=false`, still forwards to `forward_backward_contractor` unchanged (no overhead in the default path).
+- `Separator(...; exact=false)` and `separator(...; exact=false)` — threads the keyword through.
+
+### Usage
+
+```julia
+julia> C = constraint(x^2 + y^2 == 1, vars; exact=true);
+julia> C.f([3..4, 5..6])
+[33.0, 51.0]_com         # no NG
+julia> C.contractor((-10..10, -10..10))
+[-1.0, 1.0]_trv²         # no NG
+```
+
+Default behaviour (`exact=false`) is unchanged.
