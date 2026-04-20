@@ -84,17 +84,25 @@ Wrapping literals in the user-facing symbolic expression (`x^2 + y^2 - exact(1)`
 Added an `exactify(ex)` helper in `src/utils.jl` that walks an `Expr` and wraps every non-`Bool` `Real` literal with `IntervalArithmetic.exact(...)`. Threaded an `exact::Bool = false` keyword argument through `Contractor`, `Separator`, and `separator`/`constraint`:
 
 - `make_function(ex, vars; exact=false)` — runs `exactify` on the `build_function` output when `exact=true`, before `@RuntimeGeneratedFunction`.
-- `Contractor(ssa, ex, vars; exact=false)` — when `exact=true`, delegates to `build_fb_contractor`, which replicates RP's outer wrapper locally so it can `exactify` the body before RGF. When `exact=false`, still forwards to `forward_backward_contractor` unchanged (no overhead in the default path).
+- `Contractor(ssa, ex, vars; exact=false)` — when `exact=true`, delegates to `build_fb_contractor`, which replicates RP's outer wrapper locally so it can `exactify` and run `preserve_decorations` on the body before RGF. When `exact=false`, still forwards to `forward_backward_contractor` unchanged (no overhead in the default path).
 - `Separator(...; exact=false)` and `separator(...; exact=false)` — threads the keyword through.
+
+### Decoration preservation through contraction
+
+IEEE 1788 weakens `intersect_interval(a, b)` to the `trv` decoration because, in general, the result may not be a subset of the range of any function. Every reverse op in `IntervalContractors` (`plus_rev`, `power_rev`, …) is built on top of that same intersect, so both the outer `intersect_interval(_value, _constraint)` that RP emits *and* every narrowing step in the reverse sweep drag `trv` through the result. HC4Revise however is only ever narrowing *within* an already-evaluated function range, so the right answer is `min(decoration(inputs)...)` — not `trv`.
+
+`preserve_decorations(ex)` walks the body `Expr` returned by `ReversePropagation.forward_backward_expr` and wraps each `IntervalArithmetic.intersect_interval` call and each `ReversePropagation._rev_*` reverse-op call so its output interval(s) are re-decorated with `min(decoration(inputs)...)`. Empty intervals stay `trv` (empty semantics). Because Symbolics' `toexpr` emits the call head as the actual function *value* (not `Expr(:., Module, :name)`), the matchers compare `ex.args[1] === IntervalArithmetic.intersect_interval` and `parentmodule(f) === ReversePropagation && startswith(nameof(f), "_rev_")` directly.
+
+Re-decoration strategy: `_redecorate(x, d) = interval(inf(x), sup(x), d)` unconditionally replaces the decoration; it does *not* `min` with `decoration(x)`, because the op's own output decoration is exactly the weakened `trv` we're trying to override. Narrowing is a subset, so the pre-op input decoration is the valid upper bound regardless of what the op stamped on. Empty intervals keep their existing (`trv`) decoration.
 
 ### Usage
 
 ```julia
 julia> C = constraint(x^2 + y^2 == 1, vars; exact=true);
 julia> C.f([3..4, 5..6])
-[33.0, 51.0]_com         # no NG
+[33.0, 51.0]_com             # no NG
 julia> C.contractor((-10..10, -10..10))
-[-1.0, 1.0]_trv²         # no NG
+[-1.0, 1.0]_com²             # no NG, no trv
 ```
 
-Default behaviour (`exact=false`) is unchanged.
+Default behaviour (`exact=false`) is unchanged. Note: the outer of the full `Separator` triple can still end up `_trv` because it is computed via `boundary ⊔ corner` in `(SS::Separator)(X)` — hull (`⊔`) intrinsically weakens in IEEE 1788, and that is the intended semantics.

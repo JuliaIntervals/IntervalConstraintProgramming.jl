@@ -13,8 +13,11 @@ contractor so it can be reused (e.g. shared between a `Separator` and other
 contractors over the same expression).
 
 If `exact=true`, every numeric literal in the generated forward--backward code
-is wrapped in `IntervalArithmetic.exact` (see [`exactify`](@ref)), suppressing
-the "NG" flag on results.
+is wrapped in `IntervalArithmetic.exact` (see [`exactify`](@ref)) and every
+`intersect_interval` / `_rev_*` call site is wrapped so its output decoration
+is `min(decoration(inputs)...)` instead of the IEEE 1788 default `trv` (see
+[`preserve_decorations`](@ref)). Together these suppress the "NG" flag and
+preserve `com` / `dac` decorations through contraction.
 """
 struct Contractor{V, E, S, CC} <: AbstractContractor
     vars::V
@@ -31,10 +34,11 @@ Contractor(ssa::SSAFunction, ex, vars; exact::Bool = false) =
 
 # Build the forward--backward contractor function. When `exact=false`, just
 # forward to RP's `forward_backward_contractor`. When `exact=true`, re-assemble
-# the outer wrapper so we can walk the generated code and mark every Real
-# literal as `IntervalArithmetic.exact` before handing it to RGF — otherwise
-# the literals from the user's constraint (and the integer exponents inserted
-# by CSE) drag the NG flag into the result.
+# the outer wrapper so we can (a) mark every Real literal as
+# `IntervalArithmetic.exact` (so constraint literals and CSE-inserted exponents
+# don't drag the NG flag through the result) and (b) clamp decorations through
+# intersect/reverse-op call sites to `min(input decorations)` instead of the
+# IEEE 1788 default `trv` weakening.
 function build_fb_contractor(ssa::SSAFunction, vars; exact::Bool = false)
     exact || return forward_backward_contractor(ssa, vars)
 
@@ -45,11 +49,13 @@ function build_fb_contractor(ssa::SSAFunction, vars; exact::Bool = false)
     final = toexpr(final_var)
     constraint = toexpr(constraint_var)
 
+    body = preserve_decorations(exactify(code))
+
     function_code = :(
         (__inputs, __constraint) -> begin
             $input_vars = __inputs
             $constraint = __constraint
-            $(exactify(code))
+            $body
             return $input_vars, $(final)
         end
     )
