@@ -1,13 +1,67 @@
 abstract type AbstractContractor end
 
 
-struct Contractor{V, E, CC} <: AbstractContractor
+"""
+	Contractor(ex, vars; exact=false)
+	Contractor(ssa::SSAFunction, ex, vars; exact=false)
+
+HC4Revise forward--backward contractor for the constraint `ex(vars...) ∈ constraint`.
+
+The symbolic expression is first lowered to SSA form via
+`ReversePropagation.cse_equations`; the resulting `SSAFunction` is stored on the
+contractor so it can be reused (e.g. shared between a `Separator` and other
+contractors over the same expression).
+
+If `exact=true`, every numeric literal in the generated forward--backward code
+is wrapped in `IntervalArithmetic.exact` (see [`exactify`](@ref)) and every
+`intersect_interval` / `_rev_*` call site is wrapped so its output decoration
+is `min(decoration(inputs)...)` instead of the IEEE 1788 default `trv` (see
+[`preserve_decorations`](@ref)). Together these suppress the "NG" flag and
+preserve `com` / `dac` decorations through contraction.
+"""
+struct Contractor{V, E, S, CC} <: AbstractContractor
     vars::V
     ex::E
+    ssa::S
     contractor::CC
 end
 
-Contractor(ex, vars) = Contractor(vars, ex, forward_backward_contractor(ex, vars))
+Contractor(ex, vars; exact::Bool = false) =
+    Contractor(cse_equations(ex), ex, vars; exact = exact)
+
+Contractor(ssa::SSAFunction, ex, vars; exact::Bool = false) =
+    Contractor(vars, ex, ssa, build_fb_contractor(ssa, vars; exact = exact))
+
+# Build the forward--backward contractor function. When `exact=false`, just
+# forward to RP's `forward_backward_contractor`. When `exact=true`, re-assemble
+# the outer wrapper so we can (a) mark every Real literal as
+# `IntervalArithmetic.exact` (so constraint literals and CSE-inserted exponents
+# don't drag the NG flag through the result) and (b) clamp decorations through
+# intersect/reverse-op call sites to `min(input decorations)` instead of the
+# IEEE 1788 default `trv` weakening.
+function build_fb_contractor(ssa::SSAFunction, vars; exact::Bool = false)
+    exact || return forward_backward_contractor(ssa, vars)
+
+    code, final_var, constraint_var =
+        ReversePropagation.forward_backward_expr(ssa, vars)
+
+    input_vars = toexpr(Symbolics.MakeTuple(vars))
+    final = toexpr(final_var)
+    constraint = toexpr(constraint_var)
+
+    body = preserve_decorations(exactify(code))
+
+    function_code = :(
+        (__inputs, __constraint) -> begin
+            $input_vars = __inputs
+            $constraint = __constraint
+            $body
+            return $input_vars, $(final)
+        end
+    )
+
+    return @RuntimeGeneratedFunction(function_code)
+end
 
 (CC::Contractor)(X, constraint=interval(0.0)) = IntervalBox(CC.contractor(X, constraint)[1])
 
@@ -33,13 +87,18 @@ function Base.show(io::IO, S::AbstractSeparator)
     end
 end
 
-function Separator(orig_expr, vars)
+function Separator(orig_expr, vars; exact::Bool = false)
     ex, constraint = analyse(orig_expr)
 
-    return Separator(ex, vars, constraint)
+    return Separator(ex, vars, constraint; exact = exact)
 end
 
-Separator(ex, vars, constraint::Interval) = Separator(vars, ex, constraint, make_function(ex, vars), Contractor(ex, vars))
+function Separator(ex, vars, constraint::Interval; exact::Bool = false)
+    ssa = cse_equations(ex)
+    return Separator(vars, ex, constraint,
+                     make_function(ex, vars; exact = exact),
+                     Contractor(ssa, ex, vars; exact = exact))
+end
 
 function separate_infinite_box(S::Separator, X::IntervalBox)
     # for an box that extends to infinity we cannot evaluate at a corner

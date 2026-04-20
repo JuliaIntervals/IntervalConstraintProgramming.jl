@@ -14,6 +14,10 @@ using Symbolics: @register_symbolic
 using StaticArrays
 
 using ReversePropagation
+using ReversePropagation: SSAFunction, cse_equations
+
+using RuntimeGeneratedFunctions
+RuntimeGeneratedFunctions.init(@__MODULE__)
 
 # using MacroTools
 
@@ -50,7 +54,8 @@ export
     add_constraint!, 
     variables, 
     add_variables!,
-    ConstraintProblem
+    ConstraintProblem,
+    SSAFunction
 
 export ¬
 
