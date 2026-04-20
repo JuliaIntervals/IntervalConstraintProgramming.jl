@@ -43,3 +43,28 @@ This file tracks decisions and context discovered while working on this package.
 
 - Chained comparisons like `0 <= x^2+y^2 <= 1` don't work (Julia lowers to `&&` which requires `Bool`). Users should use `x^2+y^2 ∈ interval(0, 1)` instead. A `@constraint` macro could fix this — see `future.md`.
 - ReversePropagation emits many "Method definition overwritten" warnings with Symbolics v7. Harmless but noisy — see `future.md`.
+
+## ReversePropagation SSAFunction / RuntimeGeneratedFunctions migration (2026-04-20)
+
+### Versions
+
+Bumped `ReversePropagation` compat from `"0.3 - 0.4"` to `"0.8"`. Added a direct dependency on `RuntimeGeneratedFunctions = "0.5"` (transitively available through RP, but worth owning directly since we now call `@RuntimeGeneratedFunction` ourselves). Bumped the package version to `0.16.0`.
+
+### Why
+
+RP 0.5+ reshapes `cse_equations`, `forward_backward_code`, `forward_backward_contractor`, and `gradient_code` around a new `SSAFunction` value: SSA `code`, an `output` variable, and a `variables` NamedTuple carrying extras like `constraint`. It also replaces `eval` with `@RuntimeGeneratedFunction` so a generated function can be built and called within the same dynamic extent (no world-age error) and with a 4–15× faster build time.
+
+### Code changes
+
+**`src/IntervalConstraintProgramming.jl`** — bring in `SSAFunction` and `cse_equations` from RP; call `RuntimeGeneratedFunctions.init(@__MODULE__)` so `@RuntimeGeneratedFunction` works inside this module; export `SSAFunction`.
+
+**`src/utils.jl`** — `make_function` now wraps `build_function(...)` in `@RuntimeGeneratedFunction` instead of `eval`. Same reasons as upstream RP: no world-age hazard, faster build.
+
+**`src/contractor.jl`** — `Contractor` now stores the `SSAFunction` it was built from:
+- `Contractor(ex, vars)` calls `cse_equations(ex)` once and forwards to
+- `Contractor(ssa::SSAFunction, ex, vars)` which calls `forward_backward_contractor(ssa, vars)` (the SSA-taking method).
+- `Separator(ex, vars, constraint::Interval)` runs `cse_equations(ex)` once and shares the SSA between `make_function(ex, vars)` (forward evaluator) and `Contractor(ssa, ex, vars)` (HC4Revise), so each constructor does CSE on `ex` only once rather than twice.
+
+### Known issues
+
+- This change requires ReversePropagation `0.8.0`, which is not registered yet at the time of writing — to develop/test against it, `]dev` the local RP checkout.

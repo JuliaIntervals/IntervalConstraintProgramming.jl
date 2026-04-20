@@ -1,6 +1,7 @@
 
 
-make_function(ex, vars) = eval(build_function(ex, vars, nanmath=false))
+make_function(ex, vars) =
+	@RuntimeGeneratedFunction(build_function(ex, vars, nanmath=false))
 
 
 """

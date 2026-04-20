@@ -1,13 +1,28 @@
 abstract type AbstractContractor end
 
 
-struct Contractor{V, E, CC} <: AbstractContractor
+"""
+	Contractor(ex, vars)
+	Contractor(ssa::SSAFunction, ex, vars)
+
+HC4Revise forward--backward contractor for the constraint `ex(vars...) ∈ constraint`.
+
+The symbolic expression is first lowered to SSA form via
+`ReversePropagation.cse_equations`; the resulting `SSAFunction` is stored on the
+contractor so it can be reused (e.g. shared between a `Separator` and other
+contractors over the same expression).
+"""
+struct Contractor{V, E, S, CC} <: AbstractContractor
     vars::V
     ex::E
+    ssa::S
     contractor::CC
 end
 
-Contractor(ex, vars) = Contractor(vars, ex, forward_backward_contractor(ex, vars))
+Contractor(ex, vars) = Contractor(cse_equations(ex), ex, vars)
+
+Contractor(ssa::SSAFunction, ex, vars) =
+    Contractor(vars, ex, ssa, forward_backward_contractor(ssa, vars))
 
 (CC::Contractor)(X, constraint=interval(0.0)) = IntervalBox(CC.contractor(X, constraint)[1])
 
@@ -39,7 +54,10 @@ function Separator(orig_expr, vars)
     return Separator(ex, vars, constraint)
 end
 
-Separator(ex, vars, constraint::Interval) = Separator(vars, ex, constraint, make_function(ex, vars), Contractor(ex, vars))
+function Separator(ex, vars, constraint::Interval)
+    ssa = cse_equations(ex)
+    return Separator(vars, ex, constraint, make_function(ex, vars), Contractor(ssa, ex, vars))
+end
 
 function separate_infinite_box(S::Separator, X::IntervalBox)
     # for an box that extends to infinity we cannot evaluate at a corner
