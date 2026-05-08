@@ -43,3 +43,66 @@ This file tracks decisions and context discovered while working on this package.
 
 - Chained comparisons like `0 <= x^2+y^2 <= 1` don't work (Julia lowers to `&&` which requires `Bool`). Users should use `x^2+y^2 ∈ interval(0, 1)` instead. A `@constraint` macro could fix this — see `future.md`.
 - ReversePropagation emits many "Method definition overwritten" warnings with Symbolics v7. Harmless but noisy — see `future.md`.
+
+## ReversePropagation SSAFunction / RuntimeGeneratedFunctions migration (2026-04-20)
+
+### Versions
+
+Bumped `ReversePropagation` compat from `"0.3 - 0.4"` to `"0.8"`. Added a direct dependency on `RuntimeGeneratedFunctions = "0.5"` (transitively available through RP, but worth owning directly since we now call `@RuntimeGeneratedFunction` ourselves). Bumped the package version to `0.16.0`.
+
+### Why
+
+RP 0.5+ reshapes `cse_equations`, `forward_backward_code`, `forward_backward_contractor`, and `gradient_code` around a new `SSAFunction` value: SSA `code`, an `output` variable, and a `variables` NamedTuple carrying extras like `constraint`. It also replaces `eval` with `@RuntimeGeneratedFunction` so a generated function can be built and called within the same dynamic extent (no world-age error) and with a 4–15× faster build time.
+
+### Code changes
+
+**`src/IntervalConstraintProgramming.jl`** — bring in `SSAFunction` and `cse_equations` from RP; call `RuntimeGeneratedFunctions.init(@__MODULE__)` so `@RuntimeGeneratedFunction` works inside this module; export `SSAFunction`.
+
+**`src/utils.jl`** — `make_function` now wraps `build_function(...)` in `@RuntimeGeneratedFunction` instead of `eval`. Same reasons as upstream RP: no world-age hazard, faster build.
+
+**`src/contractor.jl`** — `Contractor` now stores the `SSAFunction` it was built from:
+- `Contractor(ex, vars)` calls `cse_equations(ex)` once and forwards to
+- `Contractor(ssa::SSAFunction, ex, vars)` which calls `forward_backward_contractor(ssa, vars)` (the SSA-taking method).
+- `Separator(ex, vars, constraint::Interval)` runs `cse_equations(ex)` once and shares the SSA between `make_function(ex, vars)` (forward evaluator) and `Contractor(ssa, ex, vars)` (HC4Revise), so each constructor does CSE on `ex` only once rather than twice.
+
+### Known issues
+
+- This change requires ReversePropagation `0.8.0`, which is not registered yet at the time of writing — to develop/test against it, `]dev` the local RP checkout.
+
+## Suppressing the "NG" flag via `exact=true` (2026-04-20)
+
+### Problem
+
+`IntervalArithmetic` v1 sets a "not guaranteed" (NG) flag on any interval that has ever touched a plain (non-`ExactReal`) `Real`. ICP's generated code is full of those — both the literals from the user's expression (the `1` in `x^2 + y^2 == 1`) and the integer exponents that CSE inserts (the `2` in `x^2`). So even `C.f([3..4, 5..6])` came back as `[33.0, 51.0]_com_NG`.
+
+### Why not on the symbolic side
+
+Wrapping literals in the user-facing symbolic expression (`x^2 + y^2 - exact(1)`) does not survive — `Symbolics` normalises `ExactReal` back to a plain `Int`/`Float` during its own simplification. Any fix has to happen on the generated `Expr`, after `Symbolics.build_function` / `ReversePropagation.forward_backward_expr`.
+
+### Design
+
+Added an `exactify(ex)` helper in `src/utils.jl` that walks an `Expr` and wraps every non-`Bool` `Real` literal with `IntervalArithmetic.exact(...)`. Threaded an `exact::Bool = false` keyword argument through `Contractor`, `Separator`, and `separator`/`constraint`:
+
+- `make_function(ex, vars; exact=false)` — runs `exactify` on the `build_function` output when `exact=true`, before `@RuntimeGeneratedFunction`.
+- `Contractor(ssa, ex, vars; exact=false)` — when `exact=true`, delegates to `build_fb_contractor`, which replicates RP's outer wrapper locally so it can `exactify` and run `preserve_decorations` on the body before RGF. When `exact=false`, still forwards to `forward_backward_contractor` unchanged (no overhead in the default path).
+- `Separator(...; exact=false)` and `separator(...; exact=false)` — threads the keyword through.
+
+### Decoration preservation through contraction
+
+IEEE 1788 weakens `intersect_interval(a, b)` to the `trv` decoration because, in general, the result may not be a subset of the range of any function. Every reverse op in `IntervalContractors` (`plus_rev`, `power_rev`, …) is built on top of that same intersect, so both the outer `intersect_interval(_value, _constraint)` that RP emits *and* every narrowing step in the reverse sweep drag `trv` through the result. HC4Revise however is only ever narrowing *within* an already-evaluated function range, so the right answer is `min(decoration(inputs)...)` — not `trv`.
+
+`preserve_decorations(ex)` walks the body `Expr` returned by `ReversePropagation.forward_backward_expr` and wraps each `IntervalArithmetic.intersect_interval` call and each `ReversePropagation._rev_*` reverse-op call so its output interval(s) are re-decorated with `min(decoration(inputs)...)`. Empty intervals stay `trv` (empty semantics). Because Symbolics' `toexpr` emits the call head as the actual function *value* (not `Expr(:., Module, :name)`), the matchers compare `ex.args[1] === IntervalArithmetic.intersect_interval` and `parentmodule(f) === ReversePropagation && startswith(nameof(f), "_rev_")` directly.
+
+Re-decoration strategy: `_redecorate(x, d) = interval(inf(x), sup(x), d)` unconditionally replaces the decoration; it does *not* `min` with `decoration(x)`, because the op's own output decoration is exactly the weakened `trv` we're trying to override. Narrowing is a subset, so the pre-op input decoration is the valid upper bound regardless of what the op stamped on. Empty intervals keep their existing (`trv`) decoration.
+
+### Usage
+
+```julia
+julia> C = constraint(x^2 + y^2 == 1, vars; exact=true);
+julia> C.f([3..4, 5..6])
+[33.0, 51.0]_com             # no NG
+julia> C.contractor((-10..10, -10..10))
+[-1.0, 1.0]_com²             # no NG, no trv
+```
+
+Default behaviour (`exact=false`) is unchanged. Note: the outer of the full `Separator` triple can still end up `_trv` because it is computed via `boundary ⊔ corner` in `(SS::Separator)(X)` — hull (`⊔`) intrinsically weakens in IEEE 1788, and that is the intended semantics.

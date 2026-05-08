@@ -3,7 +3,9 @@ __precompile__()
 module IntervalConstraintProgramming
 
 using IntervalArithmetic, IntervalArithmetic.Symbols
-using IntervalContractors
+## IntervalContractors removed on this branch — see ReversePropagation
+## branch lorentz-no-icontractors. Was previously imported only to bind
+## `reverse_operations`, which was never referenced inside this package.
 using IntervalBoxes
 
 using Symbolics
@@ -14,6 +16,10 @@ using Symbolics: @register_symbolic
 using StaticArrays
 
 using ReversePropagation
+using ReversePropagation: SSAFunction, cse_equations
+
+using RuntimeGeneratedFunctions
+RuntimeGeneratedFunctions.init(@__MODULE__)
 
 # using MacroTools
 
@@ -50,11 +56,11 @@ export
     add_constraint!, 
     variables, 
     add_variables!,
-    ConstraintProblem
+    ConstraintProblem,
+    SSAFunction
 
 export ¬
 
-const reverse_operations = IntervalContractors.reverse_operations
 
 
 include("utils.jl")
