@@ -116,6 +116,45 @@ end
 
 # end
 
+@testset "Parametric Contractor" begin
+    @variables x, y, r
+
+    # Build a circle-of-radius-r contractor ONCE; evaluate at different r.
+    C = Contractor(x^2 + y^2, [x, y]; params = [r])
+    X = IntervalBox(-Inf..Inf, 2)
+
+    # r = 1: x^2 + y^2 ∈ [-Inf, 1] ⇒ x, y ∈ [-1, 1]
+    @test eq(C(X, -Inf..1, (interval(1.0),)), IntervalBox(-1..1, 2))
+
+    # Same compiled contractor at r = 2: x, y ∈ [-2, 2]
+    @test eq(C(X, -Inf..4, (interval(2.0),)), IntervalBox(-2..2, 2))
+end
+
+@testset "Parametric Separator" begin
+    @variables x, y, cx, cy
+
+    II = -100..100
+    X = IntervalBox(II, 2)
+
+    # Disc of radius 1 centred at (cx, cy), with (cx, cy) parametric.
+    S = Separator((x - cx)^2 + (y - cy)^2 <= 1, [x, y]; params = [cx, cy])
+
+    # Centre (0, 0): inner = [-1, 1]^2.
+    boundary, inner, outer = S(X, (interval(0.0), interval(0.0)))
+    @test eq(inner, IntervalBox(-1..1, 2))
+
+    # Centre (5, 0): inner = [4, 6] × [-1, 1] — same compiled separator.
+    boundary, inner, outer = S(X, (interval(5.0), interval(0.0)))
+    @test eq(inner, IntervalBox(4..6, -1..1))
+
+    # ⊓ with a non-parametric separator: param call should still work,
+    # the non-parametric leaf ignores the params tuple.
+    Sx = Separator(x >= 0, [x, y])     # half-plane, no params
+    Scomb = S ⊓ Sx
+    boundary, inner, outer = Scomb(X, (interval(0.0), interval(0.0)))
+    @test eq(inner, IntervalBox(0..1, -1..1))
+end
+
 @testset "Paving a 3D torus" begin
 
     vars = @variables x, y, z

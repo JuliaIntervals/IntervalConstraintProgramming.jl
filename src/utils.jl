@@ -111,8 +111,10 @@ function preserve_decorations(ex::Expr)
 end
 
 
-make_function(ex, vars; exact::Bool = false) = begin
-	code = build_function(ex, vars, nanmath=false)
+make_function(ex, vars; exact::Bool = false, params = []) = begin
+	code = isempty(params) ?
+		build_function(ex, vars, nanmath=false) :
+		build_function(ex, vars, params, nanmath=false)
 	exact && (code = exactify(code))
 	@RuntimeGeneratedFunction(code)
 end
@@ -156,7 +158,7 @@ end
 
 
 
-function separator(ex, vars; exact::Bool = false)
+function separator(ex, vars; exact::Bool = false, params = [])
 	ex2 = ex
 
 	if ex isa Num
@@ -168,31 +170,33 @@ function separator(ex, vars; exact::Bool = false)
 
 	if op == ¬
 		arg = arguments(ex2)[1]
-		return ¬(separator(arg, vars; exact = exact))
+		return ¬(separator(arg, vars; exact = exact, params = params))
 	end
 
 	lhs, rhs = arguments(ex2)
 
 	if op == &
-		return separator(lhs, vars; exact = exact) ⊓ separator(rhs, vars; exact = exact)
+		return separator(lhs, vars; exact = exact, params = params) ⊓
+		       separator(rhs, vars; exact = exact, params = params)
 
 	elseif op == |
-		return separator(lhs, vars; exact = exact) ⊔ separator(rhs, vars; exact = exact)
+		return separator(lhs, vars; exact = exact, params = params) ⊔
+		       separator(rhs, vars; exact = exact, params = params)
 
 	elseif op ∈ (≤, <)
 		constraint = interval(-Inf, 0)
-		Separator(Num(lhs - rhs), vars, constraint; exact = exact)
+		Separator(Num(lhs - rhs), vars, constraint; exact = exact, params = params)
 
 	elseif op ∈ (≥, >)
 		constraint = interval(0, +Inf)
-		Separator(Num(lhs - rhs), vars, constraint; exact = exact)
+		Separator(Num(lhs - rhs), vars, constraint; exact = exact, params = params)
 
 	elseif op == (==)
 		constraint = interval(0, 0)
-		Separator(Num(lhs - rhs), vars, constraint; exact = exact)
+		Separator(Num(lhs - rhs), vars, constraint; exact = exact, params = params)
 
 	else
-		return Separator(ex, vars, interval(0, 0); exact = exact)   # implicit "== 0"
+		return Separator(ex, vars, interval(0, 0); exact = exact, params = params)   # implicit "== 0"
 	end
 
 end

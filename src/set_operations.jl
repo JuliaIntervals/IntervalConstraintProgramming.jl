@@ -1,8 +1,13 @@
 
-struct CombinationSeparator{V, E, F} <: AbstractSeparator
+# `f`  : X            -> (boundary, inner, outer)        — non-parametric call
+# `fp` : (X, params)  -> (boundary, inner, outer)        — parametric call
+# Each combinator builds both, so the same composite separator can be invoked
+# either way; atomic operands without params silently ignore `params`.
+struct CombinationSeparator{V, E, F, FP} <: AbstractSeparator
     vars::V
     ex::E
     f::F
+    fp::FP
 end
 
 # TODO: Replace intersection with composition
@@ -25,9 +30,23 @@ function ⊓(S1::AbstractSeparator, S2::AbstractSeparator)
 
     end
 
+    fp = (X, p) -> begin
+
+        boundary1, inner1, outer1 = S1(X, p)
+        boundary2, inner2, outer2 = S2(X, p)
+
+        inner = inner1 ⊓ inner2
+        outer = outer1 ⊔ outer2
+
+        boundary = inner ⊓ outer
+
+        return (boundary, inner, outer)
+
+    end
+
     ex = (S1.ex) ⊓ (S2.ex)
 
-    return CombinationSeparator(vars, ex, f)
+    return CombinationSeparator(vars, ex, f, fp)
 
 end
 
@@ -49,9 +68,23 @@ function ∘(S1::AbstractSeparator, S2::AbstractSeparator)
 
     end
 
+    fp = (X, p) -> begin
+
+        boundary1, inner1, outer1 = S1(X, p)
+        boundary2, inner2, outer2 = S2(X, p)
+
+        inner = inner1 ⊓ inner2
+        outer = outer1 ⊔ outer2
+
+        boundary = inner ⊓ outer
+
+        return (boundary, inner, outer)
+
+    end
+
     ex = (S1.ex) ⊓ (S2.ex)
 
-    return CombinationSeparator(vars, ex, f)
+    return CombinationSeparator(vars, ex, f, fp)
 
 end
 
@@ -75,9 +108,23 @@ function ⊔(S1::AbstractSeparator, S2::AbstractSeparator)
 
     end
 
+    fp = (X, p) -> begin
+
+       boundary1, inner1, outer1 = S1(X, p)
+       boundary2, inner2, outer2 = S2(X, p)
+
+       inner = inner1 ⊔ inner2
+       outer = outer1 ⊓ outer2
+
+       boundary = inner ⊓ outer
+
+       return (boundary, inner, outer)
+
+    end
+
     ex = (S1.ex) ⊔ (S2.ex)
 
-    return CombinationSeparator(vars, ex, f)
+    return CombinationSeparator(vars, ex, f, fp)
 end
 
 ⊓
@@ -96,9 +143,17 @@ function ¬(S::AbstractSeparator)
 
     end
 
+    fp = (X, p) -> begin
+
+       boundary, inner, outer = S(X, p)
+
+       return (boundary, outer, inner)
+
+    end
+
     ex = ¬(S.ex)
 
-    return CombinationSeparator(vars, ex, f)
+    return CombinationSeparator(vars, ex, f, fp)
 
 end
 
@@ -107,6 +162,7 @@ Base.:!(S::AbstractSeparator) = ¬(S)
 
 
 (S::CombinationSeparator)(X) = S.f(X)
+(S::CombinationSeparator)(X, p::Tuple) = S.fp(X, p)
 
 
 Base.setdiff(S1::AbstractSeparator, S2::AbstractSeparator) = S1 ⊓ ¬(S2)
